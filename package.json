@@ -1,0 +1,25 @@
+{
+  "name": "activecollab-discord-bot",
+  "version": "0.0.1",
+  "description": "Discord integration for ActiveCollab",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Real-Serious-Games/activecollab-discord-bot.git"
+  },
+  "keywords": [
+    "activecollab",
+    "discord",
+    "bot",
+    "integration"
+  ],
+  "author": "Rory Dungan <rory.dungan@realseriousgames.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Real-Serious-Games/activecollab-discord-bot/issues"
+  },
+  "homepage": "https://github.com/Real-Serious-Games/activecollab-discord-bot#readme"
+}
