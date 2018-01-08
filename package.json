@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "description": "Discord integration for ActiveCollab",
   "scripts": {
-    "test": "jest --forceExit --coverage --verbose",
+    "test": "jest --forceExit --coverage --verbose --watch",
     "start": "npm run serve",
     "build": "npm run build-ts && npm run tslint",
     "serve": "node dist/server.js",

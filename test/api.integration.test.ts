@@ -1,29 +1,28 @@
 import * as request from 'supertest';
 import * as sinon from 'sinon';
 
-import * as app from '../src/app';
-
 var chai = require('chai');
 var expect = chai.expect;
 
-describe('POST /api/webhook', () => {
-  it('should return 200 OK', () => {
-    return request(app).post('/api/webhook')
-      .expect(200);
-  });
-});
+import * as app from '../src/app';
+import * as testData from './testData';
+import { Task } from '../src/models/taskPayload';
 
 describe('POST /api/webhook', () => {
-  it('should return body', (done) => {
-    return request(app).post('/api/webhook')
-      .send(
-        {
-          'test': 'test'
-        }
-      )
-      .end(function(err, res) {
-        expect(res.body.test).to.equal('test');
-        done();
+    it('should return formatted body', (done) => {
+        let expectedFormattedTask : string =
+            'A new task has been created. \n' +
+            'Task Name: ' + testData.rawNewTask.payload.name +
+            '\n Project Name: ' + testData.rawNewTask.payload.project_id;
+
+      return request(app).post('/api/webhook')
+          .send(
+              testData.rawNewTask
+          )
+          .end(function(err, res) {
+              console.log('res: ' + JSON.stringify(res));
+              expect(res.body).to.equal(expectedFormattedTask);
+              done();
       });
   });
 });
