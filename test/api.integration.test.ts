@@ -15,14 +15,13 @@ describe('POST /api/webhook', () => {
             'Task Name: ' + testData.rawNewTask.payload.name +
             '\n Project Name: ' + testData.rawNewTask.payload.project_id;
 
-      return request(app).post('/api/webhook')
-          .send(
-              testData.rawNewTask
-          )
-          .end(function(err, res) {
-              console.log('res: ' + JSON.stringify(res));
-              expect(res.body).to.equal(expectedFormattedTask);
-              done();
+        return request(app).post('/api/webhook')
+            .send(
+                testData.rawNewTask
+            )
+            .end(function(err, res) {
+                expect(res.text).to.equal(expectedFormattedTask);
+                done();
       });
   });
 });
