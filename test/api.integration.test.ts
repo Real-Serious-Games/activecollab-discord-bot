@@ -11,9 +11,9 @@ import { Task } from '../src/models/taskPayload';
 describe('POST /api/webhook', () => {
     it('should return formatted body', (done) => {
         let expectedFormattedTask : string =
-            'A new task has been created. \n' +
-            'Task Name: ' + testData.rawNewTask.payload.name +
-            '\n Project Name: ' + testData.rawNewTask.payload.project_id;
+            'A new task has been created.\n' +
+            `Task Name: ${testData.rawNewTask.payload.name}\n` +
+            `Project Name: ${testData.rawNewTask.payload.project_id}`;
 
         return request(app).post('/api/webhook')
             .send(
