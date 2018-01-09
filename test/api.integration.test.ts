@@ -1,8 +1,8 @@
 import * as request from 'supertest';
 import * as sinon from 'sinon';
 
-var chai = require('chai');
-var expect = chai.expect;
+const chai = require('chai');
+const expect = chai.expect;
 
 import * as app from '../src/app';
 import * as testData from './testData';
@@ -10,7 +10,7 @@ import { Task } from '../src/models/taskEvent';
 
 describe('POST /api/webhook', () => {
     it('should return formatted body', (done) => {
-        let expectedFormattedTask : string =
+        const expectedFormattedTask: string =
             'A new task has been created.\n' +
             `Task Name: ${testData.rawNewTask.payload.name}\n` +
             `Project Name: ${testData.rawNewTask.payload.project_id}`;

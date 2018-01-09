@@ -1,16 +1,16 @@
 import { Response, Request } from 'express';
 
-var chai = require('chai');
-var expect = chai.expect;
+const chai = require('chai');
+const expect = chai.expect;
 
-import * as eventController from '../src/controllers/event'
+import * as eventController from '../src/controllers/event';
 import * as testData from './testData';
 import { Task } from '../src/models/taskEvent';
 
 describe('processPayload with new task', () => {
     it('should return formatted payload', () => {
-        let rawData = testData.rawNewTask;
-        let expectedFormattedPayload : string =
+        const rawData = testData.rawNewTask;
+        const expectedFormattedPayload: string =
                 'A new task has been created.\n' +
                 `Task Name: ${rawData.payload.name}\n` +
                 `Project Name: ${rawData.payload.project_id}`;
@@ -21,8 +21,8 @@ describe('processPayload with new task', () => {
 
 describe('processPayload with updated task', () => {
     it('should return formatted payload', () => {
-        let rawData = testData.rawUpdatedTask;
-        let expectedFormattedPayload : string =
+        const rawData = testData.rawUpdatedTask;
+        const expectedFormattedPayload: string =
                 'A task has been updated.\n' +
                 `Task Name: ${rawData.payload.name}\n` +
                 `Project Name: ${rawData.payload.project_id}`;
@@ -33,7 +33,7 @@ describe('processPayload with updated task', () => {
 
 describe('processNewTask', () => {
     it('should return formatted task', () => {
-        let expectedFormattedTask : string =
+        const expectedFormattedTask: string =
                 'A new task has been created.\n' +
                 `Task Name: ${testData.rawNewTask.payload.name}\n` +
                 `Project Name: ${testData.rawNewTask.payload.project_id}`;
@@ -44,7 +44,7 @@ describe('processNewTask', () => {
 
 describe('processUpdatedTask', () => {
     it('should return formatted task', () => {
-        let expectedFormattedTask : string =
+        const expectedFormattedTask: string =
                 'A task has been updated.\n' +
                 `Task Name: ${testData.rawNewTask.payload.name}\n` +
                 `Project Name: ${testData.rawNewTask.payload.project_id}`;
