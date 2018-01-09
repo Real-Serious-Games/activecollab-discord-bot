@@ -1,9 +1,9 @@
 //TODO: ensure this interface matches all events coming in
 
 export interface Event {
-    "payload": {
-        "class" : string
+    payload: {
+        class : string
     },
-    "timestamp": number,
-    "type": string
+    timestamp: number,
+    type: string
 };

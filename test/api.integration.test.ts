@@ -6,7 +6,7 @@ var expect = chai.expect;
 
 import * as app from '../src/app';
 import * as testData from './testData';
-import { Task } from '../src/models/taskPayload';
+import { Task } from '../src/models/taskEvent';
 
 describe('POST /api/webhook', () => {
     it('should return formatted body', (done) => {
