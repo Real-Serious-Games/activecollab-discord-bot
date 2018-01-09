@@ -2,8 +2,15 @@
 
 import { Task } from '../models/taskEvent';
 import { Event } from '../models/event';
+import { assert } from 'console';
 
 export function processEvent(event: Event): string {
+    assert(event.payload, 'Cannot process event with no payload.');
+    assert(
+        event.payload.class,
+        'Cannot process event that does not specify its payload class.'
+    );
+
     switch (event.payload.class) {
         case ('Task') : {
             const taskPayload: Task = <Task>event;
@@ -14,8 +21,12 @@ export function processEvent(event: Event): string {
                 case ('TaskUpdated') : {
                     return processUpdatedTask(taskPayload);
                 }
+                default:
+                    return `Received Task event with unknown payload type ${taskPayload.type}`;
             }
         }
+        default:
+            return `Received event of unknown type ${event.payload.class}`;
     }
 }
 

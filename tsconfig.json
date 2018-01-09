@@ -5,6 +5,7 @@
         "noImplicitAny": true,
         "moduleResolution": "node",
         "sourceMap": true,
+        "strictNullChecks": true,
         "outDir": "dist",
         "baseUrl": ".",
         "paths": {
