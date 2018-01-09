@@ -1,6 +1,4 @@
-import { Task } from '../src/models/taskPayload';
-
-export const rawNewTask : Task = {
+export const rawNewTask = {
     "payload": {
       "id": 288,
       "class": "Task",
@@ -46,7 +44,7 @@ export const rawNewTask : Task = {
     "type": "TaskCreated"
 };
 
-export const rawUpdatedTask : Task = {
+export const rawUpdatedTask = {
   "payload": {
     "id": 288,
     "class": "Task",

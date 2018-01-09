@@ -1,11 +1,12 @@
 'use strict';
 
-import { Task } from '../models/taskPayload';
+import { Task } from '../models/taskEvent';
+import { Event } from '../models/event';
 
-export function processEvent(event: any) : string {
+export function processEvent(event: Event) : string {
     switch(event.payload.class) {
         case ('Task') : {
-            let taskPayload : Task = event;
+            let taskPayload : Task = <Task>event;
             switch(taskPayload.type) {
                 case ('TaskCreated') : {
                     return processNewTask(taskPayload);

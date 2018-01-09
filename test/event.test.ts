@@ -5,11 +5,11 @@ var expect = chai.expect;
 
 import * as eventController from '../src/controllers/event'
 import * as testData from './testData';
-import { Task } from '../src/models/taskPayload';
+import { Task } from '../src/models/taskEvent';
 
 describe('processPayload with new task', () => {
     it('should return formatted payload', () => {
-        let rawData : Task = testData.rawNewTask;
+        let rawData = testData.rawNewTask;
         let expectedFormattedPayload : string =
                 'A new task has been created.\n' +
                 `Task Name: ${rawData.payload.name}\n` +
@@ -21,7 +21,7 @@ describe('processPayload with new task', () => {
 
 describe('processPayload with updated task', () => {
     it('should return formatted payload', () => {
-        let rawData : Task = testData.rawUpdatedTask;
+        let rawData = testData.rawUpdatedTask;
         let expectedFormattedPayload : string =
                 'A task has been updated.\n' +
                 `Task Name: ${rawData.payload.name}\n` +

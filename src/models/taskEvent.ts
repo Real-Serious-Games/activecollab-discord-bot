@@ -1,3 +1,5 @@
+//TODO: figure out what properties we care about and remove the rest
+
 export interface Task {
     "payload": {
       "id": number,
@@ -9,8 +11,6 @@ export interface Task {
       "completed_on"?: number,
       "completed_by_id"?: number,
       "is_completed": boolean,
-      "comments_count": number,
-      "attachments": Array<any>,
       "labels": Array<string>,
       "is_trashed": boolean,
       "trashed_on"?: number,
@@ -26,15 +26,11 @@ export interface Task {
       "task_number": number,
       "task_list_id": number,
       "position": number,
-      "is_important": false,
+      "is_important": boolean,
       "start_on": null,
       "due_on": null,
       "estimate": number,
       "job_type_id": number,
-      "total_subtasks": number,
-      "completed_subtasks": number,
-      "open_subtasks": number,
-      "created_from_recurring_task_id": number
     },
     "timestamp": number,
     "type": string
