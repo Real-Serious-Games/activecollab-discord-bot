@@ -9,18 +9,11 @@ import * as testData from './testData';
 import { Task } from '../src/models/taskEvent';
 
 describe('POST /api/webhook', () => {
-    it('should return formatted body', (done) => {
-        const expectedFormattedTask: string =
-            'A new task has been created.\n' +
-            `Task Name: ${testData.rawNewTask.payload.name}\n` +
-            `Project Name: ${testData.rawNewTask.payload.project_id}`;
-
+    it('should return status 200', (done) => {
         return request(app).post('/api/webhook')
-            .send(
-                testData.rawNewTask
-            )
+            .send(testData.rawNewTask)
             .end(function(err, res) {
-                expect(res.text).to.equal(expectedFormattedTask);
+                expect(res.status).to.equal(200);
                 done();
       });
   });
