@@ -2,31 +2,34 @@ import * as express from 'express';
 import * as bodyParser from 'body-parser';
 import * as logger from 'morgan';
 import * as config from 'confucious';
-import * as circularJson from 'circular-json';
+
+import { IDiscordController } from './controllers/discord';
 
 // Controllers (route handlers)
+// TODO: App apiController via constructor
 import * as apiController from './controllers/api';
 
-// Setup config
-config.pushJsonFile('./src/config.json');
-config.pushEnv();
-config.pushArgv();
+export class App {
+    public static express: express.Express;
 
-// Create Express server
-const app = express();
+    public constructor(discordController: IDiscordController) {
+        if (App.express != undefined) {
+            return;
+        }
 
-// Express configuration
-app.set('port', config.get('port') || 8080);
-app.use(logger('dev'));
-app.use(bodyParser.json());
-// app.use(function (req, res, next) {
-//     console.log('Request Body:\n' + circularJson.stringify(req.body, undefined, 2));
-//     next();
-// });
+        App.express = express();
 
-import * as discordController from './controllers/discord';
+        // Create Express server
+        const app = express();
 
-const postActiveCollabWebhook = apiController.postActiveCollabWebhookFactory(discordController.sendMessageToHook, discordController.determineChannel);
-app.post('/api/webhook', postActiveCollabWebhook);
+        // Express configuration
+        App.express.set('port', config.get('port') || 8080);
+        App.express.use(logger('dev'));
+        App.express.use(bodyParser.json());
 
-module.exports = app;
+        const postActiveCollabWebhook = apiController
+            .postActiveCollabWebhookFactory(discordController);
+
+        App.express.post('/api/webhook', postActiveCollabWebhook);
+    }
+}

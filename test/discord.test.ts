@@ -1,7 +1,7 @@
 import * as sinon from 'sinon';
-import { TextChannel } from 'discord.js';
+import { TextChannel, Client } from 'discord.js';
 
-import * as discord from '../src/controllers/discord';
+import { DiscordController } from '../src/controllers/discord';
 
 describe('sendMessageToHook', () => {
     it('should return message', () => {
@@ -14,7 +14,17 @@ describe('sendMessageToHook', () => {
             send: channelStub
         };
 
-        discord.sendMessageToHook(message, <TextChannel>channel);
+        const loginStub: sinon.SinonStub = sinon.stub();
+        loginStub.resolves();
+
+        const client: Partial<Client> = {
+            on: sinon.stub(),
+            login: loginStub
+        };
+
+        const discordController: DiscordController =  new DiscordController('', <Client>client);
+
+        discordController.sendMessageToChannel(message, <TextChannel>channel);
         sinon.assert.calledWith(channel.send as sinon.SinonStub, message);
     })
 })
