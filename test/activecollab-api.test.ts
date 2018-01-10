@@ -179,6 +179,56 @@ describe('ActiveCollab API', () => {
         );
     });
 
+    it('sets token header on GET requests', async () => {
+        const expectedToken = 'test token';
+        const request = createRequestStubWithToken(expectedToken);
+
+        const api = await createActiveCollabApi(
+            <activeCollabApi.Request>request,
+            connectionStr,
+            'email',
+            'password'
+        );
+
+        const testRoute = '/api/v1/initial';
+        await api.get(testRoute);
+
+        const expected = {
+            headers: {
+                'X-Angie-AuthApiToken': expectedToken
+            }
+        };
+
+        sinon.assert.calledWithMatch(request.get as sinon.SinonStub, expected);
+    });
+
+    it('sets token header on POST requests', async () => {
+        const expectedToken = 'test token';
+        const request = createRequestStubWithToken(expectedToken);
+
+        const api = await createActiveCollabApi(
+            <activeCollabApi.Request>request,
+            connectionStr,
+            'email',
+            'password'
+        );
+
+        const testRoute = '/api/v1/projects/1/task-lists';
+        await api.post(testRoute, {});
+
+        const expected = {
+            headers: {
+                'X-Angie-AuthApiToken': expectedToken
+            }
+        };
+
+        sinon.assert.calledWithMatch(request.post as sinon.SinonStub, expected);
+    });
+
+    function createRequestStubWithToken(token: string): Partial<activeCollabApi.Request> {
+        return createRequestStub(200, true, 'test intent', token);
+    }
+
     function createRequestOkStub(): Partial<activeCollabApi.Request> {
         return createRequestStub(200, true, 'test intent');
     }
@@ -187,7 +237,8 @@ describe('ActiveCollab API', () => {
         status: number,
         is_ok: boolean,
         intent?: string,
-        message?: string
+        message?: string,
+        token?: string,
     ): Partial<activeCollabApi.Request> {
         return {
             post: sinon.stub().onFirstCall().returns(
@@ -206,10 +257,11 @@ describe('ActiveCollab API', () => {
                     status: status,
                     body: {
                         is_ok: is_ok,
-                        token: 'token'
+                        token: token || 'test token'
                     }
                 })
-            )
+            ),
+            get: sinon.spy()
         };
     }
 });
