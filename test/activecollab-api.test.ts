@@ -11,15 +11,10 @@ describe('ActiveCollab API', () => {
     const loginUrl = 'https://my.activecollab.com/api/v1/external/login';
     const connectionStr = 'https://app.activecollab.com/1';
 
-    it('should POST to correct URL for login', () => {
+    it('should POST to correct URL for login', async () => {
         const request = createRequestOkStub();
 
-        createActiveCollabApi(
-            <activeCollabApi.Request>request,
-            'connection',
-            'email',
-            'password'
-        );
+        await createDefaultTestObject(request);
 
         const expected = {
             url: loginUrl
@@ -28,15 +23,10 @@ describe('ActiveCollab API', () => {
         sinon.assert.calledWithMatch(request.post as sinon.SinonStub, expected);
     });
 
-    it('sets content-type header to application/json on login', () => {
+    it('sets content-type header to application/json on login', async () => {
         const request = createRequestOkStub();
 
-        createActiveCollabApi(
-            <activeCollabApi.Request>request,
-            'connection',
-            'email',
-            'password'
-        );
+        await createDefaultTestObject(request);
 
         const expected = {
             headers: {
@@ -47,13 +37,13 @@ describe('ActiveCollab API', () => {
         sinon.assert.calledWithMatch(request.post as sinon.SinonStub, expected);
     });
 
-    it('uses specified username and password', () => {
+    it('uses specified username and password', async () => {
         const request = createRequestOkStub();
 
         const testEmail = 'someone@example.com';
         const testPassword = 'Easy to remember, hard to guess';
 
-        createActiveCollabApi(
+        await createActiveCollabApi(
             <activeCollabApi.Request>request,
             'connection',
             testEmail,
@@ -76,16 +66,10 @@ describe('ActiveCollab API', () => {
         const expectedMessage = 'Invalid password.';
         const request = createRequestStub(500, false, undefined, expectedMessage);
 
-        await expect(
-            createActiveCollabApi(
-                <activeCollabApi.Request>request,
-                'connection',
-                'someone@example.com',
-                'password'
-            )
-        ).rejects.toMatchObject(
-            new Error('Error 500 returned logging in: Invalid password.')
-        );
+        await expect(createDefaultTestObject(request))
+            .rejects.toMatchObject(
+                new Error('Error 500 returned logging in: Invalid password.')
+            );
     });
 
     it('should POST to correct URL to get token', async () => {
@@ -94,12 +78,7 @@ describe('ActiveCollab API', () => {
         const issueTokenUrl = connectionStr
             + '/api/v1/?format=json&path_info=%2Fissue-token-intent';
 
-        await createActiveCollabApi(
-            <activeCollabApi.Request>request,
-            connectionStr,
-            'email',
-            'password'
-        );
+        await createDefaultTestObject(request);
 
         const expected = {
             url: issueTokenUrl
@@ -113,12 +92,7 @@ describe('ActiveCollab API', () => {
 
         const request = createRequestStub(200, true, testIntent);
 
-        await createActiveCollabApi(
-            <activeCollabApi.Request>request,
-            connectionStr,
-            'email',
-            'password'
-        );
+        await createDefaultTestObject(request);
 
         const expected = {
             json: {
@@ -134,12 +108,7 @@ describe('ActiveCollab API', () => {
     it('sets content-type header when requesting token', async () => {
         const request = createRequestOkStub();
 
-        await createActiveCollabApi(
-            <activeCollabApi.Request>request,
-            connectionStr,
-            'email',
-            'password'
-        );
+        await createDefaultTestObject(request);
 
         const expected = {
             headers: {
@@ -167,28 +136,17 @@ describe('ActiveCollab API', () => {
             }))
         };
 
-        await expect(
-            createActiveCollabApi(
-                <activeCollabApi.Request>request,
-                'connection',
-                'someone@example.com',
-                'password'
-            )
-        ).rejects.toMatchObject(
-            new Error('Error 500 returned requesting token.')
-        );
+        await expect(createDefaultTestObject(request))
+            .rejects.toMatchObject(
+                new Error('Error 500 returned requesting token.')
+            );
     });
 
     it('sets token header on GET requests', async () => {
         const expectedToken = 'test token';
         const request = createRequestStubWithToken(expectedToken);
 
-        const api = await createActiveCollabApi(
-            <activeCollabApi.Request>request,
-            connectionStr,
-            'email',
-            'password'
-        );
+        const api = await createDefaultTestObject(request);
 
         const testRoute = '/api/v1/initial';
         await api.get(testRoute);
@@ -206,12 +164,7 @@ describe('ActiveCollab API', () => {
         const expectedToken = 'test token';
         const request = createRequestStubWithToken(expectedToken);
 
-        const api = await createActiveCollabApi(
-            <activeCollabApi.Request>request,
-            connectionStr,
-            'email',
-            'password'
-        );
+        const api = await createDefaultTestObject(request);
 
         const testRoute = '/api/v1/projects/1/task-lists';
         await api.post(testRoute, {});
@@ -224,6 +177,15 @@ describe('ActiveCollab API', () => {
 
         sinon.assert.calledWithMatch(request.post as sinon.SinonStub, expected);
     });
+
+    function createDefaultTestObject(request: Partial<activeCollabApi.Request>) {
+        return createActiveCollabApi(
+            <activeCollabApi.Request>request,
+            connectionStr,
+            'email',
+            'password'
+        );
+    }
 
     function createRequestStubWithToken(token: string): Partial<activeCollabApi.Request> {
         return createRequestStub(200, true, 'test intent', token);
