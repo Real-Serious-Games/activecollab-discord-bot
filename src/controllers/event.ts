@@ -5,6 +5,7 @@ import { Event } from '../models/event';
 import { assert } from 'console';
 
 export function processEvent(event: Event): string {
+    assert(event, 'Cannot process with no event.');
     assert(event.payload, 'Cannot process event with no payload.');
     assert(
         event.payload.class,

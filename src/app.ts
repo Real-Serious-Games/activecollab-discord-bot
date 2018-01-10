@@ -6,8 +6,6 @@ import * as circularJson from 'circular-json';
 
 // Controllers (route handlers)
 import * as apiController from './controllers/api';
-import * as discordController from './controllers/discord';
-import { SendMessageToHook, DetermineWebhookClient } from './controllers/discord';
 
 // Setup config
 config.pushJsonFile('./src/config.json');
@@ -26,7 +24,9 @@ app.use(bodyParser.json());
 //     next();
 // });
 
-const postActiveCollabWebhook = apiController.postActiveCollabWebhookFactory(discordController.sendMessageToHook, discordController.determineWebhookClient);
+import * as discordController from './controllers/discord';
+
+const postActiveCollabWebhook = apiController.postActiveCollabWebhookFactory(discordController.sendMessageToHook, discordController.determineChannel);
 app.post('/api/webhook', postActiveCollabWebhook);
 
 module.exports = app;

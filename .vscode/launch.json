@@ -13,6 +13,22 @@
             "outFiles": [
                 "${workspaceFolder}/dist/**/*.js"
             ]
-        }
+        },
+        {
+          "name": "Jest",
+          "type": "node",
+          "request": "launch",
+          "env": { "NODE_ENV": "test" },
+          "cwd": "${workspaceRoot}",
+          "program": "${workspaceRoot}/node_modules/jest/bin/jest.js",
+          "stopOnEntry": false,
+          "args": [
+
+          ],
+          "runtimeArgs": ["--nolazy"],
+          "console": "internalConsole",
+          "sourceMaps": false,
+          "internalConsoleOptions": "openOnSessionStart"
+      }
     ]
 }

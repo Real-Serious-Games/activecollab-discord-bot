@@ -4,17 +4,23 @@ import { Response, Request } from 'express';
 import { WebhookClient } from 'discord.js';
 
 import * as eventController from './event';
-import { SendMessageToHook, DetermineWebhookClient } from './discord';
+import { SendMessageToHook, DetermineChannel } from './discord';
 
 type Route = (req: Request, res: Response) => void;
 
-export function postActiveCollabWebhookFactory(sendMessageToHook: SendMessageToHook, determineWebhookClient: DetermineWebhookClient): Route {
-    return postActiveCollabWebhook.bind(undefined, sendMessageToHook, determineWebhookClient);
+export function postActiveCollabWebhookFactory(
+    sendMessageToHook: SendMessageToHook, 
+    determineChannel: DetermineChannel): Route {
+        return postActiveCollabWebhook.bind(undefined, sendMessageToHook, determineChannel);
 }
 
-export function postActiveCollabWebhook(sendMessageToHook: SendMessageToHook, determineWebhookClient: DetermineWebhookClient, req: Request, res: Response): void {
-    const processed = eventController.processEvent(req.body);
-    sendMessageToHook(processed, determineWebhookClient());
+export function postActiveCollabWebhook(
+    sendMessageToHook: SendMessageToHook,
+    determineChannel: DetermineChannel,
+    req: Request,
+    res: Response): void {
+        const processed = eventController.processEvent(req.body);
+        sendMessageToHook(processed, determineChannel());
 
-    res.status(200);
+        res.send();
 }
