@@ -23,20 +23,6 @@ describe('ActiveCollab API', () => {
         sinon.assert.calledWithMatch(request.post as sinon.SinonStub, expected);
     });
 
-    it('sets content-type header to application/json on login', async () => {
-        const request = createRequestOkStub();
-
-        await createDefaultTestObject(request);
-
-        const expected = {
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        };
-
-        sinon.assert.calledWithMatch(request.post as sinon.SinonStub, expected);
-    });
-
     it('uses specified username and password', async () => {
         const request = createRequestOkStub();
 
@@ -99,20 +85,6 @@ describe('ActiveCollab API', () => {
                 intent: testIntent,
                 client_name: 'Discord Integration',
                 client_vendor: 'Real Serious Games'
-            }
-        };
-
-        sinon.assert.calledWithMatch(request.post as sinon.SinonStub, expected);
-    });
-
-    it('sets content-type header when requesting token', async () => {
-        const request = createRequestOkStub();
-
-        await createDefaultTestObject(request);
-
-        const expected = {
-            headers: {
-                'Content-Type': 'application/json'
             }
         };
 

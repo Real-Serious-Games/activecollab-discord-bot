@@ -31,8 +31,7 @@ function post(
     return request.post({
         url: connectionStr + route,
         headers: {
-            'X-Angie-AuthApiToken': token,
-            'Content-Type': 'application/json'
+            'X-Angie-AuthApiToken': token
         },
         json: body
     });
@@ -48,9 +47,6 @@ async function login(
 
     const login = await request.post({
         url: 'https://my.activecollab.com/api/v1/external/login',
-        headers: {
-            'Content-Type': 'application/json'
-        },
         json: {
             email: email,
             password: password
@@ -71,9 +67,6 @@ async function login(
 
     const issueToken = await request.post({
         url: connectionStr + '/api/v1/?format=json&path_info=%2Fissue-token-intent',
-        headers: {
-            'Content-Type': 'application/json'
-        },
         json: {
             intent: login.body.user.intent,
             client_name: 'Discord Integration',
