@@ -16,7 +16,8 @@ function get(
         url: connectionStr + route,
         headers: {
             'X-Angie-AuthApiToken': token
-        }
+        },
+        json: true
     });
 }
 
@@ -33,7 +34,7 @@ function post(
             'X-Angie-AuthApiToken': token,
             'Content-Type': 'application/json'
         },
-        body: body
+        json: body
     });
 }
 
@@ -53,12 +54,13 @@ async function login(
         json: {
             email: email,
             password: password
-        }
+        },
+        resolveWithFullResponse: true
     });
 
-    if (login.status !== 200 || !login.body || !login.body.is_ok) {
+    if (login.statusCode !== 200 || !login.body || !login.body.is_ok) {
         if (login.body && login.body.message) {
-            throw new Error(`Error ${login.status} returned logging in: ${login.body.message}`);
+            throw new Error(`Error ${login.statusCode} returned logging in: ${login.body.message}`);
         }
         throw new Error(`Recieved response code on login ${login.status}`);
     }
@@ -76,11 +78,12 @@ async function login(
             intent: login.body.user.intent,
             client_name: 'Discord Integration',
             client_vendor: 'Real Serious Games'
-        }
+        },
+        resolveWithFullResponse: true
     });
 
-    if (issueToken.status !== 200 || !issueToken.body || !issueToken.body.token) {
-        throw new Error(`Error ${issueToken.status} returned requesting token.`);
+    if (issueToken.statusCode !== 200 || !issueToken.body || !issueToken.body.token) {
+        throw new Error(`Error ${issueToken.statusCode} returned requesting token.`);
     }
 
     return issueToken.body.token;

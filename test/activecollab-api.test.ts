@@ -124,7 +124,7 @@ describe('ActiveCollab API', () => {
 
         const request: Partial<activeCollabApi.Request> = {
             post: sinon.stub().onFirstCall().returns(Promise.resolve({
-                status: 200,
+                statusCode: 200,
                 body: {
                     is_ok: true,
                     user: {
@@ -132,7 +132,7 @@ describe('ActiveCollab API', () => {
                     }
                 }
             })).onSecondCall().returns(Promise.resolve({
-                status: 500
+                statusCode: 500
             }))
         };
 
@@ -205,7 +205,7 @@ describe('ActiveCollab API', () => {
         return {
             post: sinon.stub().onFirstCall().returns(
                 Promise.resolve({
-                    status: status,
+                    statusCode: status,
                     body: {
                         is_ok: is_ok,
                         user: {
@@ -216,7 +216,7 @@ describe('ActiveCollab API', () => {
                 })
             ).onSecondCall().returns(
                 Promise.resolve({
-                    status: status,
+                    statusCode: status,
                     body: {
                         is_ok: is_ok,
                         token: token || 'test token'
