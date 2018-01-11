@@ -9,6 +9,7 @@ const expect = chai.expect;
 import { setupApp } from '../src/app';
 import * as testData from './testData';
 import { Task } from '../src/models/taskEvent';
+import * as apiController from '../src/controllers/api';
 import { IDiscordController, SendMessageToChannel, DetermineChannel } from '../src/controllers/discord';
 
 
@@ -24,7 +25,7 @@ describe('POST /api/webhook', () => {
 
         const app = express();
 
-        setupApp(app, discordControllerStub);
+        setupApp(app, discordControllerStub, apiController);
         
         return request(app).post('/api/webhook')
             .send(testData.rawNewTask)

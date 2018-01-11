@@ -4,14 +4,12 @@ import * as logger from 'morgan';
 import * as config from 'confucious';
 
 import { IDiscordController } from './controllers/discord';
-
-// Controllers (route handlers)
-// TODO: App apiController via constructor
-import * as apiController from './controllers/api';
+import { IApiController } from './controllers/api';
 
 export function setupApp (
     express: express.Express,
-    discordController: IDiscordController
+    discordController: IDiscordController,
+    apiController: IApiController
 ): void {
     // Express configuration
     express.set('port', config.get('port') || 8080);
