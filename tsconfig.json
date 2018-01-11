@@ -3,6 +3,7 @@
         "module": "commonjs",
         "target": "es2016",
         "strict": true,
+        "alwaysStrict": true,
         "noImplicitReturns": true,
         "moduleResolution": "node",
         "sourceMap": true,

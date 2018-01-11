@@ -1,5 +1,3 @@
-'use strict';
-
 import { Response, Request } from 'express';
 
 import * as eventController from './event';
