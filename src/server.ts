@@ -2,20 +2,23 @@
 
 import * as config from 'confucious';
 import * as discord from 'discord.js';
+import * as express from 'express';
 
-import { App } from './app';
+import { setupApp } from './app';
 import { DiscordController } from './controllers/discord';
 
 // Setup config
-config.pushJsonFile('./src/config.json');
+config.pushJsonFile('./config.json');
 config.pushEnv();
 config.pushArgv();
 
-const discordController = new DiscordController(config.get('token'), new discord.Client());
-const app =  new App(discordController);
+const app = express();
 
-const server = App.express.listen(App.express.get('port'), () => {
-    console.log(('  App is running at http://localhost:%d in %s mode'), App.express.get('port'), App.express.get('env'));
+const discordController = new DiscordController(config.get('discordBotToken'), new discord.Client());
+setupApp(app, discordController);
+
+const server = app.listen(app.get('port'), () => {
+    console.log('  App is running at http://localhost:%d in %s mode', app.get('port'), app.get('env'));
     console.log('  Press CTRL-C to stop\n');
 });
 
