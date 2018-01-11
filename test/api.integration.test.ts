@@ -1,26 +1,36 @@
 import * as request from 'supertest';
 import * as sinon from 'sinon';
+import { Client } from 'discord.js';
+import * as express from 'express';
 
 const chai = require('chai');
 const expect = chai.expect;
 
-import * as app from '../src/app';
+import { setupApp } from '../src/app';
 import * as testData from './testData';
 import { Task } from '../src/models/taskEvent';
+import * as apiController from '../src/controllers/api';
+import { IDiscordController, SendMessageToChannel, DetermineChannel } from '../src/controllers/discord';
+
 
 describe('POST /api/webhook', () => {
-    it('should return formatted body', (done) => {
-        const expectedFormattedTask: string =
-            'A new task has been created.\n' +
-            `Task Name: ${testData.rawNewTask.payload.name}\n` +
-            `Project Name: ${testData.rawNewTask.payload.project_id}`;
+    it('should return status 200', (done) => {
+        const client: Partial<Client> = {
+        };
 
+        const discordControllerStub: IDiscordController = {
+            sendMessageToChannel: <SendMessageToChannel>sinon.stub(),
+            determineChannel: <DetermineChannel>sinon.stub()
+        };
+
+        const app = express();
+
+        setupApp(app, discordControllerStub, apiController);
+        
         return request(app).post('/api/webhook')
-            .send(
-                testData.rawNewTask
-            )
+            .send(testData.rawNewTask)
             .end(function(err, res) {
-                expect(res.text).to.equal(expectedFormattedTask);
+                expect(res.status).to.equal(200);
                 done();
       });
   });

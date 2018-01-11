@@ -1,25 +1,35 @@
 import * as sinon from 'sinon';
 import { Response, Request } from 'express';
+import { Client } from 'discord.js';
 
+import { IDiscordController, SendMessageToChannel, DetermineChannel } from '../src/controllers/discord';
 import * as apiController from '../src/controllers/api';
 import * as testData from './testData';
 
 describe('postActiveCollabWebhook', () => {
-    it('should return formatted body', () => {
+    it('should call send', () => {
         const body = testData.rawNewTask;
+
         const req: Partial<Request> = {
             body: body
         };
+
         const res: Partial<Response> = {
             send: sinon.stub()
         };
 
-        const expectedFormattedPayload: string =
-                'A new task has been created.\n' +
-                `Task Name: ${testData.rawNewTask.payload.name}\n` +
-                `Project Name: ${testData.rawNewTask.payload.project_id}`;
+        const client: Partial<Client> = {
+        };
 
-        apiController.postActiveCollabWebhook(<Request>req, <Response>res);
-        sinon.assert.calledWith(res.send as sinon.SinonStub, expectedFormattedPayload);
+
+        const discordControllerStub: IDiscordController = {
+            sendMessageToChannel: <SendMessageToChannel>sinon.stub(),
+            determineChannel: <DetermineChannel>sinon.stub()
+        };
+
+        const postActiveCollabWebhook = apiController.postActiveCollabWebhookFactory(discordControllerStub);
+
+        postActiveCollabWebhook(<Request>req, <Response>res);
+        sinon.assert.calledOnce(res.send as sinon.SinonStub);
     });
 });

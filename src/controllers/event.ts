@@ -1,5 +1,3 @@
-'use strict';
-
 import { Task } from '../models/taskEvent';
 import { Event } from '../models/event';
 import { assert } from 'console';

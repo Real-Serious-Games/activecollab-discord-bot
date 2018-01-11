@@ -3,21 +3,21 @@ import * as bodyParser from 'body-parser';
 import * as logger from 'morgan';
 import * as config from 'confucious';
 
-// Controllers (route handlers)
-import * as apiController from './controllers/api';
+import { IDiscordController } from './controllers/discord';
+import { IApiController } from './controllers/api';
 
-// Setup config
-config.pushEnv();
-config.pushArgv();
+export function setupApp (
+    express: express.Express,
+    discordController: IDiscordController,
+    apiController: IApiController
+): void {
+    // Express configuration
+    express.set('port', config.get('port') || 8080);
+    express.use(logger('dev'));
+    express.use(bodyParser.json());
 
-// Create Express server
-const app = express();
+    const postActiveCollabWebhook = apiController
+        .postActiveCollabWebhookFactory(discordController);
 
-// Express configuration
-app.set('port', config.get('port') || 8080);
-app.use(bodyParser.json());
-app.use(logger('dev'));
-
-app.post('/api/webhook', apiController.postActiveCollabWebhook);
-
-module.exports = app;
+    express.post('/api/webhook', postActiveCollabWebhook);
+}

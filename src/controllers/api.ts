@@ -1,9 +1,28 @@
 import { Response, Request } from 'express';
+import { WebhookClient } from 'discord.js';
 
 import * as eventController from './event';
+import { IDiscordController, DiscordController } from '../controllers/discord';
 
-export function postActiveCollabWebhook(req: Request, res: Response): void {
-    const processed = eventController.processEvent(req.body);
+type Route = (req: Request, res: Response) => void;
 
-    processed.map(p => res.send(p));
+export type PostActiveCollabWebhookFactory = (discordController: IDiscordController) => Route;
+
+export interface IApiController {
+    postActiveCollabWebhookFactory: PostActiveCollabWebhookFactory;
+}
+
+export function postActiveCollabWebhookFactory(
+    discordController: IDiscordController): Route {
+        return postActiveCollabWebhook.bind(undefined, discordController);
+}
+
+function postActiveCollabWebhook(
+    discordController: IDiscordController,
+    req: Request,
+    res: Response): void {
+        const processed = eventController.processEvent(req.body);
+        discordController.sendMessageToChannel(processed.value, discordController.determineChannel());
+
+        res.send();
 }
