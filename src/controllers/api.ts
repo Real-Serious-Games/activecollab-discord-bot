@@ -18,7 +18,7 @@ export function postActiveCollabWebhook(
     req: Request,
     res: Response): void {
         const processed = eventController.processEvent(req.body);
-        discordController.sendMessageToChannel(processed, discordController.determineChannel());
+        discordController.sendMessageToChannel(processed.value, discordController.determineChannel());
 
         res.send();
 }

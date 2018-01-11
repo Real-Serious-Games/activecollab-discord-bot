@@ -9,7 +9,7 @@ config.pushJsonFile('./src/config.json');
 config.pushEnv();
 config.pushArgv();
 
-const discordController = new DiscordController(config.get('token'), new discord.Client())
+const discordController = new DiscordController(config.get('token'), new discord.Client());
 const app =  new App(discordController);
 
 const server = App.express.listen(App.express.get('port'), () => {

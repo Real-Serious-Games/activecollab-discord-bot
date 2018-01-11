@@ -1,7 +1,8 @@
 import * as sinon from 'sinon';
 import { Response, Request } from 'express';
+import { Client } from 'discord.js';
 
-import { IDiscordController } from '../src/controllers/discord';
+import { IDiscordController, SendMessageToChannel, DetermineChannel } from '../src/controllers/discord';
 import * as apiController from '../src/controllers/api';
 import * as testData from './testData';
 
@@ -17,9 +18,14 @@ describe('postActiveCollabWebhook', () => {
             send: sinon.stub()
         };
 
+        const client: Partial<Client> = {
+        };
+
+
         const discordControllerStub: IDiscordController = {
-            sendMessageToChannel: sinon.stub(),
-            determineChannel: sinon.stub()
+            client: <Client>client,
+            sendMessageToChannel: <SendMessageToChannel>sinon.stub(),
+            determineChannel: <DetermineChannel>sinon.stub()
         };
 
         apiController.postActiveCollabWebhook(discordControllerStub, <Request>req, <Response>res);

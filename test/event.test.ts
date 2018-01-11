@@ -15,7 +15,9 @@ describe('processPayload with new task', () => {
                 `Task Name: ${rawData.payload.name}\n` +
                 `Project Name: ${rawData.payload.project_id}`;
 
-        expect(eventController.processEvent(rawData)).to.equal(expectedFormattedPayload);
+        const actualValue = eventController.processEvent(rawData)
+            .getOrElseValue(undefined);
+        expect(actualValue).to.equal(expectedFormattedPayload);
     });
 });
 
@@ -27,7 +29,9 @@ describe('processPayload with updated task', () => {
                 `Task Name: ${rawData.payload.name}\n` +
                 `Project Name: ${rawData.payload.project_id}`;
 
-        expect(eventController.processEvent(rawData)).to.equal(expectedFormattedPayload);
+        const actualValue = eventController.processEvent(rawData)
+            .getOrElseValue(undefined);
+        expect(actualValue).to.equal(expectedFormattedPayload);
     });
 });
 

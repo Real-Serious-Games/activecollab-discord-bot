@@ -3,12 +3,12 @@ import * as config from 'confucious';
 import { assert } from 'console';
 import { AssertionError } from 'assert';
 
-export type SendMessageToHook = (message: string, channel: discord.TextChannel) => any;
+export type SendMessageToChannel = (message: string, channel: discord.TextChannel) => any;
 export type DetermineChannel = () => discord.TextChannel;
 
 export interface IDiscordController {
     client: discord.Client;
-    sendMessageToChannel: SendMessageToHook;
+    sendMessageToChannel: SendMessageToChannel;
     determineChannel: DetermineChannel;
 }
 

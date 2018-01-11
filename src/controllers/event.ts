@@ -3,9 +3,9 @@
 import { Task } from '../models/taskEvent';
 import { Event } from '../models/event';
 import { assert } from 'console';
+import { Either, left, right } from 'fp-ts/lib/Either';
 
-export function processEvent(event: Event): string {
-    assert(event, 'Cannot process with no event.');
+export function processEvent(event: Event): Either<string, string> {
     assert(event.payload, 'Cannot process event with no payload.');
     assert(
         event.payload.class,
@@ -13,21 +13,24 @@ export function processEvent(event: Event): string {
     );
 
     switch (event.payload.class) {
-        case ('Task') : {
+        case 'Task': {
             const taskPayload: Task = <Task>event;
             switch (taskPayload.type) {
-                case ('TaskCreated') : {
-                    return processNewTask(taskPayload);
-                }
-                case ('TaskUpdated') : {
-                    return processUpdatedTask(taskPayload);
-                }
+                case 'TaskCreated':
+                    return right(processNewTask(taskPayload));
+
+                case 'TaskUpdated':
+                    return right(processUpdatedTask(taskPayload));
+
                 default:
-                    return `Received Task event with unknown payload type ${taskPayload.type}`;
+                    return left(
+                        'Received Task event with unknown payload type ' +
+                        taskPayload.type
+                    );
             }
         }
         default:
-            return `Received event of unknown type ${event.payload.class}`;
+            return left(`Received event of unknown type ${event.payload.class}`);
     }
 }
 
