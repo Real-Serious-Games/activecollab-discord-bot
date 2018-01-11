@@ -1,11 +1,12 @@
 {
     "compilerOptions": {
         "module": "commonjs",
-        "target": "es6",
-        "noImplicitAny": true,
+        "target": "es2016",
+        "strict": true,
+        "alwaysStrict": true,
+        "noImplicitReturns": true,
         "moduleResolution": "node",
         "sourceMap": true,
-        "strictNullChecks": true,
         "outDir": "dist",
         "baseUrl": ".",
         "paths": {
