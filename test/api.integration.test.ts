@@ -1,5 +1,3 @@
-'use strict';
-
 import * as request from 'supertest';
 import * as sinon from 'sinon';
 import { Client } from 'discord.js';

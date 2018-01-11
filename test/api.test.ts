@@ -1,5 +1,3 @@
-'use strict';
-
 import * as sinon from 'sinon';
 import { Response, Request } from 'express';
 import { Client } from 'discord.js';
