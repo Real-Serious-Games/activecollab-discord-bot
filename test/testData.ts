@@ -93,3 +93,28 @@ export const rawUpdatedTask = {
   "timestamp": 1515388620,
   "type": "TaskUpdated"
 }
+
+export const rawNewComment  = {
+  "payload": {
+    "id": 32,
+    "class": "Comment",
+    "url_path": "\/comments\/32",
+    "attachments": [
+      
+    ],
+    "is_trashed": false,
+    "trashed_on": null,
+    "trashed_by_id": 0,
+    "parent_type": "Task",
+    "parent_id": 311,
+    "body": "Add comment",
+    "body_formatted": "Add comment",
+    "body_plain_text": "Add comment",
+    "created_on": 1515648058,
+    "created_by_id": 18,
+    "updated_on": 1515648058,
+    "updated_by_id": 18
+  },
+  "timestamp": 1515648058,
+  "type": "CommentCreated"
+}
