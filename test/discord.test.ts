@@ -1,3 +1,5 @@
+'use strict';
+
 import * as sinon from 'sinon';
 import { TextChannel, Client } from 'discord.js';
 
@@ -19,7 +21,7 @@ describe('DiscordController', () => {
 
         expect(() => new DiscordController('', <Client>client))
             .to
-            .throw('Attempting to create a new DiscordController when one already exists')
+            .throw('Attempting to create a new DiscordController when one already exists');
     }),
 
     describe('sendMessageToChannel', () => {

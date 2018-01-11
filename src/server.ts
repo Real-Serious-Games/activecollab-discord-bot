@@ -1,3 +1,5 @@
+'use strict';
+
 import * as config from 'confucious';
 import * as discord from 'discord.js';
 

@@ -1,3 +1,5 @@
+'use strict';
+
 import { Response, Request } from 'express';
 
 const chai = require('chai');
