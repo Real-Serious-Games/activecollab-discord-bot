@@ -7,11 +7,9 @@ import { IDiscordController, DiscordController } from '../controllers/discord';
 type Route = (req: Request, res: Response) => void;
 
 export type PostActiveCollabWebhookFactory = (discordController: IDiscordController) => Route;
-export type PostActiveCollabWebhook = (discordController: IDiscordController, req: Request, res: Response) => void;
 
 export interface IApiController {
     postActiveCollabWebhookFactory: PostActiveCollabWebhookFactory;
-    postActiveCollabWebhook: PostActiveCollabWebhook;
 }
 
 export function postActiveCollabWebhookFactory(
@@ -19,7 +17,7 @@ export function postActiveCollabWebhookFactory(
         return postActiveCollabWebhook.bind(undefined, discordController);
 }
 
-export function postActiveCollabWebhook(
+function postActiveCollabWebhook(
     discordController: IDiscordController,
     req: Request,
     res: Response): void {
