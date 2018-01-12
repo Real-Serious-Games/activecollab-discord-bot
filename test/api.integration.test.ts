@@ -2,6 +2,7 @@ import * as request from 'supertest';
 import * as sinon from 'sinon';
 import { Client } from 'discord.js';
 import * as express from 'express';
+import { Logger } from 'structured-log/src';
 
 const chai = require('chai');
 const expect = chai.expect;
@@ -15,8 +16,7 @@ import { IDiscordController, SendMessageToChannel, DetermineChannel } from '../s
 
 describe('POST /api/webhook', () => {
     it('should return status 200', (done) => {
-        const client: Partial<Client> = {
-        };
+        const client: Partial<Client> = { };
 
         const discordControllerStub: IDiscordController = {
             sendMessageToChannel: <SendMessageToChannel>sinon.stub(),
@@ -25,7 +25,9 @@ describe('POST /api/webhook', () => {
 
         const app = express();
 
-        setupApp(app, discordControllerStub, apiController);
+        const logger: Partial<Logger> = { };
+
+        setupApp(app, <Logger>logger, discordControllerStub, apiController);
         
         return request(app).post('/api/webhook')
             .send(testData.rawNewTask)

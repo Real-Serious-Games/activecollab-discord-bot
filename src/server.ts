@@ -3,6 +3,7 @@
 import * as config from 'confucious';
 import * as discord from 'discord.js';
 import * as express from 'express';
+import * as structuredLog from 'structured-log/src';
 
 import { setupApp } from './app';
 import { DiscordController } from './controllers/discord';
@@ -15,12 +16,24 @@ config.pushArgv();
 
 const app = express();
 
-const discordController = new DiscordController(config.get('discordBotToken'), new discord.Client());
-setupApp(app, discordController, apiController);
+const logger = structuredLog
+    .configure()
+    .writeTo(new structuredLog.ConsoleSink())
+    .create();
+
+const discordController = new DiscordController(
+    config.get('discordBotToken'),
+    new discord.Client()
+);
+
+setupApp(app, logger, discordController, apiController);
 
 const server = app.listen(app.get('port'), () => {
-    console.log('  App is running at http://localhost:%d in %s mode', app.get('port'), app.get('env'));
-    console.log('  Press CTRL-C to stop\n');
+    logger.info('  App is running at http://localhost:{port} in {env} mode',
+        app.get('port'), app.get('env')
+    );
+
+    logger.info('  Press CTRL-C to stop\n');
 });
 
 export = server;

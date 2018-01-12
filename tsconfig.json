@@ -4,7 +4,7 @@
         "target": "es2016",
         "strict": true,
         "alwaysStrict": true,
-        "noImplicitReturns": true,
+        "noImplicitReturns": false,
         "moduleResolution": "node",
         "sourceMap": true,
         "outDir": "dist",

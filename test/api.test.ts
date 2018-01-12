@@ -1,6 +1,7 @@
 import * as sinon from 'sinon';
 import { Response, Request } from 'express';
 import { Client } from 'discord.js';
+import { Logger } from 'structured-log/src';
 
 import { IDiscordController, SendMessageToChannel, DetermineChannel } from '../src/controllers/discord';
 import * as apiController from '../src/controllers/api';
@@ -21,13 +22,15 @@ describe('postActiveCollabWebhook', () => {
         const client: Partial<Client> = {
         };
 
+        const logger: Partial<Logger> = { };
 
         const discordControllerStub: IDiscordController = {
             sendMessageToChannel: <SendMessageToChannel>sinon.stub(),
             determineChannel: <DetermineChannel>sinon.stub()
         };
 
-        const postActiveCollabWebhook = apiController.postActiveCollabWebhookFactory(discordControllerStub);
+        const postActiveCollabWebhook = 
+            apiController.postActiveCollabWebhookFactory(discordControllerStub, <Logger>logger);
 
         postActiveCollabWebhook(<Request>req, <Response>res);
         sinon.assert.calledOnce(res.send as sinon.SinonStub);
