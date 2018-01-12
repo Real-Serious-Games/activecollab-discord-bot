@@ -1,12 +1,11 @@
-'use strict';
-
 import * as config from 'confucious';
 import * as discord from 'discord.js';
 import * as express from 'express';
 
 import { setupApp } from './app';
 import { DiscordController } from './controllers/discord';
-import * as apiController from './controllers/api';
+import { ApiController } from './controllers/api';
+import { disconnect } from 'cluster';
 
 // Setup config
 config.pushJsonFile('./config.json');
@@ -16,6 +15,8 @@ config.pushArgv();
 const app = express();
 
 const discordController = new DiscordController(config.get('discordBotToken'), new discord.Client());
+const apiController = new ApiController(discordController, config.get('webhookSecret'));
+
 setupApp(app, discordController, apiController);
 
 const server = app.listen(app.get('port'), () => {
