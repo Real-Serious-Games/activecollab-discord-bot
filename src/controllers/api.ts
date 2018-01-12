@@ -31,5 +31,5 @@ function postActiveCollabWebhook(
         processed.map(value => discordController.sendMessageToChannel(value, discordController.determineChannel()));
         processed.mapLeft(value => logger.warn('Issue processing event: {value}', value));
 
-        res.send();
+        res.sendStatus(200);
 }
