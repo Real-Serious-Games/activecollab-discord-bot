@@ -59,11 +59,43 @@ describe('processEvent', () => {
                 const rawData = testData.rawNewComment;
                 rawData.type = undefined;
 
-                const expectedFormattedPayload: string =
-                        '*A new comment has been added.*\n' +
-                        `**Comment:** \`${rawData.payload.body}\`\n` +
-                        `**${rawData.payload.parent_type}:** ${rawData.payload.parent_id}\n` +
+                const actualValue = eventController.processEvent(rawData);
+        
+                expect(actualValue.isLeft())
+                    .is
+                    .true;
+
+                expect(actualValue.isRight())
+                    .is
+                    .false;
+
+                expect(actualValue.value)
+                    .to
+                    .equal('Received Comment Event with unknown payload type: undefined');
+            });
+        });
+    });
+
+    describe('with project', () => {
+        describe('with new project', () => {
+            it('should return formatted project event', () => {
+                const rawData = testData.rawNewProject;
+                const expectedFormattedEvent: string =
+                        '*A new project has been created.*\n' +
+                        `**Project:** \`${rawData.payload.name}\`\n` +
+                        `**Company:** ${rawData.payload.company_id}\n` +
                         `**Author:** ${rawData.payload.created_by_id}\n`;
+        
+                const actualValue = eventController.processEvent(rawData)
+                    .getOrElseValue(undefined);
+                expect(actualValue).to.equal(expectedFormattedEvent);
+            });
+        });
+    
+        describe('with unknown project type', () => {
+            it('should return error value', () => {
+                const rawData = testData.rawNewProject;
+                rawData.type = undefined;
 
                 const actualValue = eventController.processEvent(rawData);
         
@@ -77,7 +109,7 @@ describe('processEvent', () => {
 
                 expect(actualValue.value)
                     .to
-                    .equal('Received Comment event with unknown payload type: undefined');
+                    .equal('Received Project Event with unknown payload type: undefined');
             });
         });
     });

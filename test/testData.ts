@@ -94,7 +94,7 @@ export const rawUpdatedTask = {
   "type": "TaskUpdated"
 }
 
-export const rawNewComment  = {
+export const rawNewComment = {
   "payload": {
     "id": 32,
     "class": "Comment",
@@ -117,4 +117,50 @@ export const rawNewComment  = {
   },
   "timestamp": 1515648058,
   "type": "CommentCreated"
+}
+
+export const rawNewProject = {
+  "payload": {
+    "id": 24,
+    "class": "Project",
+    "url_path": "\/projects\/24",
+    "name": "TestProject",
+    "completed_on": null,
+    "completed_by_id": null,
+    "is_completed": false,
+    "members": [
+      5,
+      18
+    ],
+    "category_id": 0,
+    "label_id": 0,
+    "is_trashed": false,
+    "trashed_on": null,
+    "trashed_by_id": 0,
+    "created_on": 1515719736,
+    "created_by_id": 18,
+    "created_by_name": "Ben Morningstar",
+    "created_by_email": "ben.morningstar@realseriousgames.com",
+    "updated_on": 1515719737,
+    "updated_by_id": 18,
+    "body": "",
+    "body_formatted": "",
+    "company_id": 1,
+    "leader_id": 18,
+    "currency_id": 10,
+    "template_id": 1,
+    "based_on_type": null,
+    "based_on_id": null,
+    "email": "notifications-157544+lppy21hzjm@activecollab.com",
+    "is_tracking_enabled": false,
+    "is_client_reporting_enabled": false,
+    "budget": null,
+    "count_tasks": 0,
+    "count_discussions": 0,
+    "count_files": 0,
+    "count_notes": 0,
+    "last_activity_on": 1515719737
+  },
+  "timestamp": 1515719737,
+  "type": "ProjectCreated"
 }
