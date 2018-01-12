@@ -1,5 +1,3 @@
-'use strict';
-
 import * as sinon from 'sinon';
 import { Response, Request } from 'express';
 import { Client } from 'discord.js';
@@ -25,12 +23,13 @@ describe('postActiveCollabWebhook', () => {
 
 
         const discordControllerStub: IDiscordController = {
-            client: <Client>client,
             sendMessageToChannel: <SendMessageToChannel>sinon.stub(),
             determineChannel: <DetermineChannel>sinon.stub()
         };
 
-        apiController.postActiveCollabWebhook(discordControllerStub, <Request>req, <Response>res);
+        const postActiveCollabWebhook = apiController.postActiveCollabWebhookFactory(discordControllerStub);
+
+        postActiveCollabWebhook(<Request>req, <Response>res);
         sinon.assert.calledOnce(res.send as sinon.SinonStub);
     });
 });

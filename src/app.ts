@@ -4,32 +4,20 @@ import * as logger from 'morgan';
 import * as config from 'confucious';
 
 import { IDiscordController } from './controllers/discord';
+import { IApiController } from './controllers/api';
 
-// Controllers (route handlers)
-// TODO: App apiController via constructor
-import * as apiController from './controllers/api';
+export function setupApp (
+    express: express.Express,
+    discordController: IDiscordController,
+    apiController: IApiController
+): void {
+    // Express configuration
+    express.set('port', config.get('port') || 8080);
+    express.use(logger('dev'));
+    express.use(bodyParser.json());
 
-export class App {
-    public static express: express.Express;
+    const postActiveCollabWebhook = apiController
+        .postActiveCollabWebhookFactory(discordController);
 
-    public constructor(discordController: IDiscordController) {
-        if (App.express != undefined) {
-            return;
-        }
-
-        App.express = express();
-
-        // Create Express server
-        const app = express();
-
-        // Express configuration
-        App.express.set('port', config.get('port') || 8080);
-        App.express.use(logger('dev'));
-        App.express.use(bodyParser.json());
-
-        const postActiveCollabWebhook = apiController
-            .postActiveCollabWebhookFactory(discordController);
-
-        App.express.post('/api/webhook', postActiveCollabWebhook);
-    }
+    express.post('/api/webhook', postActiveCollabWebhook);
 }

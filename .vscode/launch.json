@@ -27,7 +27,7 @@
           ],
           "runtimeArgs": ["--nolazy"],
           "console": "internalConsole",
-          "sourceMaps": false,
+          "sourceMaps": true,
           "internalConsoleOptions": "openOnSessionStart"
       }
     ]

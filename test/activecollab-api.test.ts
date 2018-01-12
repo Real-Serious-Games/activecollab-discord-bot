@@ -1,5 +1,3 @@
-'use strict';
-
 import * as sinon from 'sinon';
 import { RequestAPI, UriOptions, UrlOptions } from 'request';
 import { RequestPromise, RequestPromiseOptions } from 'request-promise-native';
@@ -18,20 +16,6 @@ describe('ActiveCollab API', () => {
 
         const expected = {
             url: loginUrl
-        };
-
-        sinon.assert.calledWithMatch(request.post as sinon.SinonStub, expected);
-    });
-
-    it('sets content-type header to application/json on login', async () => {
-        const request = createRequestOkStub();
-
-        await createDefaultTestObject(request);
-
-        const expected = {
-            headers: {
-                'Content-Type': 'application/json'
-            }
         };
 
         sinon.assert.calledWithMatch(request.post as sinon.SinonStub, expected);
@@ -105,26 +89,12 @@ describe('ActiveCollab API', () => {
         sinon.assert.calledWithMatch(request.post as sinon.SinonStub, expected);
     });
 
-    it('sets content-type header when requesting token', async () => {
-        const request = createRequestOkStub();
-
-        await createDefaultTestObject(request);
-
-        const expected = {
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        };
-
-        sinon.assert.calledWithMatch(request.post as sinon.SinonStub, expected);
-    });
-
     it('throws error on failure to obtain token', async () => {
         expect.assertions(1);
 
         const request: Partial<activeCollabApi.Request> = {
             post: sinon.stub().onFirstCall().returns(Promise.resolve({
-                status: 200,
+                statusCode: 200,
                 body: {
                     is_ok: true,
                     user: {
@@ -132,7 +102,7 @@ describe('ActiveCollab API', () => {
                     }
                 }
             })).onSecondCall().returns(Promise.resolve({
-                status: 500
+                statusCode: 500
             }))
         };
 
@@ -205,7 +175,7 @@ describe('ActiveCollab API', () => {
         return {
             post: sinon.stub().onFirstCall().returns(
                 Promise.resolve({
-                    status: status,
+                    statusCode: status,
                     body: {
                         is_ok: is_ok,
                         user: {
@@ -216,7 +186,7 @@ describe('ActiveCollab API', () => {
                 })
             ).onSecondCall().returns(
                 Promise.resolve({
-                    status: status,
+                    statusCode: status,
                     body: {
                         is_ok: is_ok,
                         token: token || 'test token'

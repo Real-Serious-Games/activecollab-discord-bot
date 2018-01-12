@@ -1,15 +1,15 @@
-'use strict';
-
 import * as request from 'supertest';
 import * as sinon from 'sinon';
 import { Client } from 'discord.js';
+import * as express from 'express';
 
 const chai = require('chai');
 const expect = chai.expect;
 
-import { App } from '../src/app';
+import { setupApp } from '../src/app';
 import * as testData from './testData';
 import { Task } from '../src/models/taskEvent';
+import * as apiController from '../src/controllers/api';
 import { IDiscordController, SendMessageToChannel, DetermineChannel } from '../src/controllers/discord';
 
 
@@ -19,14 +19,15 @@ describe('POST /api/webhook', () => {
         };
 
         const discordControllerStub: IDiscordController = {
-            client: <Client>client,
             sendMessageToChannel: <SendMessageToChannel>sinon.stub(),
             determineChannel: <DetermineChannel>sinon.stub()
         };
 
-        const app = new App(discordControllerStub);
+        const app = express();
+
+        setupApp(app, discordControllerStub, apiController);
         
-        return request(App.express).post('/api/webhook')
+        return request(app).post('/api/webhook')
             .send(testData.rawNewTask)
             .end(function(err, res) {
                 expect(res.status).to.equal(200);

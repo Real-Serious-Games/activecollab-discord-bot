@@ -1,5 +1,3 @@
-'use strict';
-
 import { RequestAPI, UriOptions, UrlOptions } from 'request';
 import { RequestPromise, RequestPromiseOptions } from 'request-promise-native';
 
@@ -16,7 +14,8 @@ function get(
         url: connectionStr + route,
         headers: {
             'X-Angie-AuthApiToken': token
-        }
+        },
+        json: true
     });
 }
 
@@ -30,10 +29,9 @@ function post(
     return request.post({
         url: connectionStr + route,
         headers: {
-            'X-Angie-AuthApiToken': token,
-            'Content-Type': 'application/json'
+            'X-Angie-AuthApiToken': token
         },
-        body: body
+        json: body
     });
 }
 
@@ -47,18 +45,16 @@ async function login(
 
     const login = await request.post({
         url: 'https://my.activecollab.com/api/v1/external/login',
-        headers: {
-            'Content-Type': 'application/json'
-        },
         json: {
             email: email,
             password: password
-        }
+        },
+        resolveWithFullResponse: true
     });
 
-    if (login.status !== 200 || !login.body || !login.body.is_ok) {
+    if (login.statusCode !== 200 || !login.body || !login.body.is_ok) {
         if (login.body && login.body.message) {
-            throw new Error(`Error ${login.status} returned logging in: ${login.body.message}`);
+            throw new Error(`Error ${login.statusCode} returned logging in: ${login.body.message}`);
         }
         throw new Error(`Recieved response code on login ${login.status}`);
     }
@@ -69,18 +65,16 @@ async function login(
 
     const issueToken = await request.post({
         url: connectionStr + '/api/v1/?format=json&path_info=%2Fissue-token-intent',
-        headers: {
-            'Content-Type': 'application/json'
-        },
         json: {
             intent: login.body.user.intent,
             client_name: 'Discord Integration',
             client_vendor: 'Real Serious Games'
-        }
+        },
+        resolveWithFullResponse: true
     });
 
-    if (issueToken.status !== 200 || !issueToken.body || !issueToken.body.token) {
-        throw new Error(`Error ${issueToken.status} returned requesting token.`);
+    if (issueToken.statusCode !== 200 || !issueToken.body || !issueToken.body.token) {
+        throw new Error(`Error ${issueToken.statusCode} returned requesting token.`);
     }
 
     return issueToken.body.token;

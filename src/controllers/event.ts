@@ -1,5 +1,3 @@
-'use strict';
-
 import { Task } from '../models/taskEvent';
 import { Comment } from '../models/comment';
 import { Event } from '../models/event';
