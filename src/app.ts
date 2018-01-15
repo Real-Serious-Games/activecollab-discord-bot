@@ -16,8 +16,7 @@ export function setupApp (
     express.use(logger('dev'));
     express.use(bodyParser.json());
 
-    const postActiveCollabWebhook = apiController
-        .postActiveCollabWebhookFactory(discordController);
+    const postActiveCollabWebhook = apiController.postActiveCollabWebhook;
 
     express.post('/api/webhook', postActiveCollabWebhook);
 }

@@ -13,7 +13,7 @@ export interface IDiscordController {
 }
 
 export class DiscordController implements IDiscordController {
-    public readonly client: discord.Client;
+    private readonly client: discord.Client;
 
     public constructor(token: string, discordClient: discord.Client) {
         this.client = discordClient;
