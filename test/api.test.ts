@@ -8,57 +8,79 @@ import * as testData from './testData';
 
 describe('postActiveCollabWebhook', () => {
     it('should call send with status 200', () => {
-        const webhookSecret = 'secret';
+        const testFramework = createApiTestFramework();
 
-        const req: Partial<Request> = {
-            body: testData.rawNewTask,
-            header: sinon.stub().returns(webhookSecret)
-        };
-
-        const res: Partial<Response> = {
-            sendStatus: sinon.stub()
-        };
-
-        const client: Partial<Client> = {
-        };
-
-        const discordControllerStub: IDiscordController = {
-            sendMessageToChannel: <SendMessageToChannel>sinon.stub(),
-            determineChannel: <DetermineChannel>sinon.stub()
-        };
-
-        const apiController = createApiController(discordControllerStub, webhookSecret);
-
-        apiController.postActiveCollabWebhook(<Request>req, <Response>res);
-        sinon.assert.calledOnce(res.sendStatus as sinon.SinonStub);
-        sinon.assert.calledWith(res.sendStatus as sinon.SinonStub, 200);
+        testFramework
+            .apiController
+            .postActiveCollabWebhook(
+                <Request>testFramework.req,
+                <Response>testFramework.res
+            );
+        sinon.assert.calledOnce(testFramework.res.sendStatus as sinon.SinonStub);
+        sinon.assert.calledWith(testFramework.res.sendStatus as sinon.SinonStub, 200);
     });
 
     it('should return 403 status when missing auth header', () => {
-        const webhookSecret = 'secret';
+        const authHeaderMissing = true;
 
-        const req: Partial<Request> = {
-            body: testData.rawNewTask,
-            header: sinon.stub().returns('')
-        };
+        const testFramework = createApiTestFramework(undefined, undefined, authHeaderMissing);
 
-        const res: Partial<Response> = {
-            sendStatus: sinon.stub()
-        };
+        testFramework
+            .apiController
+            .postActiveCollabWebhook(
+                <Request>testFramework.req,
+                <Response>testFramework.res
+            );
+        sinon.assert.calledOnce(testFramework.res.sendStatus as sinon.SinonStub);
+        sinon.assert.calledWith(testFramework.res.sendStatus as sinon.SinonStub, 403);
+    });
 
-        const client: Partial<Client> = {
-        };
+    it('should return 403 status when auth header wrong', () => {
+        const secret = 'secret';
+        const wrongSecret = 'wrong secret';
 
+        const testFramework = createApiTestFramework(secret, wrongSecret);
 
-        const discordControllerStub: IDiscordController = {
-            sendMessageToChannel: <SendMessageToChannel>sinon.stub(),
-            determineChannel: <DetermineChannel>sinon.stub()
-        };
-
-        const apiController = createApiController(discordControllerStub, webhookSecret);
-
-        apiController.postActiveCollabWebhook(<Request>req, <Response>res);
-        sinon.assert.calledOnce(res.sendStatus as sinon.SinonStub);
-        sinon.assert.calledWith(res.sendStatus as sinon.SinonStub, 403);
+        testFramework
+            .apiController
+            .postActiveCollabWebhook(
+                <Request>testFramework.req,
+                <Response>testFramework.res
+            );
+        sinon.assert.calledOnce(testFramework.res.sendStatus as sinon.SinonStub);
+        sinon.assert.calledWith(testFramework.res.sendStatus as sinon.SinonStub, 403);
     });
 });
+
+function createApiTestFramework(
+    expectedSecret = 'secret',
+    responseSecret = 'secret',
+    responseSecretUndefined = false,
+    bodyToTest = testData.rawNewTask,
+    req: Partial<Request> = {
+        body: bodyToTest,
+        header: sinon.stub().returns(
+            responseSecretUndefined 
+            ? undefined 
+            : responseSecret)
+    },
+    res: Partial<Response> = {
+        sendStatus: sinon.stub()
+    },
+    client: Partial<Client> = {
+    },
+    discordControllerStub: IDiscordController = {
+        sendMessageToChannel: <SendMessageToChannel>sinon.stub(),
+        determineChannel: <DetermineChannel>sinon.stub()
+    },
+    apiController = createApiController(discordControllerStub, expectedSecret)
+) {
+    return {
+        webhookSecret: expectedSecret,
+        req: req,
+        res: res,
+        client: client,
+        discordController: discordControllerStub,
+        apiController: apiController
+    };
+}
