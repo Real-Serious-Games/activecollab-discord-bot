@@ -1,6 +1,6 @@
 import { Response, Request } from 'express';
 import { WebhookClient } from 'discord.js';
-import { assert } from 'console';
+import { Logger } from 'structured-log';
 
 import * as eventController from './event';
 import { IDiscordController, DiscordController } from '../controllers/discord';
@@ -19,6 +19,7 @@ export interface IApiController {
 function postActiveCollabWebhook (
     discordController: IDiscordController,
     webhookSecret: string,
+    logger: Logger,
     req: Request,
     res: Response
 ): void {
@@ -26,23 +27,32 @@ function postActiveCollabWebhook (
         res.sendStatus(403);
         return;
     }
-
     const processed = eventController.processEvent(req.body);
-    discordController.sendMessageToChannel(
-        processed.value,
-        discordController.determineChannel());
+
+    processed.map(value =>
+        discordController.sendMessageToChannel(
+            value,
+            discordController.determineChannel()
+        )
+    );
+
+    processed.mapLeft(value => 
+        logger.warn('Issue processing event: {value}', value)
+    );
 
     res.sendStatus(200);
 }
 
 export function createApiController(
     discordController: IDiscordController,
-    webhookSecret: string
+    webhookSecret: string,
+    logger: Logger
 ): IApiController {
     return {
         postActiveCollabWebhook: postActiveCollabWebhook.bind(
             undefined,
             discordController,
-            webhookSecret)
+            webhookSecret,
+            logger)
     };
 }

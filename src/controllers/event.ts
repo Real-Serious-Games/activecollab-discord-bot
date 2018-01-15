@@ -4,11 +4,9 @@ import { assert } from 'console';
 import { Either, left, right } from 'fp-ts/lib/Either';
 
 export function processEvent(event: Event): Either<string, string> {
-    assert(event.payload, 'Cannot process event with no payload.');
-    assert(
-        event.payload.class,
-        'Cannot process event that does not specify its payload class.'
-    );
+    if (!event || !event.payload || !event.payload.class) {
+        return left(`Received invalid event: ${event}`);
+    }
 
     switch (event.payload.class) {
         case 'Task': {
