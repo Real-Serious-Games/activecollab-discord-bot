@@ -9,7 +9,7 @@ import { Task } from '../src/models/taskEvent';
 
 describe('processPayload with new task', () => {
     it('should return formatted payload', () => {
-        const rawData = testData.getRawNewtask();
+        const rawData = testData.getRawNewTask();
         const expectedFormattedPayload: string =
                 'A new task has been created.\n' +
                 `Task Name: ${rawData.payload.name}\n` +
@@ -39,10 +39,10 @@ describe('processNewTask', () => {
     it('should return formatted task', () => {
         const expectedFormattedTask: string =
                 'A new task has been created.\n' +
-                `Task Name: ${testData.getRawNewtask().payload.name}\n` +
-                `Project Name: ${testData.getRawNewtask().payload.project_id}`;
+                `Task Name: ${testData.getRawNewTask().payload.name}\n` +
+                `Project Name: ${testData.getRawNewTask().payload.project_id}`;
 
-        expect(eventController.processNewTask(testData.getRawNewtask())).to.equal(expectedFormattedTask);
+        expect(eventController.processNewTask(testData.getRawNewTask())).to.equal(expectedFormattedTask);
     });
 });
 

@@ -55,7 +55,7 @@ describe('postActiveCollabWebhook', () => {
     
 
     it('should call logger and not sendMessageToChannel when unknown request body', () => {
-        const body: Task = testData.getRawNewtask();
+        const body: Task = testData.getRawNewTask();
         body.payload.class = undefined;
 
         const testFramework = createApiTestFramework(
@@ -82,7 +82,7 @@ describe('postActiveCollabWebhook', () => {
     it('should call sendMessageToChannel when known request body', () => {       
         const testFramework = createApiTestFramework();
 
-        const body = testData.getRawNewtask;
+        const body = testData.getRawNewTask;
 
         testFramework
             .apiController
@@ -101,7 +101,7 @@ function createApiTestFramework(
     expectedSecret = 'secret',
     responseSecret = 'secret',
     responseSecretUndefined = false,
-    bodyToTest = testData.getRawNewtask(),
+    bodyToTest = testData.getRawNewTask(),
     req: Partial<Request> = {
         body: bodyToTest,
         header: sinon.stub().returns(

@@ -4,7 +4,7 @@
 // import { Event } from '../src/models/event'
 import { Task } from '../src/models/taskEvent';
 
-export function getRawNewtask(): Task { 
+export function getRawNewTask(): Task { 
     return {
       "payload": {
         "id": 288,
