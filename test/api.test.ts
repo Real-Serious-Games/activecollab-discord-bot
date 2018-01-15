@@ -3,7 +3,7 @@ import { Response, Request } from 'express';
 import { Client } from 'discord.js';
 
 import { IDiscordController, SendMessageToChannel, DetermineChannel } from '../src/controllers/discord';
-import { ApiController } from '../src/controllers/api';
+import { createApiController } from '../src/controllers/api';
 import * as testData from './testData';
 
 describe('postActiveCollabWebhook', () => {
@@ -27,7 +27,7 @@ describe('postActiveCollabWebhook', () => {
             determineChannel: <DetermineChannel>sinon.stub()
         };
 
-        const apiController = new ApiController(discordControllerStub, webhookSecret);
+        const apiController = createApiController(discordControllerStub, webhookSecret);
 
         apiController.postActiveCollabWebhook(<Request>req, <Response>res);
         sinon.assert.calledOnce(res.sendStatus as sinon.SinonStub);
@@ -55,7 +55,7 @@ describe('postActiveCollabWebhook', () => {
             determineChannel: <DetermineChannel>sinon.stub()
         };
 
-        const apiController = new ApiController(discordControllerStub, webhookSecret);
+        const apiController = createApiController(discordControllerStub, webhookSecret);
 
         apiController.postActiveCollabWebhook(<Request>req, <Response>res);
         sinon.assert.calledOnce(res.sendStatus as sinon.SinonStub);

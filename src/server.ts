@@ -4,7 +4,7 @@ import * as express from 'express';
 
 import { setupApp } from './app';
 import { DiscordController } from './controllers/discord';
-import { ApiController } from './controllers/api';
+import { createApiController } from './controllers/api';
 import { disconnect } from 'cluster';
 
 // Setup config
@@ -15,7 +15,7 @@ config.pushArgv();
 const app = express();
 
 const discordController = new DiscordController(config.get('discordBotToken'), new discord.Client());
-const apiController = new ApiController(discordController, config.get('webhookSecret'));
+const apiController = createApiController(discordController, config.get('webhookSecret'));
 
 setupApp(app, discordController, apiController);
 
