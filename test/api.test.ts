@@ -1,127 +1,92 @@
 import * as sinon from 'sinon';
 import { Response, Request } from 'express';
+import { Client } from 'discord.js';
 import { Logger } from 'structured-log/src';
-
+ 
 import { IDiscordController, SendMessageToChannel, DetermineChannel } from '../src/controllers/discord';
-import * as apiController from '../src/controllers/api';
+import { createApiController } from '../src/controllers/api';
 import * as testData from './testData';
-import { PostActiveCollabWebhookFactory } from '../src/controllers/api';
 
 describe('postActiveCollabWebhook', () => {
-    it('should call sendStatus with status of 200', () => {
-        const body = testData.rawNewTask;
+    it('should call send with status 200', () => {
+        const testFramework = createApiTestFramework();
 
-        const req: Partial<Request> = {
-            body: body
-        };
-
-        const res: Partial<Response> = {
-            sendStatus: sinon.spy()
-        };
-
-        const logger: Partial<Logger> = { };
-
-        const discordControllerStub: IDiscordController = {
-            sendMessageToChannel: <SendMessageToChannel>sinon.spy(),
-            determineChannel: <DetermineChannel>sinon.spy()
-        };
-
-        const postActiveCollabWebhook = 
-            apiController.postActiveCollabWebhookFactory(discordControllerStub, <Logger>logger);
-
-        postActiveCollabWebhook(<Request>req, <Response>res);
-        sinon.assert.calledOnce(res.sendStatus as sinon.SinonSpy);
-        sinon.assert.calledWith(res.sendStatus as sinon.SinonSpy, 200);
-    });
-
-    it('should send message to channel when event is valid', () => {
-        const body = testData.rawNewTask;
-
-        const req: Partial<Request> = {
-            body: body
-        };
-
-        const res: Partial<Response> = {
-            sendStatus: sinon.spy()
-        };
-
-        const logger: Partial<Logger> = { };
-
-        const discordControllerStub: IDiscordController = {
-            sendMessageToChannel: <SendMessageToChannel>sinon.spy(),
-            determineChannel: <DetermineChannel>sinon.spy()
-        };
-
-        const postActiveCollabWebhook = 
-            apiController.postActiveCollabWebhookFactory(discordControllerStub, <Logger>logger);
-
-        postActiveCollabWebhook(<Request>req, <Response>res);
-        sinon.assert.calledOnce(discordControllerStub.sendMessageToChannel as sinon.SinonSpy);
-    });
-
-    it('should send message to channel when event is valid', () => {
-        const body = testData.rawNewTask;
-
-        const req: Partial<Request> = {
-            body: body
-        };
-
-        const res: Partial<Response> = {
-            sendStatus: sinon.spy()
-        };
-
-        const logger: Partial<Logger> = {
-            warn: sinon.spy()
-         };
-
-        const discordControllerStub: IDiscordController = {
-            sendMessageToChannel: <SendMessageToChannel>sinon.stub(),
-            determineChannel: <DetermineChannel>sinon.stub()
-        };
-
-        const postActiveCollabWebhook = 
-            apiController.postActiveCollabWebhookFactory(
-                discordControllerStub,
-                <Logger>logger
+        testFramework
+            .apiController
+            .postActiveCollabWebhook(
+                <Request>testFramework.req,
+                <Response>testFramework.res
             );
-
-        postActiveCollabWebhook(<Request>req, <Response>res);
-        sinon
-            .assert
-            .calledOnce(discordControllerStub.sendMessageToChannel as sinon.SinonSpy);
-        sinon
-            .assert
-            .notCalled(logger.warn as sinon.SinonSpy);
+        sinon.assert.calledOnce(testFramework.res.sendStatus as sinon.SinonStub);
+        sinon.assert.calledWith(testFramework.res.sendStatus as sinon.SinonStub, 200);
     });
 
-    it('should log warning when event is invalid', () => {
-        const body = { };
+    it('should return 403 status when missing auth header', () => {
+        const authHeaderMissing = true;
 
-        const req: Partial<Request> = {
-            body: body
-        };
+        const testFramework = createApiTestFramework(undefined, undefined, authHeaderMissing);
 
-        const res: Partial<Response> = {
-            sendStatus: sinon.stub()
-        };
-
-        const logger: Partial<Logger> = {
-            warn: sinon.spy()
-         };
-
-        const discordControllerStub: IDiscordController = {
-            sendMessageToChannel: <SendMessageToChannel>sinon.stub(),
-            determineChannel: <DetermineChannel>sinon.stub()
-        };
-
-        const postActiveCollabWebhook = 
-            apiController.postActiveCollabWebhookFactory(
-                discordControllerStub,
-                <Logger>logger
+        testFramework
+            .apiController
+            .postActiveCollabWebhook(
+                <Request>testFramework.req,
+                <Response>testFramework.res
             );
+        sinon.assert.calledOnce(testFramework.res.sendStatus as sinon.SinonStub);
+        sinon.assert.calledWith(testFramework.res.sendStatus as sinon.SinonStub, 403);
+    });
 
-        postActiveCollabWebhook(<Request>req, <Response>res);
-        sinon.assert.notCalled(discordControllerStub.sendMessageToChannel as sinon.SinonSpy);
-        sinon.assert.calledOnce(logger.warn as sinon.SinonSpy);
+    it('should return 403 status when auth header wrong', () => {
+        const secret = 'secret';
+        const wrongSecret = 'wrong secret';
+
+        const testFramework = createApiTestFramework(secret, wrongSecret);
+
+        testFramework
+            .apiController
+            .postActiveCollabWebhook(
+                <Request>testFramework.req,
+                <Response>testFramework.res
+            );
+        sinon.assert.calledOnce(testFramework.res.sendStatus as sinon.SinonStub);
+        sinon.assert.calledWith(testFramework.res.sendStatus as sinon.SinonStub, 403);
     });
 });
+
+function createApiTestFramework(
+    expectedSecret = 'secret',
+    responseSecret = 'secret',
+    responseSecretUndefined = false,
+    bodyToTest = testData.rawNewTask,
+    req: Partial<Request> = {
+        body: bodyToTest,
+        header: sinon.stub().returns(
+            responseSecretUndefined 
+            ? undefined 
+            : responseSecret)
+    },
+    res: Partial<Response> = {
+        sendStatus: sinon.stub()
+    },
+    client: Partial<Client> = {
+    },
+    discordControllerStub: IDiscordController = {
+        sendMessageToChannel: <SendMessageToChannel>sinon.stub(),
+        determineChannel: <DetermineChannel>sinon.stub()
+    },
+    logger: Partial<Logger> = { },
+    apiController = createApiController(
+        discordControllerStub,
+        expectedSecret, 
+        <Logger>logger
+    )
+) {
+    return {
+        webhookSecret: expectedSecret,
+        req: req,
+        res: res,
+        client: client,
+        discordController: discordControllerStub,
+        apiController: apiController
+    };
+}

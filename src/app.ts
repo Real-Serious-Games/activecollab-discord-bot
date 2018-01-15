@@ -18,8 +18,7 @@ export function setupApp (
     express.use(morganLogger('dev'));
     express.use(bodyParser.json());
 
-    const postActiveCollabWebhook = apiController
-        .postActiveCollabWebhookFactory(discordController, logger);
+    const postActiveCollabWebhook = apiController.postActiveCollabWebhook;
 
     express.post('/api/webhook', postActiveCollabWebhook);
 }

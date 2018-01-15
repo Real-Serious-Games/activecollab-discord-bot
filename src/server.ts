@@ -1,5 +1,3 @@
-'use strict';
-
 import * as config from 'confucious';
 import * as discord from 'discord.js';
 import * as express from 'express';
@@ -7,7 +5,7 @@ import * as structuredLog from 'structured-log/src';
 
 import { setupApp } from './app';
 import { DiscordController } from './controllers/discord';
-import * as apiController from './controllers/api';
+import { createApiController } from './controllers/api';
 
 // Setup config
 config.pushJsonFile('./config.json');
@@ -24,6 +22,11 @@ const logger = structuredLog
 const discordController = new DiscordController(
     config.get('discordBotToken'),
     new discord.Client()
+);
+
+const apiController = createApiController(
+    discordController,
+    config.get('webhookSecret')
 );
 
 setupApp(app, logger, discordController, apiController);
