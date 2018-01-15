@@ -42,7 +42,8 @@ describe('processNewTask', () => {
                 `Task Name: ${testData.rawNewTask.payload.name}\n` +
                 `Project Name: ${testData.rawNewTask.payload.project_id}`;
 
-        expect(eventController.processNewTask(testData.rawNewTask)).to.equal(expectedFormattedTask);
+        expect(eventController.processNewTask(testData.rawNewTask.payload))
+            .to.equal(expectedFormattedTask);
     });
 });
 
@@ -53,6 +54,7 @@ describe('processUpdatedTask', () => {
                 `Task Name: ${testData.rawNewTask.payload.name}\n` +
                 `Project Name: ${testData.rawNewTask.payload.project_id}`;
 
-        expect(eventController.processUpdatedTask(testData.rawUpdatedTask)).to.equal(expectedFormattedTask);
+        expect(eventController.processUpdatedTask(testData.rawUpdatedTask.payload))
+            .to.equal(expectedFormattedTask);
     });
 });

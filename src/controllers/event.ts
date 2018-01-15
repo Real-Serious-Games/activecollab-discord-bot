@@ -12,8 +12,8 @@ export function processEvent(event: Event): Either<string, string> {
 
     switch (event.payload.class) {
         case 'Task': {
-            const taskPayload: Task = <Task>event;
-            switch (taskPayload.type) {
+            const taskPayload: Task = <Task>event.payload;
+            switch (event.type) {
                 case 'TaskCreated':
                     return right(processNewTask(taskPayload));
 
@@ -23,7 +23,7 @@ export function processEvent(event: Event): Either<string, string> {
                 default:
                     return left(
                         'Received Task event with unknown payload type ' +
-                        taskPayload.type
+                        event.type
                     );
             }
         }
@@ -34,12 +34,12 @@ export function processEvent(event: Event): Either<string, string> {
 
 export function processNewTask(task: Task): string {
     return  'A new task has been created.\n' +
-            `Task Name: ${task.payload.name}\n` +
-            `Project Name: ${task.payload.project_id}`;
+            `Task Name: ${task.name}\n` +
+            `Project Name: ${task.project_id}`;
 }
 
 export function processUpdatedTask(task: Task): string {
     return  'A task has been updated.\n' +
-            `Task Name: ${task.payload.name}\n` +
-            `Project Name: ${task.payload.project_id}`;
+            `Task Name: ${task.name}\n` +
+            `Project Name: ${task.project_id}`;
 }
