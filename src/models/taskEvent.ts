@@ -31,6 +31,7 @@ export interface Task {
         due_on: null,
         estimate: number,
         job_type_id: number,
+        [key: string]: any;
     };
     timestamp: number;
     type: string;

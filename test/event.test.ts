@@ -9,7 +9,7 @@ import { Task } from '../src/models/taskEvent';
 
 describe('processPayload with new task', () => {
     it('should return formatted payload', () => {
-        const rawData = testData.rawNewTask;
+        const rawData = testData.getRawNewtask();
         const expectedFormattedPayload: string =
                 'A new task has been created.\n' +
                 `Task Name: ${rawData.payload.name}\n` +
@@ -23,7 +23,7 @@ describe('processPayload with new task', () => {
 
 describe('processPayload with updated task', () => {
     it('should return formatted payload', () => {
-        const rawData = testData.rawUpdatedTask;
+        const rawData = testData.getRawUpdatedTask();
         const expectedFormattedPayload: string =
                 'A task has been updated.\n' +
                 `Task Name: ${rawData.payload.name}\n` +
@@ -39,20 +39,22 @@ describe('processNewTask', () => {
     it('should return formatted task', () => {
         const expectedFormattedTask: string =
                 'A new task has been created.\n' +
-                `Task Name: ${testData.rawNewTask.payload.name}\n` +
-                `Project Name: ${testData.rawNewTask.payload.project_id}`;
+                `Task Name: ${testData.getRawNewtask().payload.name}\n` +
+                `Project Name: ${testData.getRawNewtask().payload.project_id}`;
 
-        expect(eventController.processNewTask(testData.rawNewTask)).to.equal(expectedFormattedTask);
+        expect(eventController.processNewTask(testData.getRawNewtask())).to.equal(expectedFormattedTask);
     });
 });
 
 describe('processUpdatedTask', () => {
     it('should return formatted task', () => {
+        const rawData = testData.getRawUpdatedTask();
+        
         const expectedFormattedTask: string =
                 'A task has been updated.\n' +
-                `Task Name: ${testData.rawNewTask.payload.name}\n` +
-                `Project Name: ${testData.rawNewTask.payload.project_id}`;
+                `Task Name: ${rawData.payload.name}\n` +
+                `Project Name: ${rawData.payload.project_id}`;
 
-        expect(eventController.processUpdatedTask(testData.rawUpdatedTask)).to.equal(expectedFormattedTask);
+        expect(eventController.processUpdatedTask(rawData)).to.equal(expectedFormattedTask);
     });
 });

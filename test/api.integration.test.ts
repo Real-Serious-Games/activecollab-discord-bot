@@ -33,7 +33,7 @@ describe('POST /api/webhook', () => {
         return request(app)
             .post('/api/webhook')
             .set('X-Angie-WebhookSecret', webhookSecret)
-            .send(testData.rawNewTask)
+            .send(testData.getRawNewtask())
             .end(function(err, res) {
                 expect(res.status).to.equal(200);
                 done();
@@ -59,7 +59,7 @@ describe('POST /api/webhook', () => {
         
         return request(app)
             .post('/api/webhook')
-            .send(testData.rawNewTask)
+            .send(testData.getRawNewtask())
             .end(function(err, res) {
                 expect(res.status).to.equal(403);
                 done();

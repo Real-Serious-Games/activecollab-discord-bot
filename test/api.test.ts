@@ -2,6 +2,7 @@ import * as sinon from 'sinon';
 import { Response, Request } from 'express';
 import { Client } from 'discord.js';
 import { Logger } from 'structured-log/src';
+import { Task } from '../src/models/taskEvent';
  
 import { IDiscordController, SendMessageToChannel, DetermineChannel } from '../src/controllers/discord';
 import { createApiController } from '../src/controllers/api';
@@ -54,7 +55,7 @@ describe('postActiveCollabWebhook', () => {
     
 
     it('should call logger and not sendMessageToChannel when unknown request body', () => {
-        const body = JSON.parse(JSON.stringify(testData.rawNewTask));
+        const body: Task = testData.getRawNewtask();
         body.payload.class = undefined;
 
         const testFramework = createApiTestFramework(
@@ -81,7 +82,7 @@ describe('postActiveCollabWebhook', () => {
     it('should call sendMessageToChannel when known request body', () => {       
         const testFramework = createApiTestFramework();
 
-        const body = testData.rawNewTask;
+        const body = testData.getRawNewtask;
 
         testFramework
             .apiController
@@ -100,7 +101,7 @@ function createApiTestFramework(
     expectedSecret = 'secret',
     responseSecret = 'secret',
     responseSecretUndefined = false,
-    bodyToTest = testData.rawNewTask,
+    bodyToTest = testData.getRawNewtask(),
     req: Partial<Request> = {
         body: bodyToTest,
         header: sinon.stub().returns(
