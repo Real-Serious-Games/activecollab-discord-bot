@@ -118,7 +118,7 @@ describe('ActiveCollab API', () => {
 
         const api = await createDefaultTestObject(request);
 
-        const testRoute = '/api/v1/initial';
+        const testRoute = '/initial';
         await api.get(testRoute);
 
         const expected = {
@@ -136,7 +136,7 @@ describe('ActiveCollab API', () => {
 
         const api = await createDefaultTestObject(request);
 
-        const testRoute = '/api/v1/projects/1/task-lists';
+        const testRoute = '/projects/1/task-lists';
         await api.post(testRoute, {});
 
         const expected = {
@@ -144,6 +144,32 @@ describe('ActiveCollab API', () => {
                 'X-Angie-AuthApiToken': expectedToken
             }
         };
+
+        sinon.assert.calledWithMatch(request.post as sinon.SinonStub, expected);
+    });
+
+    it('includes connection string and prefix in GET requests', async () => {
+        const request = createRequestOkStub();
+        const api = await createDefaultTestObject(request);
+
+        const testRoute = '/initial';
+        const expected = {
+            url: `${connectionStr}/api/v1/initial`
+        };
+        await api.get(testRoute);
+
+        sinon.assert.calledWithMatch(request.get as sinon.SinonStub, expected);
+    });
+
+    it('includes connection string and prefix in POST requests', async () => {
+        const request = createRequestOkStub();
+        const api = await createDefaultTestObject(request);
+
+        const testRoute = '/task-lists';
+        const expected = {
+            url: `${connectionStr}/api/v1/task-lists`
+        };
+        await api.post(testRoute, {});
 
         sinon.assert.calledWithMatch(request.post as sinon.SinonStub, expected);
     });

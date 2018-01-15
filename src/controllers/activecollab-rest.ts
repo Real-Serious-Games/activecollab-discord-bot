@@ -4,6 +4,8 @@ import { RequestPromise, RequestPromiseOptions } from 'request-promise-native';
 export type Request =
     RequestAPI<RequestPromise, RequestPromiseOptions, UriOptions | UrlOptions>;
 
+const requestPrefix = '/api/v1';
+
 function get(
     request: Request,
     connectionStr: string,
@@ -11,7 +13,7 @@ function get(
     route: string
 ): Promise<Object> {
     return request.get({
-        url: connectionStr + route,
+        url: connectionStr + requestPrefix + route,
         headers: {
             'X-Angie-AuthApiToken': token
         },
@@ -27,7 +29,7 @@ function post(
     body: Object
 ): Promise<Object> {
     return request.post({
-        url: connectionStr + route,
+        url: connectionStr + requestPrefix + route,
         headers: {
             'X-Angie-AuthApiToken': token
         },
