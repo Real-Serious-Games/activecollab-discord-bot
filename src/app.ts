@@ -2,7 +2,7 @@ import * as express from 'express';
 import * as bodyParser from 'body-parser';
 import * as morganLogger from 'morgan';
 import * as config from 'confucious';
-import { Logger } from 'structured-log/src';
+import { Logger } from 'structured-log';
 
 import { IDiscordController } from './controllers/discord';
 import { IApiController } from './controllers/api';

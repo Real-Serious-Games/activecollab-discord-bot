@@ -1,11 +1,11 @@
 import * as config from 'confucious';
 import * as discord from 'discord.js';
 import * as express from 'express';
-import * as structuredLog from 'structured-log/src';
 
 import { setupApp } from './app';
 import { DiscordController } from './controllers/discord';
 import { createApiController } from './controllers/api';
+import { createLogger } from './controllers/logger';
 
 // Setup config
 config.pushJsonFile('./config.json');
@@ -14,10 +14,7 @@ config.pushArgv();
 
 const app = express();
 
-const logger = structuredLog
-    .configure()
-    .writeTo(new structuredLog.ConsoleSink())
-    .create();
+const logger = createLogger();
 
 const discordController = new DiscordController(
     config.get('discordBotToken'),
@@ -26,7 +23,8 @@ const discordController = new DiscordController(
 
 const apiController = createApiController(
     discordController,
-    config.get('webhookSecret')
+    config.get('webhookSecret'),
+    logger
 );
 
 setupApp(app, logger, discordController, apiController);

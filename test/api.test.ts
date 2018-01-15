@@ -51,6 +51,49 @@ describe('postActiveCollabWebhook', () => {
         sinon.assert.calledOnce(testFramework.res.sendStatus as sinon.SinonStub);
         sinon.assert.calledWith(testFramework.res.sendStatus as sinon.SinonStub, 403);
     });
+    
+
+    it('should call logger and not sendMessageToChannel when unknown request body', () => {
+        const body = JSON.parse(JSON.stringify(testData.rawNewTask));
+        body.payload.class = undefined;
+
+        const testFramework = createApiTestFramework(
+            undefined,
+            undefined, 
+            undefined, 
+            body, 
+            undefined,
+            undefined,
+            undefined
+        );
+
+        testFramework
+            .apiController
+            .postActiveCollabWebhook(
+                <Request>testFramework.req,
+                <Response>testFramework.res
+            );
+
+        sinon.assert.notCalled(testFramework.discordController.sendMessageToChannel as sinon.SinonSpy);
+        sinon.assert.calledOnce(testFramework.logger.warn as sinon.SinonStub);
+    });
+
+    it('should call sendMessageToChannel when known request body', () => {       
+        const testFramework = createApiTestFramework();
+
+        const body = testData.rawNewTask;
+
+        testFramework
+            .apiController
+            .postActiveCollabWebhook(
+                <Request>testFramework.req,
+                <Response>testFramework.res
+            );
+
+        sinon.assert.calledOnce(testFramework.discordController.sendMessageToChannel as sinon.SinonSpy);
+        sinon.assert.notCalled(testFramework.logger.warn as sinon.SinonStub);
+    });
+
 });
 
 function createApiTestFramework(
@@ -66,17 +109,19 @@ function createApiTestFramework(
             : responseSecret)
     },
     res: Partial<Response> = {
-        sendStatus: sinon.stub()
+        sendStatus: sinon.spy()
     },
     client: Partial<Client> = {
     },
-    discordControllerStub: IDiscordController = {
-        sendMessageToChannel: <SendMessageToChannel>sinon.stub(),
-        determineChannel: <DetermineChannel>sinon.stub()
+    discordController: IDiscordController = {
+        sendMessageToChannel: <SendMessageToChannel>sinon.spy(),
+        determineChannel: <DetermineChannel>sinon.spy()
     },
-    logger: Partial<Logger> = { },
+    logger: Partial<Logger> = {
+        warn: sinon.spy()
+     },
     apiController = createApiController(
-        discordControllerStub,
+        discordController,
         expectedSecret, 
         <Logger>logger
     )
@@ -86,7 +131,8 @@ function createApiTestFramework(
         req: req,
         res: res,
         client: client,
-        discordController: discordControllerStub,
-        apiController: apiController
+        discordController: discordController,
+        apiController: apiController,
+        logger: logger
     };
 }

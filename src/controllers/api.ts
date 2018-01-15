@@ -1,6 +1,6 @@
 import { Response, Request } from 'express';
 import { WebhookClient } from 'discord.js';
-import { Logger } from 'structured-log/src';
+import { Logger } from 'structured-log';
 
 import * as eventController from './event';
 import { IDiscordController, DiscordController } from '../controllers/discord';
@@ -30,18 +30,15 @@ function postActiveCollabWebhook (
     const processed = eventController.processEvent(req.body);
 
     processed.map(value =>
-        discordController
-            .sendMessageToChannel(
-                value,
-                discordController.determineChannel())
-            );
+        discordController.sendMessageToChannel(
+            value,
+            discordController.determineChannel()
+        )
+    );
 
     processed.mapLeft(value => 
-        logger
-            .warn(
-                'Issue processing event: {value}',
-                value)
-            );
+        logger.warn('Issue processing event: {value}', value)
+    );
 
     res.sendStatus(200);
 }
