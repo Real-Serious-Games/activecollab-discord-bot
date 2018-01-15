@@ -80,7 +80,7 @@ async function login(
     return issueToken.body.token;
 }
 
-export interface IActiveCollabAPI {
+export interface IActiveCollabRestClient {
     /**
      * Sends an HTTP GET request to the ActiveCollab API
      */
@@ -92,12 +92,12 @@ export interface IActiveCollabAPI {
     post: (route: string, body: Object) => Promise<Object>;
 }
 
-export async function createActiveCollabApi(
+export async function createActiveCollabRestClient(
     request: Request,
     connectionStr: string,
     email: string,
     password: string
-): Promise<IActiveCollabAPI> {
+): Promise<IActiveCollabRestClient> {
     // Login
     const token = await login(request, connectionStr, email, password);
 

@@ -2,8 +2,8 @@ import * as sinon from 'sinon';
 import { RequestAPI, UriOptions, UrlOptions } from 'request';
 import { RequestPromise, RequestPromiseOptions } from 'request-promise-native';
 
-import * as activeCollabApi from '../src/controllers/activecollab-api';
-import { createActiveCollabApi } from '../src/controllers/activecollab-api';
+import * as activeCollabApi from '../src/controllers/activecollab-rest';
+import { createActiveCollabRestClient } from '../src/controllers/activecollab-rest';
 
 describe('ActiveCollab API', () => {
     const loginUrl = 'https://my.activecollab.com/api/v1/external/login';
@@ -27,7 +27,7 @@ describe('ActiveCollab API', () => {
         const testEmail = 'someone@example.com';
         const testPassword = 'Easy to remember, hard to guess';
 
-        await createActiveCollabApi(
+        await createActiveCollabRestClient(
             <activeCollabApi.Request>request,
             'connection',
             testEmail,
@@ -149,7 +149,7 @@ describe('ActiveCollab API', () => {
     });
 
     function createDefaultTestObject(request: Partial<activeCollabApi.Request>) {
-        return createActiveCollabApi(
+        return createActiveCollabRestClient(
             <activeCollabApi.Request>request,
             connectionStr,
             'email',
