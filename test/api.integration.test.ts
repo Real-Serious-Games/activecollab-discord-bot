@@ -12,7 +12,6 @@ import { Task } from '../src/models/taskEvent';
 import { createApiController } from '../src/controllers/api';
 import { IDiscordController, SendMessageToChannel, DetermineChannel } from '../src/controllers/discord';
 
-
 describe('POST /api/webhook', () => {
     it('should return status 200 when webhook secret present', (done) => {
         const webhookSecret = 'secret';
@@ -38,32 +37,32 @@ describe('POST /api/webhook', () => {
             .end(function(err, res) {
                 expect(res.status).to.equal(200);
                 done();
-      });
-  });
+        });
+    });
 
-  it('should return status 403 when missing webhook secret', (done) => {
-    const webhookSecret = 'secret';
+   it('should return status 403 when missing webhook secret', (done) => {
+        const webhookSecret = 'secret';
 
-    const client: Partial<Client> = {
-    };
+        const client: Partial<Client> = {
+        };
 
-    const discordControllerStub: IDiscordController = {
-        sendMessageToChannel: <SendMessageToChannel>sinon.stub(),
-        determineChannel: <DetermineChannel>sinon.stub()
-    };
+        const discordControllerStub: IDiscordController = {
+            sendMessageToChannel: <SendMessageToChannel>sinon.stub(),
+            determineChannel: <DetermineChannel>sinon.stub()
+        };
 
-    const app = express();
+        const app = express();
 
-    const apiController = createApiController(discordControllerStub, webhookSecret);
+        const apiController = createApiController(discordControllerStub, webhookSecret);
 
-    setupApp(app, discordControllerStub, apiController);
-    
-    return request(app)
-        .post('/api/webhook')
-        .send(testData.rawNewTask)
-        .end(function(err, res) {
-            expect(res.status).to.equal(403);
-            done();
-  });
-});
+        setupApp(app, discordControllerStub, apiController);
+        
+        return request(app)
+            .post('/api/webhook')
+            .send(testData.rawNewTask)
+            .end(function(err, res) {
+                expect(res.status).to.equal(403);
+                done();
+        });
+    });
 });

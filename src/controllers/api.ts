@@ -24,14 +24,15 @@ function postActiveCollabWebhook (
 ): void {
     if (req.header('X-Angie-WebhookSecret') != webhookSecret) {
         res.sendStatus(403);
-    } else {
-        const processed = eventController.processEvent(req.body);
-        discordController.sendMessageToChannel(
-            processed.value,
-             discordController.determineChannel());
-    
-        res.sendStatus(200);
+        return;
     }
+
+    const processed = eventController.processEvent(req.body);
+    discordController.sendMessageToChannel(
+        processed.value,
+        discordController.determineChannel());
+
+    res.sendStatus(200);
 }
 
 export function createApiController(

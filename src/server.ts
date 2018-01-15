@@ -5,7 +5,6 @@ import * as express from 'express';
 import { setupApp } from './app';
 import { DiscordController } from './controllers/discord';
 import { createApiController } from './controllers/api';
-import { disconnect } from 'cluster';
 
 // Setup config
 config.pushJsonFile('./config.json');
