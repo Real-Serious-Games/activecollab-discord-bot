@@ -2,10 +2,10 @@ import * as sinon from 'sinon';
 import { RequestAPI, UriOptions, UrlOptions } from 'request';
 import { RequestPromise, RequestPromiseOptions } from 'request-promise-native';
 
-import * as activeCollabApi from '../src/controllers/activecollab-api';
-import { createActiveCollabApi } from '../src/controllers/activecollab-api';
+import * as activeCollabRest from '../src/controllers/activecollab-rest';
+import { createActiveCollabRestClient } from '../src/controllers/activecollab-rest';
 
-describe('ActiveCollab API', () => {
+describe('ActiveCollab Rest Client', () => {
     const loginUrl = 'https://my.activecollab.com/api/v1/external/login';
     const connectionStr = 'https://app.activecollab.com/1';
 
@@ -27,8 +27,8 @@ describe('ActiveCollab API', () => {
         const testEmail = 'someone@example.com';
         const testPassword = 'Easy to remember, hard to guess';
 
-        await createActiveCollabApi(
-            <activeCollabApi.Request>request,
+        await createActiveCollabRestClient(
+            <activeCollabRest.Request>request,
             'connection',
             testEmail,
             testPassword
@@ -92,7 +92,7 @@ describe('ActiveCollab API', () => {
     it('throws error on failure to obtain token', async () => {
         expect.assertions(1);
 
-        const request: Partial<activeCollabApi.Request> = {
+        const request: Partial<activeCollabRest.Request> = {
             post: sinon.stub().onFirstCall().returns(Promise.resolve({
                 statusCode: 200,
                 body: {
@@ -118,7 +118,7 @@ describe('ActiveCollab API', () => {
 
         const api = await createDefaultTestObject(request);
 
-        const testRoute = '/api/v1/initial';
+        const testRoute = '/initial';
         await api.get(testRoute);
 
         const expected = {
@@ -136,7 +136,7 @@ describe('ActiveCollab API', () => {
 
         const api = await createDefaultTestObject(request);
 
-        const testRoute = '/api/v1/projects/1/task-lists';
+        const testRoute = '/projects/1/task-lists';
         await api.post(testRoute, {});
 
         const expected = {
@@ -148,20 +148,46 @@ describe('ActiveCollab API', () => {
         sinon.assert.calledWithMatch(request.post as sinon.SinonStub, expected);
     });
 
-    function createDefaultTestObject(request: Partial<activeCollabApi.Request>) {
-        return createActiveCollabApi(
-            <activeCollabApi.Request>request,
+    it('includes connection string and prefix in GET requests', async () => {
+        const request = createRequestOkStub();
+        const api = await createDefaultTestObject(request);
+
+        const testRoute = '/initial';
+        const expected = {
+            url: `${connectionStr}/api/v1/initial`
+        };
+        await api.get(testRoute);
+
+        sinon.assert.calledWithMatch(request.get as sinon.SinonStub, expected);
+    });
+
+    it('includes connection string and prefix in POST requests', async () => {
+        const request = createRequestOkStub();
+        const api = await createDefaultTestObject(request);
+
+        const testRoute = '/task-lists';
+        const expected = {
+            url: `${connectionStr}/api/v1/task-lists`
+        };
+        await api.post(testRoute, {});
+
+        sinon.assert.calledWithMatch(request.post as sinon.SinonStub, expected);
+    });
+
+    function createDefaultTestObject(request: Partial<activeCollabRest.Request>) {
+        return createActiveCollabRestClient(
+            <activeCollabRest.Request>request,
             connectionStr,
             'email',
             'password'
         );
     }
 
-    function createRequestStubWithToken(token: string): Partial<activeCollabApi.Request> {
+    function createRequestStubWithToken(token: string): Partial<activeCollabRest.Request> {
         return createRequestStub(200, true, 'test intent', token);
     }
 
-    function createRequestOkStub(): Partial<activeCollabApi.Request> {
+    function createRequestOkStub(): Partial<activeCollabRest.Request> {
         return createRequestStub(200, true, 'test intent');
     }
 
@@ -171,7 +197,7 @@ describe('ActiveCollab API', () => {
         intent?: string,
         message?: string,
         token?: string,
-    ): Partial<activeCollabApi.Request> {
+    ): Partial<activeCollabRest.Request> {
         return {
             post: sinon.stub().onFirstCall().returns(
                 Promise.resolve({

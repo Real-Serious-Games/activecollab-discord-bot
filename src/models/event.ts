@@ -1,9 +1,9 @@
+import { Payload } from './payload';
+
 // TODO: ensure this interface matches all events coming in
 
 export interface Event {
-    payload: {
-        class: string
-    };
+    payload: Payload;
     timestamp: number;
     type: string;
 }

@@ -4,6 +4,8 @@ import { RequestPromise, RequestPromiseOptions } from 'request-promise-native';
 export type Request =
     RequestAPI<RequestPromise, RequestPromiseOptions, UriOptions | UrlOptions>;
 
+const requestPrefix = '/api/v1';
+
 function get(
     request: Request,
     connectionStr: string,
@@ -11,7 +13,7 @@ function get(
     route: string
 ): Promise<Object> {
     return request.get({
-        url: connectionStr + route,
+        url: connectionStr + requestPrefix + route,
         headers: {
             'X-Angie-AuthApiToken': token
         },
@@ -27,7 +29,7 @@ function post(
     body: Object
 ): Promise<Object> {
     return request.post({
-        url: connectionStr + route,
+        url: connectionStr + requestPrefix + route,
         headers: {
             'X-Angie-AuthApiToken': token
         },
@@ -80,7 +82,7 @@ async function login(
     return issueToken.body.token;
 }
 
-export interface IActiveCollabAPI {
+export interface IActiveCollabRestClient {
     /**
      * Sends an HTTP GET request to the ActiveCollab API
      */
@@ -92,12 +94,12 @@ export interface IActiveCollabAPI {
     post: (route: string, body: Object) => Promise<Object>;
 }
 
-export async function createActiveCollabApi(
+export async function createActiveCollabRestClient(
     request: Request,
     connectionStr: string,
     email: string,
     password: string
-): Promise<IActiveCollabAPI> {
+): Promise<IActiveCollabRestClient> {
     // Login
     const token = await login(request, connectionStr, email, password);
 

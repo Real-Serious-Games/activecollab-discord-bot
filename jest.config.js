@@ -18,5 +18,9 @@ module.exports = {
     testMatch: [
         '**/test/**/*.test.(ts|js)'
     ],
-    testEnvironment: 'node'
+    testEnvironment: 'node',
+    mapCoverage: true,
+    transform: {
+        '^.+\\.tsx?$': 'ts-jest'
+    }
 };

@@ -12,18 +12,18 @@ export function processEvent(event: Event): Either<string, string> {
 
     switch (event.payload.class) {
         case 'Task': {
-            const taskEvent: Task = <Task>event;
-            switch (taskEvent.type) {
+            const taskPayload: Task = <Task>event.payload;
+            switch (event.type) {
                 case 'TaskCreated':
-                    return right(processNewTask(taskEvent));
+                    return right(processNewTask(taskPayload));
 
                 case 'TaskUpdated':
-                    return right(processUpdatedTask(taskEvent));
+                    return right(processUpdatedTask(taskPayload));
 
                 default:
                     return left(
-                        'Received Task Event with unknown payload type: ' +
-                        taskEvent.type
+                        'Received Task event with unknown payload type ' +
+                        event.type
                     );
             }
         }
@@ -60,14 +60,14 @@ export function processEvent(event: Event): Either<string, string> {
 
 function processNewTask(task: Task): string {
     return  'A new task has been created.\n' +
-            `Task Name: ${task.payload.name}\n` +
-            `Project Name: ${task.payload.project_id}`;
+            `Task Name: ${task.name}\n` +
+            `Project Name: ${task.project_id}`;
 }
 
 function processUpdatedTask(task: Task): string {
     return  'A task has been updated.\n' +
-            `Task Name: ${task.payload.name}\n` +
-            `Project Name: ${task.payload.project_id}`;
+            `Task Name: ${task.name}\n` +
+            `Project Name: ${task.project_id}`;
 }
 
 function processNewComment(comment: Comment): string {
