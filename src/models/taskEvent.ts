@@ -7,4 +7,5 @@ export interface Task extends Payload {
     id: number;
     name: string;
     project_id: number;
+    [key: string]: any;
 }

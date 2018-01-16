@@ -1,5 +1,4 @@
 import { IActiveCollabRestClient } from './activecollab-rest';
-import { TaskCollection } from '../models/taskCollection';
 import { Task } from '../models/taskEvent';
 
 async function taskIdToName(
