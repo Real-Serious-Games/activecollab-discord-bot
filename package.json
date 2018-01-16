@@ -62,6 +62,7 @@
     "express": "^4.16.2",
     "fp-ts": "^0.6.7",
     "morgan": "^1.9.0",
-    "request-promise-native": "^1.0.5"
+    "request-promise-native": "^1.0.5",
+    "structured-log": "^0.2.0"
   }
 }

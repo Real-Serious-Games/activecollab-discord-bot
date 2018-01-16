@@ -41,9 +41,9 @@ describe('DiscordController', () => {
 
 function createDiscordClient (
     on: sinon.SinonStub = sinon.stub(),
-    login: sinon.SinonStub = undefined
+    login?: sinon.SinonStub
 ): Partial<Client> {
-    if (login == undefined) {
+    if (login === undefined) {
         const loginStub: sinon.SinonStub = sinon.stub();
         loginStub.resolves();
 

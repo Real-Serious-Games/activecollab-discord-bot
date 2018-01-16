@@ -11,7 +11,7 @@ describe('processEvent', () => {
     describe('with task', () => {
         describe('with new task', () => {
             it('should return formatted task', () => {
-                const rawData = testData.rawNewTask;
+                const rawData = testData.getRawNewTask();
                 const expectedFormattedPayload: string =
                         'A new task has been created.\n' +
                         `Task Name: ${rawData.payload.name}\n` +
