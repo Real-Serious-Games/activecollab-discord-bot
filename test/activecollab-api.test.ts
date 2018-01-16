@@ -19,7 +19,7 @@ describe('ActiveCollab API', () => {
 
             await api.taskIdToName(projectId, taskId);
 
-            expect(mockGet.mock.calls[0][0]).toBe(`/projects/${projectId}/tasks`);
+            expect(mockGet).toBeCalledWith(`/projects/${projectId}/tasks`);
         });
 
         it('returns name of task with specified id', async () => {
@@ -76,14 +76,14 @@ describe('ActiveCollab API', () => {
 
             const mockGet = jest.fn().mockReturnValue([{
                 id: 1,
-                name: 'Test project';
+                name: 'Test project'
             }]);
 
             const api = createActiveCollabAPI(setupMockRestClient(mockGet));
 
             await api.projectIdToName(1);
 
-            expect(mockGet.mock.calls[0][0]).toBe(`/projects`);
+            expect(mockGet).toBeCalledWith(`/projects`);
         });
 
         it('throws error if data from API is invalid', async () => {
@@ -118,10 +118,7 @@ describe('ActiveCollab API', () => {
         it('throws error if no project with specified ID exists', async () => {
             expect.assertions(1);
 
-            const mockGet = jest.fn().mockReturnValue([{
-                id: 1,
-                name: 'Test project'
-            }]);
+            const mockGet = jest.fn().mockReturnValue([]);
 
             const api = createActiveCollabAPI(setupMockRestClient(mockGet));
 

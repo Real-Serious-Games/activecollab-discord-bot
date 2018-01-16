@@ -15,12 +15,11 @@ describe('ActiveCollab Rest Client', () => {
 
         await createDefaultTestObject(request);
 
-        const expected = {
+        const expected = expect.objectContaining({
             url: loginUrl
-        };
+        });
 
-        const mockCall = (request.post as jest.Mock).mock.calls[0][0];
-        expect(mockCall).toMatchObject(expected);
+        expect(request.post).toBeCalledWith(expected);
     });
 
     it('uses specified username and password', async () => {
@@ -38,15 +37,14 @@ describe('ActiveCollab Rest Client', () => {
             testPassword
         );
 
-        const expected = {
+        const expected = expect.objectContaining({
             json: {
                 email: testEmail,
                 password: testPassword
             }
-        };
+        });
 
-        const mockCall = (request.post as jest.Mock).mock.calls[0][0];
-        expect(mockCall).toMatchObject(expected);
+        expect(request.post).toBeCalledWith(expected);
     });
 
     it('throws error on failed login with message if one is present', async () => {
@@ -95,12 +93,11 @@ describe('ActiveCollab Rest Client', () => {
 
         await createDefaultTestObject(request);
 
-        const expected = {
+        const expected = expect.objectContaining({
             url: issueTokenUrl
-        };
+        });
 
-        const mockCall = (request.post as jest.Mock).mock.calls[1][0];
-        expect(mockCall).toMatchObject(expected);
+        expect(request.post).toBeCalledWith(expected);
     });
 
     it('specifies intent from login when requesting token', async () => {
@@ -111,16 +108,15 @@ describe('ActiveCollab Rest Client', () => {
 
         await createDefaultTestObject(request);
 
-        const expected = {
+        const expected = expect.objectContaining({
             json: {
                 intent: testIntent,
                 client_name: 'Discord Integration',
                 client_vendor: 'Real Serious Games'
             }
-        };
+        });
 
-        const mockCall = (request.post as jest.Mock).mock.calls[1][0];
-        expect(mockCall).toMatchObject(expected);
+        expect(request.post).toBeCalledWith(expected);
     });
 
     it('throws error on failure to obtain token', async () => {
@@ -157,14 +153,13 @@ describe('ActiveCollab Rest Client', () => {
         const testRoute = '/initial';
         await api.get(testRoute);
 
-        const expected = {
+        const expected = expect.objectContaining({
             headers: {
                 'X-Angie-AuthApiToken': expectedToken
             }
-        };
+        });
 
-        const mockCall = (request.get as jest.Mock).mock.calls[0][0];
-        expect(mockCall).toMatchObject(expected);
+        expect(request.get).toBeCalledWith(expected);
     });
 
     it('sets token header on POST requests', async () => {
@@ -178,14 +173,13 @@ describe('ActiveCollab Rest Client', () => {
         const testRoute = '/projects/1/task-lists';
         await api.post(testRoute, {});
 
-        const expected = {
+        const expected = expect.objectContaining({
             headers: {
                 'X-Angie-AuthApiToken': expectedToken
             }
-        };
+        });
 
-        const mockCall = (request.post as jest.Mock).mock.calls[2][0];
-        expect(mockCall).toMatchObject(expected);
+        expect(request.post).toBeCalledWith(expected);
     });
 
     it('includes connection string and prefix in GET requests', async () => {
@@ -195,13 +189,12 @@ describe('ActiveCollab Rest Client', () => {
         const api = await createDefaultTestObject(request);
 
         const testRoute = '/initial';
-        const expected = {
+        const expected = expect.objectContaining({
             url: `${connectionStr}/api/v1/initial`
-        };
+        });
         await api.get(testRoute);
 
-        const mockCall = (request.get as jest.Mock).mock.calls[0][0];
-        expect(mockCall).toMatchObject(expected);
+        expect(request.get).toBeCalledWith(expected);
     });
 
     it('includes connection string and prefix in POST requests', async () => {
@@ -211,13 +204,12 @@ describe('ActiveCollab Rest Client', () => {
         const api = await createDefaultTestObject(request);
 
         const testRoute = '/task-lists';
-        const expected = {
+        const expected = expect.objectContaining({
             url: `${connectionStr}/api/v1/task-lists`
-        };
+        });
         await api.post(testRoute, {});
 
-        const mockCall = (request.post as jest.Mock).mock.calls[2][0];
-        expect(mockCall).toMatchObject(expected);
+        expect(request.post).toBeCalledWith(expected);
     });
 
     function createDefaultTestObject(request: Partial<activeCollabRest.Request>) {
