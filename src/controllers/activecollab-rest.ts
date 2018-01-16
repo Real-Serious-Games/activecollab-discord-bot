@@ -58,7 +58,7 @@ async function login(
         if (login.body && login.body.message) {
             throw new Error(`Error ${login.statusCode} returned logging in: ${login.body.message}`);
         }
-        throw new Error(`Recieved response code on login ${login.status}`);
+        throw new Error(`Recieved response code on login ${login.statusCode}`);
     }
 
     if (!login.body.user || !login.body.user.intent) {
