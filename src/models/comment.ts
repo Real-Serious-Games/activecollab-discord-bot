@@ -9,6 +9,7 @@ export interface Comment extends Event {
         parent_id: number,
         body: string,
         created_on: number,
-        created_by_id: number
+        created_by_id: number,
+        [key: string]: any;
     };
 }
