@@ -15,24 +15,25 @@ describe('calling processEvent', () => {
                     'A new task has been created.\n' +
                     `Task Name: ${rawData.payload.name}\n` +
                     `Project Name: ${rawData.payload.project_id}`;
-    
+
             const actualValue = eventController.processEvent(rawData)
                 .getOrElseValue(undefined);
             expect(actualValue).to.equal(expectedFormattedPayload);
         });
+
         it('should return formatted task when task type is updated task', () => {
             const rawData = testData.getRawUpdatedTask();
             const expectedFormattedPayload: string =
                     'A task has been updated.\n' +
                     `Task Name: ${rawData.payload.name}\n` +
                     `Project Name: ${rawData.payload.project_id}`;
-    
+
             const actualValue = eventController.processEvent(rawData)
                 .getOrElseValue(undefined);
             expect(actualValue).to.equal(expectedFormattedPayload);
         });
     });
-    
+
     describe('with comment event', () => {
         it('should return formatted comment when comment type is new comment', () => {
             const rawData = testData.getRawNewComment();
@@ -41,17 +42,18 @@ describe('calling processEvent', () => {
                     `**Comment:** \`${rawData.payload.body}\`\n` +
                     `**${rawData.payload.parent_type}:** ${rawData.payload.parent_id}\n` +
                     `**Author:** ${rawData.payload.created_by_id}\n`;
-    
+
             const actualValue = eventController.processEvent(rawData)
                 .getOrElseValue(undefined);
             expect(actualValue).to.equal(expectedFormattedPayload);
         });
+
         it('should return error value when comment type unknown', () => {
             const rawData = testData.getRawNewComment();
             rawData.type = undefined;
 
             const actualValue = eventController.processEvent(rawData);
-    
+
             expect(actualValue.isLeft())
                 .is
                 .true;
@@ -68,23 +70,23 @@ describe('calling processEvent', () => {
 
     describe('with project', () => {
         it('should return formatted project event when project type is new project', () => {
-            const rawData = testData.getRawNewProject();
+            const rawData = testData.getRawNewProjectEvent();
             const expectedFormattedEvent: string =
                     '*A new project has been created.*\n' +
                     `**Project:** \`${rawData.payload.name}\`\n` +
                     `**Company:** ${rawData.payload.company_id}\n` +
                     `**Author:** ${rawData.payload.created_by_id}\n`;
-    
+
             const actualValue = eventController.processEvent(rawData)
                 .getOrElseValue(undefined);
             expect(actualValue).to.equal(expectedFormattedEvent);
         });
         it('should return error value when project type is unknown', () => {
-            const rawData = testData.getRawNewProject();
+            const rawData = testData.getRawNewProjectEvent();
             rawData.type = undefined;
 
             const actualValue = eventController.processEvent(rawData);
-    
+
             expect(actualValue.isLeft())
                 .is
                 .true;

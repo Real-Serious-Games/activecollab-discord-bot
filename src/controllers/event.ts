@@ -2,10 +2,11 @@ import { Task } from '../models/taskEvent';
 import { Comment } from '../models/comment';
 import { Event } from '../models/event';
 import { Project } from '../models/project';
+import { Payload } from '../models/payload';
 import { assert } from 'console';
 import { Either, left, right } from 'fp-ts/lib/Either';
 
-export function processEvent(event: Event): Either<string, string> {
+export function processEvent(event: Event<Payload>): Either<string, string> {
     if (!event || !event.payload || !event.payload.class) {
         return left(`Received invalid event: ${event}`);
     }
@@ -28,28 +29,28 @@ export function processEvent(event: Event): Either<string, string> {
             }
         }
         case 'Comment': {
-            const commentEvent: Comment = <Comment>event;
-            switch (commentEvent.type) {
+            const commentEvent: Comment = <Comment>event.payload;
+            switch (event.type) {
                 case 'CommentCreated':
                     return right(processNewComment(commentEvent));
 
                 default:
                     return left(
                         'Received Comment Event with unknown payload type: ' +
-                        commentEvent.type
+                        event.type
                     );
             }
         }
         case 'Project': {
-            const projectEvent: Project = <Project>event;
-            switch (projectEvent.type) {
+            const projectEvent: Project = <Project>event.payload;
+            switch (event.type) {
                 case 'ProjectCreated':
                     return right(processNewProjct(projectEvent));
 
                 default:
                     return left(
                         'Received Project Event with unknown payload type: ' +
-                        projectEvent.type
+                        event.type
                     );
             }
         }
@@ -72,14 +73,14 @@ function processUpdatedTask(task: Task): string {
 
 function processNewComment(comment: Comment): string {
     return  '*A new comment has been added.*\n' +
-            `**Comment:** \`${comment.payload.body}\`\n` +
-            `**${comment.payload.parent_type}:** ${comment.payload.parent_id}\n` +
-            `**Author:** ${comment.payload.created_by_id}\n`;
+            `**Comment:** \`${comment.body}\`\n` +
+            `**${comment.parent_type}:** ${comment.parent_id}\n` +
+            `**Author:** ${comment.created_by_id}\n`;
 }
 
 function processNewProjct(project: Project): string {
     return  '*A new project has been created.*\n' +
-            `**Project:** \`${project.payload.name}\`\n` +
-            `**Company:** ${project.payload.company_id}\n` +
-            `**Author:** ${project.payload.created_by_id}\n`;
+            `**Project:** \`${project.name}\`\n` +
+            `**Company:** ${project.company_id}\n` +
+            `**Author:** ${project.created_by_id}\n`;
 }
