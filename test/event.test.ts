@@ -7,54 +7,95 @@ import * as eventController from '../src/controllers/event';
 import * as testData from './testData';
 import { Task } from '../src/models/taskEvent';
 
-describe('processPayload with new task', () => {
-    it('should return formatted payload', () => {
-        const rawData = testData.rawNewTask;
-        const expectedFormattedPayload: string =
-                'A new task has been created.\n' +
-                `Task Name: ${rawData.payload.name}\n` +
-                `Project Name: ${rawData.payload.project_id}`;
-
-        const actualValue = eventController.processEvent(rawData)
-            .getOrElseValue(undefined);
-        expect(actualValue).to.equal(expectedFormattedPayload);
+describe('calling processEvent', () => {
+    describe('with task event', () => {
+        it('should return formatted task when task type is new task', () => {
+            const rawData = testData.getRawNewTask();
+            const expectedFormattedPayload: string =
+                    'A new task has been created.\n' +
+                    `Task Name: ${rawData.payload.name}\n` +
+                    `Project Name: ${rawData.payload.project_id}`;
+    
+            const actualValue = eventController.processEvent(rawData)
+                .getOrElseValue(undefined);
+            expect(actualValue).to.equal(expectedFormattedPayload);
+        });
+        it('should return formatted task when task type is updated task', () => {
+            const rawData = testData.getRawUpdatedTask();
+            const expectedFormattedPayload: string =
+                    'A task has been updated.\n' +
+                    `Task Name: ${rawData.payload.name}\n` +
+                    `Project Name: ${rawData.payload.project_id}`;
+    
+            const actualValue = eventController.processEvent(rawData)
+                .getOrElseValue(undefined);
+            expect(actualValue).to.equal(expectedFormattedPayload);
+        });
     });
-});
+    
+    describe('with comment event', () => {
+        it('should return formatted comment when comment type is new comment', () => {
+            const rawData = testData.getRawNewComment();
+            const expectedFormattedPayload: string =
+                    '*A new comment has been added.*\n' +
+                    `**Comment:** \`${rawData.payload.body}\`\n` +
+                    `**${rawData.payload.parent_type}:** ${rawData.payload.parent_id}\n` +
+                    `**Author:** ${rawData.payload.created_by_id}\n`;
+    
+            const actualValue = eventController.processEvent(rawData)
+                .getOrElseValue(undefined);
+            expect(actualValue).to.equal(expectedFormattedPayload);
+        });
+        it('should return error value when comment type unknown', () => {
+            const rawData = testData.getRawNewComment();
+            rawData.type = undefined;
 
-describe('processPayload with updated task', () => {
-    it('should return formatted payload', () => {
-        const rawData = testData.rawUpdatedTask;
-        const expectedFormattedPayload: string =
-                'A task has been updated.\n' +
-                `Task Name: ${rawData.payload.name}\n` +
-                `Project Name: ${rawData.payload.project_id}`;
+            const actualValue = eventController.processEvent(rawData);
+    
+            expect(actualValue.isLeft())
+                .is
+                .true;
 
-        const actualValue = eventController.processEvent(rawData)
-            .getOrElseValue(undefined);
-        expect(actualValue).to.equal(expectedFormattedPayload);
+            expect(actualValue.isRight())
+                .is
+                .false;
+
+            expect(actualValue.value)
+                .to
+                .equal('Received Comment Event with unknown payload type: undefined');
+        });
     });
-});
 
-describe('processNewTask', () => {
-    it('should return formatted task', () => {
-        const expectedFormattedTask: string =
-                'A new task has been created.\n' +
-                `Task Name: ${testData.rawNewTask.payload.name}\n` +
-                `Project Name: ${testData.rawNewTask.payload.project_id}`;
+    describe('with project', () => {
+        it('should return formatted project event when project type is new project', () => {
+            const rawData = testData.getRawNewProject();
+            const expectedFormattedEvent: string =
+                    '*A new project has been created.*\n' +
+                    `**Project:** \`${rawData.payload.name}\`\n` +
+                    `**Company:** ${rawData.payload.company_id}\n` +
+                    `**Author:** ${rawData.payload.created_by_id}\n`;
+    
+            const actualValue = eventController.processEvent(rawData)
+                .getOrElseValue(undefined);
+            expect(actualValue).to.equal(expectedFormattedEvent);
+        });
+        it('should return error value when project type is unknown', () => {
+            const rawData = testData.getRawNewProject();
+            rawData.type = undefined;
 
-        expect(eventController.processNewTask(testData.rawNewTask.payload))
-            .to.equal(expectedFormattedTask);
-    });
-});
+            const actualValue = eventController.processEvent(rawData);
+    
+            expect(actualValue.isLeft())
+                .is
+                .true;
 
-describe('processUpdatedTask', () => {
-    it('should return formatted task', () => {
-        const expectedFormattedTask: string =
-                'A task has been updated.\n' +
-                `Task Name: ${testData.rawNewTask.payload.name}\n` +
-                `Project Name: ${testData.rawNewTask.payload.project_id}`;
+            expect(actualValue.isRight())
+                .is
+                .false;
 
-        expect(eventController.processUpdatedTask(testData.rawUpdatedTask.payload))
-            .to.equal(expectedFormattedTask);
+            expect(actualValue.value)
+                .to
+                .equal('Received Project Event with unknown payload type: undefined');
+        });
     });
 });

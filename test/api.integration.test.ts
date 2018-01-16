@@ -2,6 +2,7 @@ import * as request from 'supertest';
 import * as sinon from 'sinon';
 import { Client } from 'discord.js';
 import * as express from 'express';
+import { Logger } from 'structured-log/src';
 
 const chai = require('chai');
 const expect = chai.expect;
@@ -16,8 +17,7 @@ describe('POST /api/webhook', () => {
     it('should return status 200 when webhook secret present', (done) => {
         const webhookSecret = 'secret';
 
-        const client: Partial<Client> = {
-        };
+        const client: Partial<Client> = { };
 
         const discordControllerStub: IDiscordController = {
             sendMessageToChannel: <SendMessageToChannel>sinon.stub(),
@@ -25,15 +25,15 @@ describe('POST /api/webhook', () => {
         };
 
         const app = express();
+        const logger: Partial<Logger> = { };
+        const apiController = createApiController(discordControllerStub, webhookSecret, <Logger>logger);
 
-        const apiController = createApiController(discordControllerStub, webhookSecret);
-
-        setupApp(app, discordControllerStub, apiController);
+        setupApp(app, <Logger>logger, discordControllerStub, apiController);
         
         return request(app)
             .post('/api/webhook')
             .set('X-Angie-WebhookSecret', webhookSecret)
-            .send(testData.rawNewTask)
+            .send(testData.getRawNewTask())
             .end(function(err, res) {
                 expect(res.status).to.equal(200);
                 done();
@@ -52,14 +52,14 @@ describe('POST /api/webhook', () => {
         };
 
         const app = express();
+        const logger: Partial<Logger> = { };
+        const apiController = createApiController(discordControllerStub, webhookSecret, <Logger>logger);
 
-        const apiController = createApiController(discordControllerStub, webhookSecret);
-
-        setupApp(app, discordControllerStub, apiController);
+        setupApp(app, <Logger>logger, discordControllerStub, apiController);
         
         return request(app)
             .post('/api/webhook')
-            .send(testData.rawNewTask)
+            .send(testData.getRawNewTask())
             .end(function(err, res) {
                 expect(res.status).to.equal(403);
                 done();
