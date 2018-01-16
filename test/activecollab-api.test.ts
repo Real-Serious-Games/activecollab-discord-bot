@@ -1,4 +1,4 @@
-import { createActiveCollabAPI } from '../src/controllers/activecollab';
+import { createActiveCollabAPI } from '../src/controllers/activecollab-api';
 import { IActiveCollabRestClient } from '../src/controllers/activecollab-rest';
 
 describe('ActiveCollab API', () => {
