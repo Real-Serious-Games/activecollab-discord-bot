@@ -49,7 +49,7 @@ describe('ActiveCollab Rest Client', () => {
         expect(mockCall).toMatchObject(expected);
     });
 
-    it('throws error on failed login', async () => {
+    it('throws error on failed login with message if one is present', async () => {
         expect.assertions(1);
 
         const expectedMessage = 'Invalid password.';
@@ -58,6 +58,30 @@ describe('ActiveCollab Rest Client', () => {
         await expect(createDefaultTestObject(request))
             .rejects.toMatchObject(
                 new Error('Error 500 returned logging in: Invalid password.')
+            );
+    });
+
+    it('throws generic error on failed login if no message is present', async () => {
+        expect.assertions(1);
+
+        const expectedMessage = 'Invalid password.';
+        const request = createRequestStub(500, false, undefined, undefined);
+
+        await expect(createDefaultTestObject(request))
+            .rejects.toMatchObject(
+                new Error('Recieved response code on login 500')
+            );
+    });
+
+    it('throws error on login if user information not present', async () => {
+        expect.assertions(1);
+
+        const expectedMessage = 'Invalid password.';
+        const request = createRequestStub(200, true, undefined, undefined);
+
+        await expect(createDefaultTestObject(request))
+            .rejects.toMatchObject(
+                new Error('Could not retrieve user information from login.')
             );
     });
 
