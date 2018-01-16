@@ -1,4 +1,3 @@
-import * as sinon from 'sinon';
 import { RequestAPI, UriOptions, UrlOptions } from 'request';
 import { RequestPromise, RequestPromiseOptions } from 'request-promise-native';
 
@@ -10,6 +9,8 @@ describe('ActiveCollab Rest Client', () => {
     const connectionStr = 'https://app.activecollab.com/1';
 
     it('should POST to correct URL for login', async () => {
+        expect.assertions(1);
+
         const request = createRequestOkStub();
 
         await createDefaultTestObject(request);
@@ -18,10 +19,13 @@ describe('ActiveCollab Rest Client', () => {
             url: loginUrl
         };
 
-        sinon.assert.calledWithMatch(request.post as sinon.SinonStub, expected);
+        const mockCall = (request.post as jest.Mock).mock.calls[0][0];
+        expect(mockCall).toMatchObject(expected);
     });
 
     it('uses specified username and password', async () => {
+        expect.assertions(1);
+
         const request = createRequestOkStub();
 
         const testEmail = 'someone@example.com';
@@ -41,7 +45,8 @@ describe('ActiveCollab Rest Client', () => {
             }
         };
 
-        sinon.assert.calledWithMatch(request.post as sinon.SinonStub, expected);
+        const mockCall = (request.post as jest.Mock).mock.calls[0][0];
+        expect(mockCall).toMatchObject(expected);
     });
 
     it('throws error on failed login', async () => {
@@ -57,6 +62,8 @@ describe('ActiveCollab Rest Client', () => {
     });
 
     it('should POST to correct URL to get token', async () => {
+        expect.assertions(1);
+
         const request = createRequestOkStub();
 
         const issueTokenUrl = connectionStr
@@ -68,12 +75,14 @@ describe('ActiveCollab Rest Client', () => {
             url: issueTokenUrl
         };
 
-        sinon.assert.calledWithMatch(request.post as sinon.SinonStub, expected);
+        const mockCall = (request.post as jest.Mock).mock.calls[1][0];
+        expect(mockCall).toMatchObject(expected);
     });
 
     it('specifies intent from login when requesting token', async () => {
-        const testIntent = 'test intent';
+        expect.assertions(1);
 
+        const testIntent = 'test intent';
         const request = createRequestStub(200, true, testIntent);
 
         await createDefaultTestObject(request);
@@ -86,14 +95,15 @@ describe('ActiveCollab Rest Client', () => {
             }
         };
 
-        sinon.assert.calledWithMatch(request.post as sinon.SinonStub, expected);
+        const mockCall = (request.post as jest.Mock).mock.calls[1][0];
+        expect(mockCall).toMatchObject(expected);
     });
 
     it('throws error on failure to obtain token', async () => {
         expect.assertions(1);
 
         const request: Partial<activeCollabRest.Request> = {
-            post: sinon.stub().onFirstCall().returns(Promise.resolve({
+            post: jest.fn().mockReturnValueOnce(Promise.resolve({
                 statusCode: 200,
                 body: {
                     is_ok: true,
@@ -101,7 +111,7 @@ describe('ActiveCollab Rest Client', () => {
                         intent: 'intent'
                     }
                 }
-            })).onSecondCall().returns(Promise.resolve({
+            })).mockReturnValueOnce(Promise.resolve({
                 statusCode: 500
             }))
         };
@@ -113,6 +123,8 @@ describe('ActiveCollab Rest Client', () => {
     });
 
     it('sets token header on GET requests', async () => {
+        expect.assertions(1);
+
         const expectedToken = 'test token';
         const request = createRequestStubWithToken(expectedToken);
 
@@ -127,10 +139,13 @@ describe('ActiveCollab Rest Client', () => {
             }
         };
 
-        sinon.assert.calledWithMatch(request.get as sinon.SinonStub, expected);
+        const mockCall = (request.get as jest.Mock).mock.calls[0][0];
+        expect(mockCall).toMatchObject(expected);
     });
 
     it('sets token header on POST requests', async () => {
+        expect.assertions(1);
+
         const expectedToken = 'test token';
         const request = createRequestStubWithToken(expectedToken);
 
@@ -145,10 +160,13 @@ describe('ActiveCollab Rest Client', () => {
             }
         };
 
-        sinon.assert.calledWithMatch(request.post as sinon.SinonStub, expected);
+        const mockCall = (request.post as jest.Mock).mock.calls[2][0];
+        expect(mockCall).toMatchObject(expected);
     });
 
     it('includes connection string and prefix in GET requests', async () => {
+        expect.assertions(1);
+
         const request = createRequestOkStub();
         const api = await createDefaultTestObject(request);
 
@@ -158,10 +176,13 @@ describe('ActiveCollab Rest Client', () => {
         };
         await api.get(testRoute);
 
-        sinon.assert.calledWithMatch(request.get as sinon.SinonStub, expected);
+        const mockCall = (request.get as jest.Mock).mock.calls[0][0];
+        expect(mockCall).toMatchObject(expected);
     });
 
     it('includes connection string and prefix in POST requests', async () => {
+        expect.assertions(1);
+
         const request = createRequestOkStub();
         const api = await createDefaultTestObject(request);
 
@@ -171,7 +192,8 @@ describe('ActiveCollab Rest Client', () => {
         };
         await api.post(testRoute, {});
 
-        sinon.assert.calledWithMatch(request.post as sinon.SinonStub, expected);
+        const mockCall = (request.post as jest.Mock).mock.calls[2][0];
+        expect(mockCall).toMatchObject(expected);
     });
 
     function createDefaultTestObject(request: Partial<activeCollabRest.Request>) {
@@ -199,7 +221,7 @@ describe('ActiveCollab Rest Client', () => {
         token?: string,
     ): Partial<activeCollabRest.Request> {
         return {
-            post: sinon.stub().onFirstCall().returns(
+            post: jest.fn().mockReturnValueOnce(
                 Promise.resolve({
                     statusCode: status,
                     body: {
@@ -210,7 +232,7 @@ describe('ActiveCollab Rest Client', () => {
                         message: message
                     }
                 })
-            ).onSecondCall().returns(
+            ).mockReturnValueOnce(
                 Promise.resolve({
                     statusCode: status,
                     body: {
@@ -219,7 +241,7 @@ describe('ActiveCollab Rest Client', () => {
                     }
                 })
             ),
-            get: sinon.spy()
+            get: jest.fn()
         };
     }
 });
