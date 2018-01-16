@@ -2,10 +2,10 @@ import * as sinon from 'sinon';
 import { RequestAPI, UriOptions, UrlOptions } from 'request';
 import { RequestPromise, RequestPromiseOptions } from 'request-promise-native';
 
-import * as activeCollabApi from '../src/controllers/activecollab-rest';
+import * as activeCollabRest from '../src/controllers/activecollab-rest';
 import { createActiveCollabRestClient } from '../src/controllers/activecollab-rest';
 
-describe('ActiveCollab API', () => {
+describe('ActiveCollab Rest Client', () => {
     const loginUrl = 'https://my.activecollab.com/api/v1/external/login';
     const connectionStr = 'https://app.activecollab.com/1';
 
@@ -28,7 +28,7 @@ describe('ActiveCollab API', () => {
         const testPassword = 'Easy to remember, hard to guess';
 
         await createActiveCollabRestClient(
-            <activeCollabApi.Request>request,
+            <activeCollabRest.Request>request,
             'connection',
             testEmail,
             testPassword
@@ -92,7 +92,7 @@ describe('ActiveCollab API', () => {
     it('throws error on failure to obtain token', async () => {
         expect.assertions(1);
 
-        const request: Partial<activeCollabApi.Request> = {
+        const request: Partial<activeCollabRest.Request> = {
             post: sinon.stub().onFirstCall().returns(Promise.resolve({
                 statusCode: 200,
                 body: {
@@ -174,20 +174,20 @@ describe('ActiveCollab API', () => {
         sinon.assert.calledWithMatch(request.post as sinon.SinonStub, expected);
     });
 
-    function createDefaultTestObject(request: Partial<activeCollabApi.Request>) {
+    function createDefaultTestObject(request: Partial<activeCollabRest.Request>) {
         return createActiveCollabRestClient(
-            <activeCollabApi.Request>request,
+            <activeCollabRest.Request>request,
             connectionStr,
             'email',
             'password'
         );
     }
 
-    function createRequestStubWithToken(token: string): Partial<activeCollabApi.Request> {
+    function createRequestStubWithToken(token: string): Partial<activeCollabRest.Request> {
         return createRequestStub(200, true, 'test intent', token);
     }
 
-    function createRequestOkStub(): Partial<activeCollabApi.Request> {
+    function createRequestOkStub(): Partial<activeCollabRest.Request> {
         return createRequestStub(200, true, 'test intent');
     }
 
@@ -197,7 +197,7 @@ describe('ActiveCollab API', () => {
         intent?: string,
         message?: string,
         token?: string,
-    ): Partial<activeCollabApi.Request> {
+    ): Partial<activeCollabRest.Request> {
         return {
             post: sinon.stub().onFirstCall().returns(
                 Promise.resolve({
