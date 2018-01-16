@@ -13,13 +13,13 @@ export function processEvent(event: Event<Payload>): Either<string, string> {
 
     switch (event.payload.class) {
         case 'Task': {
-            const taskPayload: Task = <Task>event.payload;
+            const task: Task = <Task>event.payload;
             switch (event.type) {
                 case 'TaskCreated':
-                    return right(processNewTask(taskPayload));
+                    return right(processNewTask(task));
 
                 case 'TaskUpdated':
-                    return right(processUpdatedTask(taskPayload));
+                    return right(processUpdatedTask(task));
 
                 default:
                     return left(
@@ -29,10 +29,10 @@ export function processEvent(event: Event<Payload>): Either<string, string> {
             }
         }
         case 'Comment': {
-            const commentEvent: Comment = <Comment>event.payload;
+            const comment: Comment = <Comment>event.payload;
             switch (event.type) {
                 case 'CommentCreated':
-                    return right(processNewComment(commentEvent));
+                    return right(processNewComment(comment));
 
                 default:
                     return left(
@@ -42,10 +42,10 @@ export function processEvent(event: Event<Payload>): Either<string, string> {
             }
         }
         case 'Project': {
-            const projectEvent: Project = <Project>event.payload;
+            const project: Project = <Project>event.payload;
             switch (event.type) {
                 case 'ProjectCreated':
-                    return right(processNewProjct(projectEvent));
+                    return right(processNewProjct(project));
 
                 default:
                     return left(
