@@ -14,7 +14,7 @@ export function setupApp (
     apiController: IApiController
 ): void {
     // Express configuration
-    express.set('port', config.get('port') || 8080);
+    express.set('port', config.get('port') || 80);
     express.use(morganLogger('dev'));
     express.use(bodyParser.json());
 
