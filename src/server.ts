@@ -18,7 +18,8 @@ const logger = createLogger();
 
 const discordController = new DiscordController(
     config.get('discordBotToken'),
-    new discord.Client()
+    new discord.Client(),
+    (projectId: number) => config.get(`channels:${projectId}`)
 );
 
 const apiController = createApiController(

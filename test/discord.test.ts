@@ -17,26 +17,14 @@ describe('calling sendMessageToChannel', () => {
             send: channelStub
         };
 
-        const client = setupMockDiscordClient();
-
-        const discordController: DiscordController = 
-            new DiscordController(
-                '',
-                <Client>client,
-                jest.fn().mockReturnValue('channel'));
+        const discordController = setupDiscordController();
 
         discordController.sendMessageToChannel(message, <TextChannel>channel);
         sinon.assert.calledWith(channel.send as sinon.SinonStub, message);
     }),
 
     it('should error when channel is invalid', () => {
-        const client = setupMockDiscordClient();
-
-        const discordController: DiscordController = 
-            new DiscordController(
-                '',
-                <Client>client,
-                jest.fn().mockReturnValue('channel'));
+        const discordController = setupDiscordController();
 
         expect(() => discordController.sendMessageToChannel('', undefined))
             .toThrow('Cannot send without a channel: undefined');
@@ -55,6 +43,7 @@ describe('calling determineChannel', () => {
         expect(framework.getChannelFromId)
             .toHaveBeenCalled();
     });
+
     it('should return ID not found error when project ID not found', () => {
         const cantFindValue = true;
 
@@ -67,6 +56,7 @@ describe('calling determineChannel', () => {
         expect(framework.getChannelFromId)
             .toHaveBeenCalled();
     });
+
     it('should return invalid ID error when project ID not valid', () => {
         const framework = setupTestFramework();
 
@@ -77,6 +67,7 @@ describe('calling determineChannel', () => {
         expect(framework.getChannelFromId)
             .toHaveBeenCalledTimes(0);
     });
+
     it('should return channel not found error when channel not found', () => {
         const nonExistantChannel = 'channel-that-doesnt-exist';
         
@@ -117,11 +108,11 @@ function setupTestFramework(
             : channelToReturn
         );
 
-        const discordController: IDiscordController = 
-            new DiscordController(
-            '',
+        const discordController = setupDiscordController(
+            undefined,
             <Client>client,
-            getChannelFromId);
+            getChannelFromId
+        );
 
         return {
             client: client,
@@ -131,16 +122,24 @@ function setupTestFramework(
         };
 }
 
-// function setupDiscordController(
-//     token: '',
-//     client: setupMockDiscordClient(),
-//     getChannelFromId: jest.fn().mockReturnValue('channel')
-// ) {
-//     return new DiscordController(
-//         token,
-//         client,
-//         getChannelFromId);
-// }
+function setupDiscordController(
+    token = '',
+    client?: Client,
+    getChannelFromId?
+) {
+    if (!client) {
+        client = <Client>setupMockDiscordClient();
+    }
+
+    if (!getChannelFromId) {
+        getChannelFromId =  jest.fn().mockReturnValue('channel');
+    }
+
+    return new DiscordController(
+        token,
+        client,
+        getChannelFromId);
+}
 
 function setupMockDiscordClient (
     on: sinon.SinonStub = sinon.stub(),
