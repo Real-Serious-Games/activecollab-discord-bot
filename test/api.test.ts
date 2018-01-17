@@ -1,61 +1,68 @@
-import * as sinon from 'sinon';
 import { Response, Request } from 'express';
 import { Client } from 'discord.js';
 import { Logger } from 'structured-log/src';
 import { Task } from '../src/models/taskEvent';
  
 import { IDiscordController, SendMessageToChannel, DetermineChannel } from '../src/controllers/discord';
-import { createApiController } from '../src/controllers/api';
+import { createApiController, IApiController } from '../src/controllers/api';
 import * as testData from './testData';
+import { IEventController, createEventController } from '../src/controllers/event';
+import { IActiveCollabAPI } from '../src/controllers/activecollab-api';
 
 describe('postActiveCollabWebhook', () => {
-    it('should call send with status 200', () => {
+    it('should call send with status 200', async () => {
+        expect.assertions(1);
+
         const testFramework = createApiTestFramework();
 
-        testFramework
+        await testFramework
             .apiController
             .postActiveCollabWebhook(
                 <Request>testFramework.req,
                 <Response>testFramework.res
             );
-        sinon.assert.calledOnce(testFramework.res.sendStatus as sinon.SinonStub);
-        sinon.assert.calledWith(testFramework.res.sendStatus as sinon.SinonStub, 200);
+
+        expect(testFramework.res.sendStatus).toBeCalledWith(200);
     });
 
-    it('should return 403 status when missing auth header', () => {
+    it('should return 403 status when missing auth header', async () => {
+        expect.assertions(1);
+        
         const authHeaderMissing = true;
-
         const testFramework = createApiTestFramework(undefined, undefined, authHeaderMissing);
 
-        testFramework
+        await testFramework
             .apiController
             .postActiveCollabWebhook(
                 <Request>testFramework.req,
                 <Response>testFramework.res
             );
-        sinon.assert.calledOnce(testFramework.res.sendStatus as sinon.SinonStub);
-        sinon.assert.calledWith(testFramework.res.sendStatus as sinon.SinonStub, 403);
+
+        expect(testFramework.res.sendStatus).toBeCalledWith(403);
     });
 
-    it('should return 403 status when auth header wrong', () => {
+    it('should return 403 status when auth header wrong', async () => {
+        expect.assertions(1);
+        
         const secret = 'secret';
         const wrongSecret = 'wrong secret';
 
         const testFramework = createApiTestFramework(secret, wrongSecret);
 
-        testFramework
+        await testFramework
             .apiController
             .postActiveCollabWebhook(
                 <Request>testFramework.req,
                 <Response>testFramework.res
             );
-        sinon.assert.calledOnce(testFramework.res.sendStatus as sinon.SinonStub);
-        sinon.assert.calledWith(testFramework.res.sendStatus as sinon.SinonStub, 403);
-    });
-    
 
-    it('should call logger and not sendMessageToChannel when unknown request body', () => {
-        const body: Task = testData.getRawNewTask();
+        expect(testFramework.res.sendStatus).toBeCalledWith(403);
+    });
+
+    it('should call logger and not sendMessageToChannel when unknown request body', async () => {
+        expect.assertions(2);
+        
+        const body = testData.getRawNewTask();
         body.payload.class = undefined;
 
         const testFramework = createApiTestFramework(
@@ -68,31 +75,32 @@ describe('postActiveCollabWebhook', () => {
             undefined
         );
 
-        testFramework
+        await testFramework
             .apiController
             .postActiveCollabWebhook(
                 <Request>testFramework.req,
                 <Response>testFramework.res
             );
 
-        sinon.assert.notCalled(testFramework.discordController.sendMessageToChannel as sinon.SinonSpy);
-        sinon.assert.calledOnce(testFramework.logger.warn as sinon.SinonStub);
+        expect(testFramework.discordController.sendMessageToChannel).toHaveBeenCalledTimes(0);
+        expect(testFramework.logger.warn).toHaveBeenCalled();
     });
 
-    it('should call sendMessageToChannel when known request body', () => {       
+    it('should call sendMessageToChannel when known request body', async () => {       
+        expect.assertions(2);
+        
         const testFramework = createApiTestFramework();
-
         const body = testData.getRawNewTask;
 
-        testFramework
+        await testFramework
             .apiController
             .postActiveCollabWebhook(
                 <Request>testFramework.req,
                 <Response>testFramework.res
             );
 
-        sinon.assert.calledOnce(testFramework.discordController.sendMessageToChannel as sinon.SinonSpy);
-        sinon.assert.notCalled(testFramework.logger.warn as sinon.SinonStub);
+        expect(testFramework.discordController.sendMessageToChannel).toHaveBeenCalled();
+        expect(testFramework.logger.warn).toHaveBeenCalledTimes(0);
     });
 
 });
@@ -104,27 +112,31 @@ function createApiTestFramework(
     bodyToTest = testData.getRawNewTask(),
     req: Partial<Request> = {
         body: bodyToTest,
-        header: sinon.stub().returns(
+        header: jest.fn().mockReturnValue(
             responseSecretUndefined 
             ? undefined 
             : responseSecret)
     },
     res: Partial<Response> = {
-        sendStatus: sinon.spy()
+        sendStatus: jest.fn()
     },
     client: Partial<Client> = {
     },
     discordController: IDiscordController = {
-        sendMessageToChannel: <SendMessageToChannel>sinon.spy(),
-        determineChannel: <DetermineChannel>sinon.spy()
+        sendMessageToChannel: <SendMessageToChannel>jest.fn(),
+        determineChannel: <DetermineChannel>jest.fn()
     },
     logger: Partial<Logger> = {
-        warn: sinon.spy()
-     },
+        warn: jest.fn()
+    },
+    eventController: IEventController = createEventController(
+        { } as IActiveCollabAPI
+    ),
     apiController = createApiController(
         discordController,
         expectedSecret, 
-        <Logger>logger
+        <Logger>logger,
+        <IEventController>eventController
     )
 ) {
     return {
@@ -134,6 +146,7 @@ function createApiTestFramework(
         client: client,
         discordController: discordController,
         apiController: apiController,
-        logger: logger
+        logger: logger,
+        eventControllerStub: eventController
     };
 }
