@@ -86,6 +86,38 @@ describe('postActiveCollabWebhook', () => {
         expect(testFramework.logger.warn).toHaveBeenCalled();
     });
 
+    it('should call logger and not sendMessageToChannel unable to determine channel', async () => {
+        expect.assertions(2);
+        
+        const body = testData.getRawNewTask();
+
+        const discordController: Partial<IDiscordController> = {
+            determineChannel: jest.fn(() => Promise.reject('Channel error')),
+            sendMessageToChannel: jest.fn()
+        };
+
+        const testFramework = createApiTestFramework(
+            undefined,
+            undefined, 
+            undefined, 
+            body, 
+            undefined,
+            undefined,
+            undefined,
+            <IDiscordController>discordController
+        );
+
+        await testFramework
+            .apiController
+            .postActiveCollabWebhook(
+                <Request>testFramework.req,
+                <Response>testFramework.res
+            );
+
+        expect(testFramework.discordController.sendMessageToChannel).toHaveBeenCalledTimes(0);
+        expect(testFramework.logger.warn).toHaveBeenCalled();
+    });
+
     it('should call sendMessageToChannel when known request body', async () => {       
         expect.assertions(2);
         

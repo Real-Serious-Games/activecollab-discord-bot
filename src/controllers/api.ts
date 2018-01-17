@@ -30,15 +30,22 @@ async function postActiveCollabWebhook (
     }
     const processed = await eventController.processEvent(req.body);
 
-    processed.map(p =>
-        discordController.sendMessageToChannel(
-            p.body,
-            discordController.determineChannel(p.projectId)
-        )
-    );
+    await processed.map(async p => {
+        try {
+            const projectId = await discordController.determineChannel(p.projectId);
 
-    processed.mapLeft(p => 
-        logger.warn('Issue processing event: {value}', p)
+            discordController.sendMessageToChannel(
+                p.body,
+                projectId
+            );
+        } catch (e) {
+            logger.warn('Issue processing event: {value}', e);
+        }
+    });
+
+    processed.mapLeft(e => 
+        logger.warn('Issue processing event: {value}', e)
+        
     );
 
     res.sendStatus(200);
