@@ -1,6 +1,7 @@
 import { IActiveCollabRestClient } from './activecollab-rest';
 import { Task } from '../models/taskEvent';
 import { Project } from '../models/project';
+import { Comment } from '../models/comment';
 
 /**
  * Get the name of a specified task from its ID and project ID.
@@ -47,6 +48,16 @@ async function projectIdToName(
     throw new Error(`Could not find project with ID ${id}`);
 }
 
+/**
+ * Get the project ID for a comment.
+ */
+async function getProjectIdForComment(
+    restClient: IActiveCollabRestClient,
+    id: number
+): Promise<string> {
+    throw new Error(`Not implemented`);
+}
+
 export interface IActiveCollabAPI {
     /**
      * Get the name of a specified task from its ID and project ID.
@@ -57,11 +68,17 @@ export interface IActiveCollabAPI {
      * Get the name of a specified project from its ID.
      */
     projectIdToName: (projectId: number) => Promise<string>;
+
+    /**
+     * Get the project ID for a comment.
+     */
+    getProjectIdForComment: (comment: Comment) => Promise<number>;
 }
 
 export function createActiveCollabAPI(restClient: IActiveCollabRestClient): IActiveCollabAPI {
     return {
         taskIdToName: taskIdToName.bind(undefined, restClient),
-        projectIdToName: projectIdToName.bind(undefined, restClient)
+        projectIdToName: projectIdToName.bind(undefined, restClient),
+        getProjectIdForComment: getProjectIdForComment.bind(undefined, restClient)
     };
 }

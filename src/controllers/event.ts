@@ -5,10 +5,36 @@ import { Project } from '../models/project';
 import { Payload } from '../models/payload';
 import { assert } from 'console';
 import { Either, left, right } from 'fp-ts/lib/Either';
+import { IActiveCollabAPI } from '../controllers/activecollab-api';
 
-export function processEvent(event: Event<Payload>): Either<string, string> {
-    if (!event || !event.payload || !event.payload.class) {
-        return left(`Received invalid event: ${event}`);
+export interface IEventController {
+    processEvent: (event: Event<Payload>) => Promise<Either<string, IProcessedEvent>>;
+}
+
+export interface IProcessedEvent {
+    projectId: number;
+    body: string;
+}
+
+class ProcessedEvent implements IProcessedEvent {
+    public readonly projectId: number;
+    public readonly body: string;
+
+    public constructor(
+        projectId: number,
+        body: string
+    ) {
+        this.projectId = projectId;
+        this.body = body;
+    }
+}
+
+async function processEvent(
+    activeCollabApi: IActiveCollabAPI,
+    event: Event<Payload>
+): Promise<Either<string, IProcessedEvent>> {
+    if (!event || !event.payload) {
+        return left(`Received invalid event: ${JSON.stringify(event, undefined, 2)}`);
     }
 
     switch (event.payload.class) {
@@ -16,15 +42,18 @@ export function processEvent(event: Event<Payload>): Either<string, string> {
             const task: Task = <Task>event.payload;
             switch (event.type) {
                 case 'TaskCreated':
-                    return right(processNewTask(task));
+                    return right(
+                        new ProcessedEvent(task.project_id, processNewTask(task))
+                    );
 
                 case 'TaskUpdated':
-                    return right(processUpdatedTask(task));
+                    return right(
+                        new ProcessedEvent(task.project_id, processUpdatedTask(task))
+                    );
 
                 default:
                     return left(
-                        'Received Task event with unknown payload type ' +
-                        event.type
+                        `Received Task Event with unknown payload type: ${event.type}`                       
                     );
             }
         }
@@ -32,7 +61,17 @@ export function processEvent(event: Event<Payload>): Either<string, string> {
             const comment: Comment = <Comment>event.payload;
             switch (event.type) {
                 case 'CommentCreated':
-                    return right(processNewComment(comment));
+                    try {
+                        const projectId = await activeCollabApi.getProjectIdForComment(comment);
+                       
+                        return right(
+                            new ProcessedEvent(
+                                projectId,
+                                processNewComment(comment))
+                            ); 
+                    } catch (e) {
+                        return left(`Error processing comment: ${e}`);
+                    }
 
                 default:
                     return left(
@@ -45,18 +84,25 @@ export function processEvent(event: Event<Payload>): Either<string, string> {
             const project: Project = <Project>event.payload;
             switch (event.type) {
                 case 'ProjectCreated':
-                    return right(processNewProjct(project));
+                    return right(new ProcessedEvent(project.id, processNewProject(project)));
 
                 default:
                     return left(
-                        'Received Project Event with unknown payload type: ' +
-                        event.type
+                        `Received Project Event with unknown payload type: ${event.type}`
                     );
             }
         }
         default:
-            return left(`Received Event of unknown type ${event.payload.class}`);
+            return left(`Received Event of unknown type: ${event.payload.class}`);
     }
+}
+
+export function createEventController(
+    activeCollabApi: IActiveCollabAPI
+) {
+    return {
+        processEvent: processEvent.bind(undefined, activeCollabApi)
+    };
 }
 
 function processNewTask(task: Task): string {
@@ -78,7 +124,7 @@ function processNewComment(comment: Comment): string {
             `**Author:** ${comment.created_by_id}\n`;
 }
 
-function processNewProjct(project: Project): string {
+function processNewProject(project: Project): string {
     return  '*A new project has been created.*\n' +
             `**Project:** \`${project.name}\`\n` +
             `**Company:** ${project.company_id}\n` +

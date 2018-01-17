@@ -5,5 +5,6 @@ export interface Project extends Payload {
     name: string;
     created_by_id: number;
     company_id: number;
+    id: number;
     [key: string]: any;
 }
