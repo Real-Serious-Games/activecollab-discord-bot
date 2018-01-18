@@ -150,8 +150,7 @@ describe('ActiveCollab Rest Client', () => {
 
         const api = await createDefaultTestObject(request);
 
-        const testRoute = '/initial';
-        await api.get(testRoute);
+        await api.get('/initial');
 
         const expected = expect.objectContaining({
             headers: {
@@ -190,7 +189,7 @@ describe('ActiveCollab Rest Client', () => {
 
         const testRoute = '/initial';
         const expected = expect.objectContaining({
-            url: `${connectionStr}/api/v1/initial`
+            url: `${connectionStr}/api/v1${testRoute}`
         });
         await api.get(testRoute);
 
@@ -205,7 +204,7 @@ describe('ActiveCollab Rest Client', () => {
 
         const testRoute = '/task-lists';
         const expected = expect.objectContaining({
-            url: `${connectionStr}/api/v1/task-lists`
+            url: `${connectionStr}/api/v1${testRoute}`
         });
         await api.post(testRoute, {});
 
