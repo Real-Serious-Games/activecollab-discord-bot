@@ -10,6 +10,7 @@ import { createLogger } from './controllers/logger';
 import { createEventController } from './controllers/event';
 import { createActiveCollabAPI } from './controllers/activecollab-api';
 import { createActiveCollabRestClient } from './controllers/activecollab-rest';
+import { createMappingController, ChannelMap, UserMap } from './controllers/mapping';
 
 async function createServer() {
     // Setup config
@@ -21,13 +22,18 @@ async function createServer() {
 
     const logger = createLogger();
 
-    const discordController = new DiscordController(
-        config.get('discordBotToken'),
-        new discord.Client(),
-        (projectId: number) => config.get(`channels:${projectId}`)
-    );
-
     try {
+        const mappingController = createMappingController(
+            () => Array.from<ChannelMap>(config.get('channels')),
+            () => Array.from<UserMap>(config.get('users'))
+        );
+    
+        const discordController = new DiscordController(
+            config.get('discordBotToken'),
+            new discord.Client(),
+            mappingController
+        );
+
         const activeCollabRestClient = await createActiveCollabRestClient(
             request,
             config.get('activeCollab:connectionStr'),

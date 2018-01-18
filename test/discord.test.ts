@@ -1,17 +1,16 @@
-import * as sinon from 'sinon';
 import { TextChannel, Client } from 'discord.js';
 import * as discord from 'discord.js';
 
 import { DiscordController, IDiscordController } from '../src/controllers/discord';
 import { createClient } from 'http';
 import { AssertionError } from 'assert';
+import { IMappingController } from '../src/controllers/mapping';
 
 describe('calling sendMessageToChannel', () => {
     it('should send message to channel when channel is valid', () => {
         const message: string = 'Test message';
 
-        const channelStub: sinon.SinonStub = sinon.stub();
-        channelStub.resolves(message);
+        const channelStub = jest.fn(() => Promise.resolve());
 
         const channel: Partial<TextChannel> = {
             send: channelStub
@@ -20,7 +19,7 @@ describe('calling sendMessageToChannel', () => {
         const discordController = setupDiscordController();
 
         discordController.sendMessageToChannel(message, <TextChannel>channel);
-        sinon.assert.calledWith(channel.send as sinon.SinonStub, message);
+        expect(channelStub).toBeCalledWith(message);
     }),
 
     it('should error when channel is invalid', () => {
@@ -40,7 +39,7 @@ describe('calling determineChannel', () => {
 
         expect(framework.discordController.determineChannel(projectId))
             .toEqual(framework.allChannels.first());
-        expect(framework.getChannelFromId)
+        expect(framework.mappingController.getChannel)
             .toHaveBeenCalled();
     });
 
@@ -53,7 +52,7 @@ describe('calling determineChannel', () => {
 
         expect(() => framework.discordController.determineChannel(projectId))
             .toThrow(`Project ID not found: ${projectId}`);
-        expect(framework.getChannelFromId)
+        expect(framework.mappingController.getChannel)
             .toHaveBeenCalled();
     });
 
@@ -64,7 +63,7 @@ describe('calling determineChannel', () => {
 
         expect(() => framework.discordController.determineChannel(invalidProjectId))
             .toThrow(`Project ID not valid: undefined`);
-        expect(framework.getChannelFromId)
+        expect(framework.mappingController.getChannel)
             .toHaveBeenCalledTimes(0);
     });
 
@@ -77,7 +76,7 @@ describe('calling determineChannel', () => {
         
         expect(() => frameWork.discordController.determineChannel(1))
             .toThrow(`Channel not found: null`);
-        expect(frameWork.getChannelFromId)
+        expect(frameWork.mappingController.getChannel)
             .toHaveBeenCalled;
     });
 });
@@ -102,22 +101,23 @@ function setupTestFramework(
 
         const client = setupMockDiscordClient(undefined, undefined, channels);
 
-        const getChannelFromId = jest.fn().mockReturnValue(
-            shouldReturnUndefinedChannel 
-            ? undefined 
-            : channelToReturn
-        );
+        const mappingController: Partial<IMappingController> = { 
+            getChannel: jest.fn().mockReturnValue(
+                shouldReturnUndefinedChannel 
+                ? undefined 
+                : channelToReturn
+        )};
 
         const discordController = setupDiscordController(
             undefined,
             <Client>client,
-            getChannelFromId
+            mappingController
         );
 
         return {
             client: client,
             allChannels: allChannels,
-            getChannelFromId: getChannelFromId,
+            mappingController: mappingController,
             discordController: discordController
         };
 }
@@ -125,38 +125,38 @@ function setupTestFramework(
 function setupDiscordController(
     token = '',
     client?: Client,
-    getChannelFromId?
+    mappingController?: Partial<IMappingController>
 ) {
     if (!client) {
         client = <Client>setupMockDiscordClient();
     }
 
-    if (!getChannelFromId) {
-        getChannelFromId =  jest.fn().mockReturnValue('channel');
+    if (!mappingController) {
+        mappingController = {
+            getChannel: jest.fn().mockReturnValue('channel')
+        };
     }
 
     return new DiscordController(
         token,
         client,
-        getChannelFromId);
+        <IMappingController>mappingController);
 }
 
 function setupMockDiscordClient (
-    on: sinon.SinonStub = sinon.stub(),
-    login?: sinon.SinonStub,
+    on = jest.fn(),
+    login?,
     channels: Partial<discord.Collection<string, discord.Channel>> = {
-        findAll: sinon.spy()
+        findAll: jest.fn()
     }
 ): Partial<Client> {
     if (login === undefined) {
-        const loginStub: sinon.SinonStub = sinon.stub();
-        loginStub.resolves();
-
+        const loginStub = jest.fn(() => Promise.resolve());
         login = loginStub;
     }
 
     const client: Partial<Client> = {
-        on: sinon.stub(),
+        on: jest.fn(),
         login: login,
         channels: <discord.Collection<string, discord.Channel>>channels
     };

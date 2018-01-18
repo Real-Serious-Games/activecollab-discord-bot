@@ -3,10 +3,12 @@ import * as config from 'confucious';
 import { assert } from 'console';
 import { AssertionError } from 'assert';
 import { get } from 'confucious';
+import { IMappingController } from '../controllers/mapping';
 
 export type SendMessageToChannel =
     (message: string, channel: discord.TextChannel) => any;
-export type DetermineChannel = (projectId: number) => discord.TextChannel;
+export type DetermineChannel =
+    (projectId: number) => discord.TextChannel;
 
 export interface IDiscordController {
     sendMessageToChannel: SendMessageToChannel;
@@ -15,15 +17,15 @@ export interface IDiscordController {
 
 export class DiscordController implements IDiscordController {
     private readonly client: discord.Client;
-    private readonly getChannelFromId: (id: number) => string;
+    private readonly mappingController: IMappingController;
 
     public constructor(
         token: string,
         discordClient: discord.Client,
-        getChannelFromId: (id: number) => string
+        mappingController: IMappingController
     ) {
         this.client = discordClient;
-        this.getChannelFromId = getChannelFromId;
+        this.mappingController = mappingController;
 
         // The ready event is vital, it means that your bot will only start 
         // reacting to information from Discord _after_ ready is emitted
@@ -36,7 +38,7 @@ export class DiscordController implements IDiscordController {
     public determineChannel(projectId: number): discord.TextChannel {
         assert(projectId, `Project ID not valid: ${projectId}`);
         
-        const channelToFind = this.getChannelFromId(projectId);
+        const channelToFind = this.mappingController.getChannel(projectId);
 
         assert(channelToFind, `Project ID not found: ${projectId}`);
 
