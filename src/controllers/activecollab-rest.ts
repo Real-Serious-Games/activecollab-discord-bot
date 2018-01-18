@@ -4,20 +4,24 @@ import { RequestPromise, RequestPromiseOptions } from 'request-promise-native';
 export type Request =
     RequestAPI<RequestPromise, RequestPromiseOptions, UriOptions | UrlOptions>;
 
+export type QueryParams = {[id: string]: string | number | boolean};
+
 const requestPrefix = '/api/v1';
 
 function get(
     request: Request,
     connectionStr: string,
     token: string,
-    route: string
+    route: string,
+    queryParams: QueryParams
 ): Promise<Object> {
     return request.get({
         url: connectionStr + requestPrefix + route,
         headers: {
             'X-Angie-AuthApiToken': token
         },
-        json: true
+        json: true,
+        qs: queryParams
     });
 }
 
@@ -86,7 +90,7 @@ export interface IActiveCollabRestClient {
     /**
      * Sends an HTTP GET request to the ActiveCollab API
      */
-    get: (route: string) => Promise<Object>;
+    get: (route: string, query?: QueryParams) => Promise<Object>;
 
     /**
      * Sends an HTTP POST request to the ActiveCollab API

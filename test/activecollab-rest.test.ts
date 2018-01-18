@@ -211,6 +211,25 @@ describe('ActiveCollab Rest Client', () => {
         expect(request.post).toBeCalledWith(expected);
     });
 
+    it('passes query parameters to GET requests', async () => {
+        expect.assertions(1);
+
+        const request = createRequestOkStub();
+        const api = await createDefaultTestObject(request);
+
+        const queryString = {
+            type: 'AssignmentFilter',
+            include_subtasks: false
+        };
+        const expected = expect.objectContaining({
+            qs: queryString
+        });
+
+        await api.get('/reports/run', queryString);
+
+        expect(request.get).toBeCalledWith(expected);
+    });
+
     function createDefaultTestObject(request: Partial<activeCollabRest.Request>) {
         return createActiveCollabRestClient(
             <activeCollabRest.Request>request,
