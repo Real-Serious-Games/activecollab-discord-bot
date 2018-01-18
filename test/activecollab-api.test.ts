@@ -161,29 +161,7 @@ describe('ActiveCollab API', () => {
             await expect(api.getAllTasks()).rejects.toMatchObject(expectedError);
         });
 
-        it('returns tasks from api', async () => {
-            expect.assertions(1);
-
-            const testTask = {
-                id: 2,
-                type: 'Task',
-                project_id: 20,
-                name: 'Test task'
-            };
-
-            const mockGet = jest.fn().mockReturnValue({
-                all: {
-                    label: 'All Assignments',
-                    assignments: { 1: testTask }
-                }
-            });
-
-            const api = createActiveCollabAPI(setupMockRestClient(mockGet));
-
-            await expect(api.getAllTasks()).resolves.toContain(testTask);
-        });
-
-        it('filters to only tasks', async () => {
+        it('returns only tasks from api', async () => {
             expect.assertions(2);
 
             const testTask = {
@@ -247,12 +225,7 @@ describe('ActiveCollab API', () => {
         it('returns none for non-existant task', async () => {
             expect.assertions(1);
 
-            const mockGet = jest.fn().mockReturnValue({
-                all: {
-                    label: 'All Assignments',
-                    assignments: {}
-                }
-            });
+            const mockGet = jest.fn().mockReturnValue(getEmptyReport());
 
             const api = createActiveCollabAPI(setupMockRestClient(mockGet));
 
