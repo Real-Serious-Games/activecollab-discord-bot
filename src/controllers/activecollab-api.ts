@@ -27,12 +27,12 @@ async function taskIdToName(
 }
 
 /**
- * Get the name of a specified project from its ID.
+ * Get a specified project from its ID.
  */
-async function projectIdToName(
+async function getProjectById(
     restClient: IActiveCollabRestClient,
     id: number
-): Promise<string> {
+): Promise<Project> {
     const response = await restClient.get('/projects');
 
     if (!Array.isArray(response)) {
@@ -41,7 +41,7 @@ async function projectIdToName(
     const projects = <Project[]>response;
     const project = projects.find(p => p.id === id);
     if (project) {
-        return project.name;
+        return project;
     }
 
     throw new Error(`Could not find project with ID ${id}`);
@@ -56,12 +56,12 @@ export interface IActiveCollabAPI {
     /**
      * Get the name of a specified project from its ID.
      */
-    projectIdToName: (projectId: number) => Promise<string>;
+    getProjectById: (projectId: number) => Promise<Project>;
 }
 
 export function createActiveCollabAPI(restClient: IActiveCollabRestClient): IActiveCollabAPI {
     return {
         taskIdToName: taskIdToName.bind(undefined, restClient),
-        projectIdToName: projectIdToName.bind(undefined, restClient)
+        getProjectById: getProjectById.bind(undefined, restClient)
     };
 }

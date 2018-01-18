@@ -70,7 +70,7 @@ describe('ActiveCollab API', () => {
         });
     });
 
-    describe('projectIdToName', () => {
+    describe('getProjectById', () => {
         it('requests list of projects', async () => {
             expect.assertions(1);
 
@@ -81,7 +81,7 @@ describe('ActiveCollab API', () => {
 
             const api = createActiveCollabAPI(setupMockRestClient(mockGet));
 
-            await api.projectIdToName(1);
+            await api.getProjectById(1);
 
             expect(mockGet).toBeCalledWith(`/projects`);
         });
@@ -95,24 +95,24 @@ describe('ActiveCollab API', () => {
             const expectedError =
                 new Error('Invalid response received trying to get projects');
 
-            await expect(api.projectIdToName(1))
+            await expect(api.getProjectById(1))
                 .rejects.toMatchObject(expectedError);
         });
 
-        it('returns name of project matching specified id', async () => {
+        it('returns project matching specified id', async () => {
             expect.assertions(1);
 
             const expectedId = 10;
-            const expectedName = 'Test project';
-            const mockGet = jest.fn().mockReturnValue([{
+            const expected = {
                 id: expectedId,
-                name: expectedName
-            }]);
+                name: 'Test project'
+            };
+            const mockGet = jest.fn().mockReturnValue([expected]);
 
             const api = createActiveCollabAPI(setupMockRestClient(mockGet));
 
-            const actual = await api.projectIdToName(expectedId);
-            expect(actual).toBe(expectedName);
+            const actual = await api.getProjectById(expectedId);
+            expect(actual).toMatchObject(expected);
         });
 
         it('throws error if no project with specified ID exists', async () => {
@@ -125,7 +125,7 @@ describe('ActiveCollab API', () => {
             const testId = 22;
             const expectedError = new Error(`Could not find project with ID ${testId}`);
 
-            await expect(api.projectIdToName(testId))
+            await expect(api.getProjectById(testId))
                 .rejects.toMatchObject(expectedError);
         });
     });
