@@ -19,7 +19,7 @@ describe('calling getChannel', () => {
         
         const mappingController = createMappingController();
 
-        expect(() => mappingController.getChannel(undefined))
+        expect(() => mappingController.getChannel(invalidProjectId))
             .toThrow('Invalid project ID: undefined');
     });
 
@@ -52,12 +52,12 @@ describe('calling getProjectId', () => {
     });
 
     it('throws error when channel is invalid', () => {
-        const invalidChannel = undefined;
+        const invalidChannel = '';
         
         const mappingController = createMappingController();
 
-        expect(() => mappingController.getProjectId(undefined))
-            .toThrow('Invalid channel: undefined');
+        expect(() => mappingController.getProjectId(invalidChannel))
+            .toThrow(`Invalid channel: ${invalidChannel}`);
     });
 
     it('throws error when channel not found', () => {
@@ -89,12 +89,12 @@ describe('calling getDiscordUser', () => {
     });
 
     it('throws error when ActiveCollab user is invalid', () => {
-        const invalidActiveCollabUser = undefined;
+        const invalidActiveCollabUser = '';
         
         const mappingController = createMappingController();
 
-        expect(() => mappingController.getDiscordUser(undefined))
-            .toThrow('Invalid ActiveCollab user: undefined');
+        expect(() => mappingController.getDiscordUser(invalidActiveCollabUser))
+            .toThrow(`Invalid ActiveCollab user: ${invalidActiveCollabUser}`);
     });
 
     it('throws error when ActiveCollab user not found', () => {
@@ -127,12 +127,12 @@ describe('calling getActiveCollabUser', () => {
     });
 
     it('throws error when Discord user is invalid', () => {
-        const invalidDiscordUser = undefined;
+        const invalidDiscordUser = '';
         
         const mappingController = createMappingController();
 
-        expect(() => mappingController.getActiveCollabUser(undefined))
-            .toThrow('Invalid Discord user: undefined');
+        expect(() => mappingController.getActiveCollabUser(invalidDiscordUser))
+            .toThrow(`Invalid Discord user: ${invalidDiscordUser}`);
     });
 
     it('throws error when Discord user not found', () => {

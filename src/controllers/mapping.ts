@@ -3,17 +3,20 @@
  */
 export interface IMappingController {
     /**
-     * Take an ActiveCollab project ID and return the Discord channel for it
+     * Take an ActiveCollab project ID and return the Discord channel name for it
      */
     getChannel: (projectId: number) => string;
+
     /**
      * Map Discord channel name to ActiveCollab project ID
      */
     getProjectId: (channelName: string) => number;
+    
     /**
      * Map Discord user to ActiveCollab user
      */
     getDiscordUser: (activeCollabUser: string) => string;
+
     /**
      * Map ActiveCollab user to Discord user
      */
@@ -31,14 +34,14 @@ export interface UserMap {
 }
 
 function getChannel(
-    channelsMap: Array<ChannelMap>,
+    channelsMap: () => Array<ChannelMap>,
     projectId: number
 ): string {
     if (!projectId) {
         throw Error(`Invalid project ID: ${projectId}`);
     }
 
-    const channelMap = channelsMap
+    const channelMap = channelsMap()
         .find(channelMap => channelMap.projectId === projectId);
 
     if (!channelMap) {
@@ -49,14 +52,14 @@ function getChannel(
 }
 
 function getProjectId(
-    channelsMap: Array<ChannelMap>,
+    channelsMap: () => Array<ChannelMap>,
     channelName: string
 ): number {
     if (!channelName) {
         throw Error(`Invalid channel: ${channelName}`);
     }
 
-    const channelMap = channelsMap
+    const channelMap = channelsMap()
         .find(channelMap => channelMap.channelName === channelName);
 
     if (!channelMap) {
@@ -67,14 +70,14 @@ function getProjectId(
 }
 
 function getDiscordUser(
-    usersMap: Array<UserMap>,
+    usersMap: () => Array<UserMap>,
     activeCollabUser: string
 ): string {
     if (!activeCollabUser) {
         throw Error(`Invalid ActiveCollab user: ${activeCollabUser}`);
     }
 
-    const userMap = usersMap
+    const userMap = usersMap()
         .find(usersMap => usersMap.activeCollabUser === activeCollabUser);
 
     if (!userMap) {
@@ -85,14 +88,14 @@ function getDiscordUser(
 }
 
 function getActiveCollabUser(
-    usersMap: Array<UserMap>,
+    usersMap: () => Array<UserMap>,
     discordUser: string
 ): string {
     if (!discordUser) {
         throw Error(`Invalid Discord user: ${discordUser}`);
     }
 
-    const userMap = usersMap
+    const userMap = usersMap()
         .find(usersMap => usersMap.discordUser === discordUser);
 
     if (!userMap) {
@@ -107,9 +110,9 @@ export function createMappingController(
     usersMap: () => Array<UserMap>
 ): IMappingController {
     return {
-        getChannel: getChannel.bind(undefined, channelsMap()),
-        getProjectId: getProjectId.bind(undefined, channelsMap()),
-        getDiscordUser: getDiscordUser.bind(undefined, usersMap()),
-        getActiveCollabUser: getActiveCollabUser.bind(undefined, usersMap()) 
+        getChannel: getChannel.bind(undefined, channelsMap),
+        getProjectId: getProjectId.bind(undefined, channelsMap),
+        getDiscordUser: getDiscordUser.bind(undefined, usersMap),
+        getActiveCollabUser: getActiveCollabUser.bind(undefined, usersMap) 
     };
 }
