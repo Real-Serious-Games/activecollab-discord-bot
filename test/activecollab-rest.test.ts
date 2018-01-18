@@ -150,8 +150,7 @@ describe('ActiveCollab Rest Client', () => {
 
         const api = await createDefaultTestObject(request);
 
-        const testRoute = '/initial';
-        await api.get(testRoute);
+        await api.get('/initial');
 
         const expected = expect.objectContaining({
             headers: {
@@ -190,7 +189,7 @@ describe('ActiveCollab Rest Client', () => {
 
         const testRoute = '/initial';
         const expected = expect.objectContaining({
-            url: `${connectionStr}/api/v1/initial`
+            url: `${connectionStr}/api/v1${testRoute}`
         });
         await api.get(testRoute);
 
@@ -205,11 +204,30 @@ describe('ActiveCollab Rest Client', () => {
 
         const testRoute = '/task-lists';
         const expected = expect.objectContaining({
-            url: `${connectionStr}/api/v1/task-lists`
+            url: `${connectionStr}/api/v1${testRoute}`
         });
         await api.post(testRoute, {});
 
         expect(request.post).toBeCalledWith(expected);
+    });
+
+    it('passes query parameters to GET requests', async () => {
+        expect.assertions(1);
+
+        const request = createRequestOkStub();
+        const api = await createDefaultTestObject(request);
+
+        const queryString = {
+            type: 'AssignmentFilter',
+            include_subtasks: false
+        };
+        const expected = expect.objectContaining({
+            qs: queryString
+        });
+
+        await api.get('/reports/run', queryString);
+
+        expect(request.get).toBeCalledWith(expected);
     });
 
     function createDefaultTestObject(request: Partial<activeCollabRest.Request>) {
