@@ -6,6 +6,7 @@ import { Task } from '../src/models/taskEvent';
 import { Project } from '../src/models/project';
 import { Comment } from '../src/models/comment';
 import { Event } from '../src/models/event';
+import { Report } from '../src/models/report';
 
 export function getRawNewTask(): Event<Task> {
     const payload:Task = {
@@ -183,5 +184,14 @@ export function getRawNewProjectEvent(): Event<Project> {
         "payload": payload,
         "timestamp": 1515719737,
         "type": "ProjectCreated"
+    };
+};
+
+export function getEmptyReport(): Report {
+    return {
+        all: {
+            label: 'All Assignments',
+            assignments: {}
+        }
     };
 };
