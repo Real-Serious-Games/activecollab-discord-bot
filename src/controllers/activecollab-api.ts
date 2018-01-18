@@ -1,6 +1,8 @@
 import { IActiveCollabRestClient } from './activecollab-rest';
 import { Task } from '../models/taskEvent';
 import { Project } from '../models/project';
+import { Report, Assignment } from '../models/report';
+import * as _ from 'lodash';
 
 /**
  * Get the name of a specified task from its ID and project ID.
@@ -47,6 +49,26 @@ async function getProjectById(
     throw new Error(`Could not find project with ID ${id}`);
 }
 
+/**
+ * Get all tasks across all projects
+ */
+async function getAllTasksLazy(
+    restClient: IActiveCollabRestClient
+): Promise<_.LoDashImplicitWrapper<Assignment[]>> {
+    const res = await restClient.get('/reports/run', {
+        type: 'AssignmentFilter',
+        include_subtasks: false
+    }) as Report;
+
+    if (!res.all || !res.all.assignments) {
+        throw new Error('Invalid response trying to get report');
+    }
+
+    return _(res.all.assignments)
+        .values()
+        .filter(a => a.type === 'Task');
+}
+
 export interface IActiveCollabAPI {
     /**
      * Get the name of a specified task from its ID and project ID.
@@ -54,14 +76,20 @@ export interface IActiveCollabAPI {
     taskIdToName: (projectId: number, taskId: number) => Promise<string>;
 
     /**
-     * Get the name of a specified project from its ID.
+     * Get a specified project from its ID.
      */
     getProjectById: (projectId: number) => Promise<Project>;
+
+    /**
+     * Get all tasks across all projects
+     */
+    getAllTasks: () => Promise<Assignment[]>;
 }
 
 export function createActiveCollabAPI(restClient: IActiveCollabRestClient): IActiveCollabAPI {
     return {
-        taskIdToName: taskIdToName.bind(undefined, restClient),
-        getProjectById: getProjectById.bind(undefined, restClient)
+        taskIdToName: (p, t) => taskIdToName(restClient, p, t),
+        getProjectById: p => getProjectById(restClient, p),
+        getAllTasks: () => getAllTasksLazy(restClient).then(a => a.value()),
     };
 }
