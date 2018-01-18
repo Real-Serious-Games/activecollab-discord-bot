@@ -3,6 +3,7 @@ import { Task } from '../models/taskEvent';
 import { Project } from '../models/project';
 import { Report, Assignment } from '../models/report';
 import * as _ from 'lodash';
+import { Option, some, none } from 'fp-ts/lib/Option';
 
 /**
  * Get the name of a specified task from its ID and project ID.
@@ -69,6 +70,19 @@ async function getAllTasksLazy(
         .filter(a => a.type === 'Task');
 }
 
+/**
+ * Get the id of the project the specified task belongs to.
+ */
+async function findProjectForTaskId(
+    restClient: IActiveCollabRestClient,
+    taskId: number
+): Promise<Option<number>> {
+    const tasks = await getAllTasksLazy(restClient);
+    const task = tasks.find(t => t.id === taskId);
+
+    return task ? some(task.project_id) : none;
+}
+
 export interface IActiveCollabAPI {
     /**
      * Get the name of a specified task from its ID and project ID.
@@ -84,6 +98,11 @@ export interface IActiveCollabAPI {
      * Get all tasks across all projects
      */
     getAllTasks: () => Promise<Assignment[]>;
+
+    /**
+     * Get the id of the project the specified task belongs to.
+     */
+    findProjectForTask: (taskId: number) => Promise<Option<number>>;
 }
 
 export function createActiveCollabAPI(restClient: IActiveCollabRestClient): IActiveCollabAPI {
@@ -91,5 +110,6 @@ export function createActiveCollabAPI(restClient: IActiveCollabRestClient): IAct
         taskIdToName: (p, t) => taskIdToName(restClient, p, t),
         getProjectById: p => getProjectById(restClient, p),
         getAllTasks: () => getAllTasksLazy(restClient).then(a => a.value()),
+        findProjectForTask: t => findProjectForTaskId(restClient, t)
     };
 }

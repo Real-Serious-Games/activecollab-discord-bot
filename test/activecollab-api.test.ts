@@ -1,6 +1,7 @@
 import { createActiveCollabAPI } from '../src/controllers/activecollab-api';
 import { IActiveCollabRestClient, QueryParams } from '../src/controllers/activecollab-rest';
 import { getEmptyReport } from './testData';
+import { none, some } from 'fp-ts/lib/Option';
 
 describe('ActiveCollab API', () => {
     describe('taskIdToName', () => {
@@ -213,6 +214,51 @@ describe('ActiveCollab API', () => {
 
             expect(tasks).toContain(testTask);
             expect(tasks).toHaveLength(1);
+        });
+    });
+
+    describe('findProjectForTask', () => {
+        it('finds id of project containing the specified task', async () => {
+            expect.assertions(1);
+
+            const taskId = 2;
+            const expectedProjectId = 22;
+            const mockGet = jest.fn().mockReturnValue({
+                all: {
+                    label: 'All Assignments',
+                    assignments: {
+                        [taskId]: {
+                            id: taskId,
+                            type: 'Task',
+                            project_id: expectedProjectId,
+                            name: 'test task'
+                        }
+                    }
+                }
+            });
+
+            const api = createActiveCollabAPI(setupMockRestClient(mockGet));
+
+            const projectId = await api.findProjectForTask(taskId);
+
+            expect(projectId).toEqual(some(expectedProjectId));
+        });
+
+        it('returns none for non-existant task', async () => {
+            expect.assertions(1);
+
+            const mockGet = jest.fn().mockReturnValue({
+                all: {
+                    label: 'All Assignments',
+                    assignments: {}
+                }
+            });
+
+            const api = createActiveCollabAPI(setupMockRestClient(mockGet));
+
+            const projectId = await api.findProjectForTask(0);
+
+            expect(projectId).toEqual(none);
         });
     });
 
