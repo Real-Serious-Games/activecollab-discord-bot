@@ -138,7 +138,7 @@ export function getRawNewComment(): Event<Comment> {
 };
 
 export function getRawNewProjectEvent(): Event<Project> {
-    const payload:Project = {
+    const payload: Project = {
         "id": 24,
         "class": "Project",
         "url_path": "\/projects\/24",

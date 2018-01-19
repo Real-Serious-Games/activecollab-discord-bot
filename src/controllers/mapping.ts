@@ -40,7 +40,6 @@ function getChannel(
     if (!projectId) {
         throw Error(`Invalid project ID: ${projectId}`);
     }
-
     const channelMap = channelsMap()
         .find(channelMap => channelMap.projectId === projectId);
 

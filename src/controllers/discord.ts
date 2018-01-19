@@ -2,10 +2,12 @@ import * as discord from 'discord.js';
 import * as config from 'confucious';
 import { assert } from 'console';
 import { AssertionError } from 'assert';
+import { IMappingController } from '../controllers/mapping';
 
 export type SendMessageToChannel =
     (message: string, channel: discord.TextChannel) => any;
-export type DetermineChannel = () => discord.TextChannel;
+export type DetermineChannel =
+    (projectId: number) => discord.TextChannel;
 
 export interface IDiscordController {
     sendMessageToChannel: SendMessageToChannel;
@@ -14,9 +16,15 @@ export interface IDiscordController {
 
 export class DiscordController implements IDiscordController {
     private readonly client: discord.Client;
+    private readonly mappingController: IMappingController;
 
-    public constructor(token: string, discordClient: discord.Client) {
+    public constructor(
+        token: string,
+        discordClient: discord.Client,
+        mappingController: IMappingController
+    ) {
         this.client = discordClient;
+        this.mappingController = mappingController;
 
         // The ready event is vital, it means that your bot will only start 
         // reacting to information from Discord _after_ ready is emitted
@@ -26,20 +34,25 @@ export class DiscordController implements IDiscordController {
             .catch(console.error);
     }
 
-    // TODO Take in project ID as paramater and lookup channel name
-    public determineChannel(): discord.TextChannel {
-        const channel = <discord.TextChannel>(
-            this.client
-                .channels
-                .findAll('type', 'text')
-                .find(channel => 
-                    (<discord.TextChannel>channel).name === 'activecollab-notifications'
-                )
-            );
+    public determineChannel(projectId: number): discord.TextChannel {
+        assert(projectId, `Project ID not valid: ${projectId}`);
+        
+        const channelToFind = this.mappingController.getChannel(projectId);
+        
+        assert(channelToFind, `Project ID not found: ${projectId}`);
+
+        const channel = this
+            .client
+            .channels
+            .findAll('type', 'text')
+            .map(channel => channel as discord.TextChannel)
+            .find(channel => channel.name === channelToFind);
     
-        assert(channel, 'Unable to find channel');
-    
-        return channel;
+        if (channel) {
+            return channel;
+        } 
+
+        throw new Error(`Channel does not exist on Discord: ${channelToFind}`);
     }
 
     public sendMessageToChannel(message: string, channel: discord.TextChannel): void {
