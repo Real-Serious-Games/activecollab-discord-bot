@@ -1,4 +1,5 @@
 import { Response, Request } from 'express';
+import { Option, some, none } from 'fp-ts/lib/Option';
 
 import * as testData from './testData';
 import { Task } from '../src/models/taskEvent';
@@ -130,7 +131,7 @@ describe('calling processEvent', () => {
                     `**Author:** ${rawData.payload.created_by_id}\n`;
 
             const mockActiveCollabApi: Partial<IActiveCollabAPI> = {
-                getProjectIdForComment: jest.fn(() => Promise.resolve(projectId))
+                findProjectForTask: jest.fn(() => Promise.resolve(some(projectId)))
             };
 
             const eventController = 
@@ -139,7 +140,7 @@ describe('calling processEvent', () => {
             const actualValue = (await eventController.processEvent(rawData))
                 .getOrElseValue(undefined);
                 
-            expect(mockActiveCollabApi.getProjectIdForComment).toBeCalledWith(rawData.payload);
+            expect(mockActiveCollabApi.findProjectForTask).toBeCalledWith(rawData.payload.parent_id);
             expect(actualValue.body).toEqual(expectedFormattedEvent);
             expect(actualValue.projectId).toEqual(projectId);
         });
@@ -162,12 +163,30 @@ describe('calling processEvent', () => {
                 .toEqual('Received Comment Event with unknown payload type: undefined');
         });
 
-        it('should return error value unable to get project ID', async () => {
+        it('should return error value when comment parent type unknown', async () => {
+            expect.assertions(3);
+
+            const rawData = testData.getRawNewComment();
+            rawData.payload.parent_type = undefined;
+
+            const mockActiveCollabApi: Partial<IActiveCollabAPI> = { };
+            const eventController = 
+                createEventController(<IActiveCollabAPI>mockActiveCollabApi);
+
+            const actualValue = await eventController.processEvent(rawData);
+
+            expect(actualValue.isLeft()).toBeTruthy();
+            expect(actualValue.isRight()).toBeFalsy();
+            expect(actualValue.value)
+                .toEqual('Received Comment Event with unknown parent type: undefined');
+        });
+
+        it('should return error value when finding project returns error', async () => {
             expect.assertions(3);
             const rawData = testData.getRawNewComment();
 
             const mockActiveCollabApi: Partial<IActiveCollabAPI> = {
-                getProjectIdForComment: jest.fn(() => Promise.reject(new Error('Dummy Error')))
+                findProjectForTask: jest.fn(() => Promise.reject(new Error('Dummy Error')))
             };
 
             const eventController = 
@@ -178,7 +197,26 @@ describe('calling processEvent', () => {
             expect(actualValue.isLeft()).toBeTruthy();
             expect(actualValue.isRight()).toBeFalsy();
             expect(actualValue.value)
-                .toEqual('Error processing comment: Error: Dummy Error');
+                .toEqual('Error processing Comment: Error: Dummy Error');
+        });
+
+        it('should return error value when finding project no ID', async () => {
+            expect.assertions(3);
+            const rawData = testData.getRawNewComment();
+
+            const mockActiveCollabApi: Partial<IActiveCollabAPI> = {
+                findProjectForTask: jest.fn(() => Promise.resolve(none))
+            };
+
+            const eventController = 
+                createEventController(<IActiveCollabAPI>mockActiveCollabApi);
+
+            const actualValue = await eventController.processEvent(rawData);
+
+            expect(actualValue.isLeft()).toBeTruthy();
+            expect(actualValue.isRight()).toBeFalsy();
+            expect(actualValue.value)
+                .toEqual(`Project ID not found for Comment with parent: ${rawData.payload.parent_id}`);
         });
     });
 

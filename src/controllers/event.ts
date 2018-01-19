@@ -1,9 +1,10 @@
+import { assert } from 'console';
+
 import { Task } from '../models/taskEvent';
 import { Comment } from '../models/comment';
 import { Event } from '../models/event';
 import { Project } from '../models/project';
 import { Payload } from '../models/payload';
-import { assert } from 'console';
 import { Either, left, right } from 'fp-ts/lib/Either';
 import { IActiveCollabAPI } from '../controllers/activecollab-api';
 
@@ -59,18 +60,32 @@ async function processEvent(
         }
         case 'Comment': {
             const comment: Comment = <Comment>event.payload;
+
+            if (comment.parent_type !== 'Task') {
+                return left(`Received Comment Event with unknown parent type: `
+                    + `${comment.parent_type}`);
+            }
+
             switch (event.type) {
                 case 'CommentCreated':
                     try {
-                        const projectId = await activeCollabApi.getProjectIdForComment(comment);
-                       
-                        return right(
-                            new ProcessedEvent(
-                                projectId,
-                                processNewComment(comment))
-                            ); 
+                        const projectId = 
+                            (await activeCollabApi.findProjectForTask(comment.parent_id))
+                            .toUndefined();
+
+                        if (projectId !== undefined) {
+                            return right(
+                                new ProcessedEvent(
+                                    projectId,
+                                    processNewComment(comment))
+                                );
+                        }
+
+                        return left(`Project ID not found for Comment with parent: `
+                            + `${comment.parent_id}`);
+
                     } catch (e) {
-                        return left(`Error processing comment: ${e}`);
+                        return left(`Error processing Comment: ${e}`);
                     }
 
                 default:
