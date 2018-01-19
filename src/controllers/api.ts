@@ -45,7 +45,6 @@ async function postActiveCollabWebhook (
 
     processed.mapLeft(e => 
         logger.warn('Issue processing event: {value}', e)
-        
     );
 
     res.sendStatus(200);

@@ -86,7 +86,7 @@ describe('postActiveCollabWebhook', () => {
         expect(testFramework.logger.warn).toHaveBeenCalled();
     });
 
-    it('should call logger and not sendMessageToChannel unable to determine channel', async () => {
+    it('should call logger and not sendMessageToChannel when unable to determine channel', async () => {
         expect.assertions(2);
         
         const body = testData.getRawNewTask();

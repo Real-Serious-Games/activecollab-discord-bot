@@ -1,5 +1,5 @@
 import { Response, Request } from 'express';
-import { Option, some, none } from 'fp-ts/lib/Option';
+import { some, none } from 'fp-ts/lib/Option';
 
 import * as testData from './testData';
 import { Task } from '../src/models/taskEvent';
@@ -18,8 +18,8 @@ describe('calling processEvent', () => {
     
             const actualValue = await eventController.processEvent(invalidEvent);
     
-            expect(actualValue.isLeft()).toBeTruthy();
-            expect(actualValue.isRight()).toBeFalsy();
+            expect(actualValue.isLeft()).toBe(true);
+            expect(actualValue.isRight()).toBe(false);
             expect(actualValue.value)
                 .toContain('Received invalid event: ');
         });
@@ -34,8 +34,8 @@ describe('calling processEvent', () => {
     
             const actualValue = await eventController.processEvent(invalidEvent);
     
-            expect(actualValue.isLeft()).toBeTruthy();
-            expect(actualValue.isRight()).toBeFalsy();
+            expect(actualValue.isLeft()).toBe(true);
+            expect(actualValue.isRight()).toBe(false);
             expect(actualValue.value)
                 .toContain('Received invalid event: ');
         });
@@ -50,8 +50,8 @@ describe('calling processEvent', () => {
     
             const actualValue = await eventController.processEvent(invalidEvent);
     
-            expect(actualValue.isLeft()).toBeTruthy();
-            expect(actualValue.isRight()).toBeFalsy();
+            expect(actualValue.isLeft()).toBe(true);
+            expect(actualValue.isRight()).toBe(false);
             expect(actualValue.value)
                 .toContain('Received Event of unknown type: ');
         });
@@ -110,8 +110,8 @@ describe('calling processEvent', () => {
 
             const actualValue = await eventController.processEvent(rawData);
 
-            expect(actualValue.isLeft()).toBeTruthy();
-            expect(actualValue.isRight()).toBeFalsy();
+            expect(actualValue.isLeft()).toBe(true);
+            expect(actualValue.isRight()).toBe(false);
             expect(actualValue.value)
                 .toEqual('Received Task Event with unknown payload type: undefined');
         });
@@ -119,7 +119,7 @@ describe('calling processEvent', () => {
 
     describe('with comment event', () => {
         it('should return formatted comment when comment type is new comment', async () => {
-            expect.assertions(3);
+            expect.assertions(2);
 
             const rawData = testData.getRawNewComment();
             const projectId = 1;
@@ -137,12 +137,11 @@ describe('calling processEvent', () => {
             const eventController = 
                 createEventController(<IActiveCollabAPI>mockActiveCollabApi);
 
-            const actualValue = (await eventController.processEvent(rawData))
+            const processedEvent = (await eventController.processEvent(rawData))
                 .getOrElseValue(undefined);
                 
-            expect(mockActiveCollabApi.findProjectForTask).toBeCalledWith(rawData.payload.parent_id);
-            expect(actualValue.body).toEqual(expectedFormattedEvent);
-            expect(actualValue.projectId).toEqual(projectId);
+            expect(processedEvent.body).toEqual(expectedFormattedEvent);
+            expect(processedEvent.projectId).toEqual(projectId);
         });
 
         it('should return error value when comment type unknown', async () => {
@@ -157,8 +156,8 @@ describe('calling processEvent', () => {
 
             const actualValue = await eventController.processEvent(rawData);
 
-            expect(actualValue.isLeft()).toBeTruthy();
-            expect(actualValue.isRight()).toBeFalsy();
+            expect(actualValue.isLeft()).toBe(true);
+            expect(actualValue.isRight()).toBe(false);
             expect(actualValue.value)
                 .toEqual('Received Comment Event with unknown payload type: undefined');
         });
@@ -175,8 +174,8 @@ describe('calling processEvent', () => {
 
             const actualValue = await eventController.processEvent(rawData);
 
-            expect(actualValue.isLeft()).toBeTruthy();
-            expect(actualValue.isRight()).toBeFalsy();
+            expect(actualValue.isLeft()).toBe(true);
+            expect(actualValue.isRight()).toBe(false);
             expect(actualValue.value)
                 .toEqual('Received Comment Event with unknown parent type: undefined');
         });
@@ -194,13 +193,13 @@ describe('calling processEvent', () => {
 
             const actualValue = await eventController.processEvent(rawData);
 
-            expect(actualValue.isLeft()).toBeTruthy();
-            expect(actualValue.isRight()).toBeFalsy();
+            expect(actualValue.isLeft()).toBe(true);
+            expect(actualValue.isRight()).toBe(false);
             expect(actualValue.value)
                 .toEqual('Error processing Comment: Error: Dummy Error');
         });
 
-        it('should return error value when finding project no ID', async () => {
+        it('should return error value when finding project returns no ID', async () => {
             expect.assertions(3);
             const rawData = testData.getRawNewComment();
 
@@ -213,8 +212,8 @@ describe('calling processEvent', () => {
 
             const actualValue = await eventController.processEvent(rawData);
 
-            expect(actualValue.isLeft()).toBeTruthy();
-            expect(actualValue.isRight()).toBeFalsy();
+            expect(actualValue.isLeft()).toBe(true);
+            expect(actualValue.isRight()).toBe(false);
             expect(actualValue.value)
                 .toEqual(`Project ID not found for Comment with parent: ${rawData.payload.parent_id}`);
         });
@@ -254,8 +253,8 @@ describe('calling processEvent', () => {
 
             const actualValue = await eventController.processEvent(rawData);
 
-            expect(actualValue.isLeft()).toBeTruthy();
-            expect(actualValue.isRight()).toBeFalsy();
+            expect(actualValue.isLeft()).toBe(true);
+            expect(actualValue.isRight()).toBe(false);
             expect(actualValue.value)
                 .toEqual('Received Project Event with unknown payload type: undefined');
         });

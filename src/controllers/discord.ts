@@ -2,7 +2,6 @@ import * as discord from 'discord.js';
 import * as config from 'confucious';
 import { assert } from 'console';
 import { AssertionError } from 'assert';
-import { get } from 'confucious';
 import { IMappingController } from '../controllers/mapping';
 
 export type SendMessageToChannel =
@@ -39,22 +38,21 @@ export class DiscordController implements IDiscordController {
         assert(projectId, `Project ID not valid: ${projectId}`);
         
         const channelToFind = this.mappingController.getChannel(projectId);
-
+        
         assert(channelToFind, `Project ID not found: ${projectId}`);
 
-        const channel = <discord.TextChannel>(
-            this
-                .client
-                .channels
-                .findAll('type', 'text')
-                .find(channel => 
-                    (<discord.TextChannel>channel).name === channelToFind
-                )
-            );
+        const channel = this
+            .client
+            .channels
+            .findAll('type', 'text')
+            .map(channel => channel as discord.TextChannel)
+            .find(channel => channel.name === channelToFind);
     
-        assert(channel, `Channel not found: ${channel}`);
-    
-        return channel;
+        if (channel) {
+            return channel;
+        } 
+
+        throw new Error(`Channel does not exist on Discord: ${channelToFind}`);
     }
 
     public sendMessageToChannel(message: string, channel: discord.TextChannel): void {

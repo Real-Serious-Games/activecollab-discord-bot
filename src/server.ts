@@ -24,8 +24,8 @@ async function createServer() {
 
     try {
         const mappingController = createMappingController(
-            () => Array.from<ChannelMap>(config.get('channels')),
-            () => Array.from<UserMap>(config.get('users'))
+            () => config.get('channels'),
+            () => config.get('users')
         );
     
         const discordController = new DiscordController(

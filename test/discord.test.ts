@@ -75,14 +75,14 @@ describe('calling determineChannel', () => {
         const projectId = 1;
         
         expect(() => frameWork.discordController.determineChannel(1))
-            .toThrow(`Channel not found: null`);
+            .toThrow(`Channel does not exist on Discord: ${nonExistantChannel}`);
         expect(frameWork.mappingController.getChannel)
             .toHaveBeenCalled;
     });
 });
 
 function setupTestFramework(
-    channelToReturn: any = 'activecollab-notifications',
+    channelToReturn: string = 'activecollab-notifications',
     shouldReturnUndefinedChannel: boolean = false
 ) {
         const allChannels = 
@@ -140,7 +140,8 @@ function setupDiscordController(
     return new DiscordController(
         token,
         client,
-        <IMappingController>mappingController);
+        <IMappingController>mappingController
+    );
 }
 
 function setupMockDiscordClient (
