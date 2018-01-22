@@ -76,7 +76,7 @@ describe('calling getProjectId', () => {
 
 describe('calling getDiscordUser', () => {
     it('returns Discord user when ActiveCollab user is valid', () => {
-        const activeCollabUser = 'activeCollabUser';
+        const activeCollabUser = 1;
         const discordUser = 'discordUser';
 
         const usersMap = new Array<mapping.UserMap>(
@@ -89,7 +89,7 @@ describe('calling getDiscordUser', () => {
     });
 
     it('throws error when ActiveCollab user is invalid', () => {
-        const invalidActiveCollabUser = '';
+        const invalidActiveCollabUser = undefined;
         
         const mappingController = createMappingController();
 
@@ -98,10 +98,10 @@ describe('calling getDiscordUser', () => {
     });
 
     it('throws error when ActiveCollab user not found', () => {
-        const unknownActiveCollabUser = 'unknownName';
+        const unknownActiveCollabUser = 10;
         
         const usersMap = new Array<mapping.UserMap>(
-            { activeCollabUser: 'activeCollabUser', discordUser: 'discordUser' },
+            { activeCollabUser: 1, discordUser: 'discordUser' },
         );
 
         const mappingController = createMappingController(undefined, usersMap);
@@ -113,7 +113,7 @@ describe('calling getDiscordUser', () => {
 
 describe('calling getActiveCollabUser', () => {
     it('returns ActiveCollab user when Discord user is valid', () => {
-        const activeCollabUser = 'activeCollabUser';
+        const activeCollabUser = 1;
         const discordUser = 'discordUser';
 
         const usersMap = new Array<mapping.UserMap>(
@@ -139,7 +139,7 @@ describe('calling getActiveCollabUser', () => {
         const unknownDiscordUser = 'unknownName';
         
         const usersMap = new Array<mapping.UserMap>(
-            { activeCollabUser: 'activeCollabUser', discordUser: 'discordUser' },
+            { activeCollabUser: 1, discordUser: 'discordUser' },
         );
 
         const mappingController = createMappingController(undefined, usersMap);
@@ -158,8 +158,8 @@ function createChannelsMap(): Array<mapping.ChannelMap> {
 
 function createUsersMap(): Array<mapping.UserMap> {
     return new Array<mapping.UserMap>(
-        { discordUser: 'user1', activeCollabUser: 'userA' },
-        { discordUser: 'user2', activeCollabUser: 'userB' },
+        { discordUser: 'user1', activeCollabUser: 1 },
+        { discordUser: 'user2', activeCollabUser: 2 },
     );
 }
 

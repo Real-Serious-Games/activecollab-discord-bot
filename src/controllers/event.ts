@@ -7,6 +7,8 @@ import { Project } from '../models/project';
 import { Payload } from '../models/payload';
 import { Either, left, right } from 'fp-ts/lib/Either';
 import { IActiveCollabAPI } from '../controllers/activecollab-api';
+import { IMappingController } from '../controllers/mapping';
+import { IDiscordController } from '../controllers/discord';
 
 export interface IEventController {
     processEvent: (event: Event<Payload>) => Promise<Either<string, IProcessedEvent>>;
@@ -32,6 +34,8 @@ class ProcessedEvent implements IProcessedEvent {
 
 async function processEvent(
     activeCollabApi: IActiveCollabAPI,
+    mappingController: IMappingController,
+    discordController: IDiscordController,
     event: Event<Payload>
 ): Promise<Either<string, IProcessedEvent>> {
     if (!event || !event.payload) {
@@ -43,13 +47,29 @@ async function processEvent(
             const task: Task = <Task>event.payload;
             switch (event.type) {
                 case 'TaskCreated':
-                    return right(
-                        new ProcessedEvent(task.project_id, processNewTask(task))
-                    );
+                    const processedTask = processNewTask(
+                            task,
+                            mappingController,
+                            discordController
+                        );
 
+                    if (processedTask.isRight()) {
+                        return right(
+                            new ProcessedEvent(
+                                task.project_id,
+                                processedTask.value
+                            )
+                        );
+                    }
+                    
+                    return left(`Unable to process Task Event: ${processedTask.value}`);
+                    
                 case 'TaskUpdated':
                     return right(
-                        new ProcessedEvent(task.project_id, processUpdatedTask(task))
+                        new ProcessedEvent(
+                            task.project_id,
+                            processUpdatedTask(task)
+                        )
                     );
 
                 default:
@@ -113,17 +133,42 @@ async function processEvent(
 }
 
 export function createEventController(
-    activeCollabApi: IActiveCollabAPI
+    activeCollabApi: IActiveCollabAPI,
+    mappingController: IMappingController,
+    discordController: IDiscordController
 ) {
     return {
-        processEvent: processEvent.bind(undefined, activeCollabApi)
+        processEvent: (e: Event<Payload>) => processEvent(
+            activeCollabApi,
+            mappingController,
+            discordController, 
+            e
+        )
     };
 }
 
-function processNewTask(task: Task): string {
-    return  'A new task has been created.\n' +
-            `Task Name: ${task.name}\n` +
-            `Project Name: ${task.project_id}`;
+function processNewTask(
+    task: Task,
+    mappingController: IMappingController,
+    discordController: IDiscordController
+): Either<string, string> {
+    const headerLine = `Task Created: **${task.name}**\n`;
+    let assignedLine: string = '';
+
+    if (task.assignee_id) {
+        try {
+            const userId = discordController
+                .getUserId(mappingController.getDiscordUser(task.assignee_id));
+
+            assignedLine = `Assignee: <@${userId}>\n`;
+        } catch (e) {
+            return left(e);
+        }
+    }
+
+    const completedLine = task.is_completed ? `Completed: ${task.is_completed}` : ''; 
+
+    return right(headerLine + assignedLine + completedLine);
 }
 
 function processUpdatedTask(task: Task): string {

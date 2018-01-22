@@ -4,27 +4,26 @@ import { assert } from 'console';
 import { AssertionError } from 'assert';
 import { IMappingController } from '../controllers/mapping';
 
-export type SendMessageToChannel =
-    (message: string, channel: discord.TextChannel) => any;
-export type DetermineChannel =
-    (projectId: number) => discord.TextChannel;
-
 export interface IDiscordController {
-    sendMessageToChannel: SendMessageToChannel;
-    determineChannel: DetermineChannel;
+    sendMessageToChannel: (message: string, channel: discord.TextChannel) => any;
+    determineChannel: (projectId: number) => discord.TextChannel;
+    getUserId: (username: string) => string;
 }
 
 export class DiscordController implements IDiscordController {
     private readonly client: discord.Client;
     private readonly mappingController: IMappingController;
+    private readonly guildName: string;
 
     public constructor(
         token: string,
         discordClient: discord.Client,
-        mappingController: IMappingController
+        mappingController: IMappingController,
+        guildName: string
     ) {
         this.client = discordClient;
         this.mappingController = mappingController;
+        this.guildName = guildName;
 
         // The ready event is vital, it means that your bot will only start 
         // reacting to information from Discord _after_ ready is emitted
@@ -55,7 +54,23 @@ export class DiscordController implements IDiscordController {
         throw new Error(`Channel does not exist on Discord: ${channelToFind}`);
     }
 
-    public sendMessageToChannel(message: string, channel: discord.TextChannel): void {
+    public getUserId(username: string): string {
+        assert(username, `Username not valid: ${username}`);
+        
+        const guild = this.client.guilds.find(g => g.name === this.guildName);
+        const user = guild.members.find(m => m.user.tag === username);
+
+        if (user) {
+            return user.id;
+        }
+
+        throw Error(`User not found in guild: ${username}`);
+    }
+
+    public sendMessageToChannel(
+        message: string,
+        channel: discord.TextChannel
+    ): void {
         assert(channel, `Cannot send without a channel: ${channel}`);
 
         channel

@@ -81,6 +81,86 @@ describe('calling determineChannel', () => {
     });
 });
 
+describe('calling getUserId', () => {
+    it('should return user ID when input valid', () => {
+        const username = 'username';
+        const expectedId = 1;
+
+        const members: Partial<discord.Collection<string, discord.GuildMember>> = {
+            find: jest.fn().mockReturnValue({ 
+                    user: { username: username },
+                    id: expectedId
+                }
+            )
+        };
+
+        const guild: Partial<discord.Guild> = {
+            members: members as discord.Collection<string, discord.GuildMember>
+        };
+
+        const guilds: Partial<discord.Collection<string, discord.Guild>> = {
+            find: jest.fn().mockReturnValue(guild)
+        };
+
+        const client = setupMockDiscordClient(
+            undefined, 
+            undefined,
+            undefined,
+            guilds
+        );
+
+        const discordController = setupDiscordController(
+            undefined,
+            client as Client
+        );
+
+
+        expect(discordController.getUserId(username)).toEqual(expectedId);
+    });
+
+    it('should throw error when username invalid', () => {
+        const invalidUsername = undefined;
+
+        const discordController = setupDiscordController();
+
+        expect(() => discordController.getUserId(invalidUsername))
+            .toThrow(`Username not valid: ${invalidUsername}`);
+    });
+
+    it('should throw error when username not found in guild', () => {
+        const username = 'username';
+        const expectedId = 1;
+
+        const members: Partial<discord.Collection<string, discord.GuildMember>> = {
+            find: jest.fn().mockReturnValue(undefined)
+        };
+
+        const guild: Partial<discord.Guild> = {
+            members: members as discord.Collection<string, discord.GuildMember>
+        };
+
+        const guilds: Partial<discord.Collection<string, discord.Guild>> = {
+            find: jest.fn().mockReturnValue(guild)
+        };
+
+        const client = setupMockDiscordClient(
+            undefined, 
+            undefined,
+            undefined,
+            guilds
+        );
+
+        const discordController = setupDiscordController(
+            undefined,
+            client as Client
+        );
+
+
+        expect(() => discordController.getUserId(username))
+            .toThrow(`User not found in guild: ${username}`);
+    });
+});
+
 function setupTestFramework(
     channelToReturn: string = 'activecollab-notifications',
     shouldReturnUndefinedChannel: boolean = false
@@ -140,7 +220,8 @@ function setupDiscordController(
     return new DiscordController(
         token,
         client,
-        <IMappingController>mappingController
+        <IMappingController>mappingController,
+        'REAL SERIOUS GAMGES'
     );
 }
 
@@ -149,6 +230,9 @@ function setupMockDiscordClient (
     login?,
     channels: Partial<discord.Collection<string, discord.Channel>> = {
         findAll: jest.fn()
+    },
+    guilds: Partial<discord.Collection<string, discord.Guild>> = {
+        find: jest.fn()
     }
 ): Partial<Client> {
     if (login === undefined) {
@@ -159,7 +243,8 @@ function setupMockDiscordClient (
     const client: Partial<Client> = {
         on: jest.fn(),
         login: login,
-        channels: <discord.Collection<string, discord.Channel>>channels
+        channels: <discord.Collection<string, discord.Channel>>channels,
+        guilds: <discord.Collection<string, discord.Guild>>guilds
     };
 
     return client;
