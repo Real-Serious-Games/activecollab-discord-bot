@@ -520,44 +520,6 @@ describe('calling processEvent', () => {
                 .toEqual('Unable to process Comment Event: Error');
         });
     });
-    });
-
-    describe('with project', () => {
-        it('should return formatted project event when project type is new project', async () => {
-            expect.assertions(2);
-            
-            const rawData = testData.getRawNewProjectEvent();
-            const expectedFormattedEvent: string =
-                    '*A new project has been created.*\n' +
-                    `**Project:** \`${rawData.payload.name}\`\n` +
-                    `**Company:** ${rawData.payload.company_id}\n` +
-                    `**Author:** ${rawData.payload.created_by_id}\n`;
-
-            const eventController = createEventController();
-
-            const actualValue = (await eventController.processEvent(rawData))
-                .getOrElseValue(undefined);
-
-            expect(actualValue.body).toEqual(expectedFormattedEvent);
-            expect(actualValue.projectId).toEqual(rawData.payload.id);
-        });
-
-        it('should return error value when project type is unknown', async () => {
-            expect.assertions(3);
-
-            const rawData = testData.getRawNewProjectEvent();
-            rawData.type = undefined;
-
-            const eventController = createEventController();
-
-            const actualValue = await eventController.processEvent(rawData);
-
-            expect(actualValue.isLeft()).toBe(true);
-            expect(actualValue.isRight()).toBe(false);
-            expect(actualValue.value)
-                .toEqual('Received Project Event with unknown payload type: undefined');
-        });
-    });
 });
 
 function createEventController(

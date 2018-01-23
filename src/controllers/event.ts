@@ -150,18 +150,6 @@ async function processEvent(
                     );
             }
         }
-        case 'Project': {
-            const project: Project = <Project>event.payload;
-            switch (event.type) {
-                case 'ProjectCreated':
-                    return right(new ProcessedEvent(project.id, processNewProject(project)));
-
-                default:
-                    return left(
-                        `Received Project Event with unknown payload type: ${event.type}`
-                    );
-            }
-        }
         default:
             return left(`Received Event of unknown type: ${event.payload.class}`);
     }
@@ -265,13 +253,6 @@ async function processNewComment(
     } catch (e) {
         return left(e);
     }    
-}
-
-function processNewProject(project: Project): string {
-    return  '*A new project has been created.*\n' +
-            `**Project:** \`${project.name}\`\n` +
-            `**Company:** ${project.company_id}\n` +
-            `**Author:** ${project.created_by_id}\n`;
 }
 
 function getUserId(
