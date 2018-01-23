@@ -19,7 +19,7 @@ describe('POST /api/webhook', () => {
 
         const client: Partial<Client> = { };
 
-    const discordControllerStub: Partial<IDiscordController> = {
+        const discordControllerStub: Partial<IDiscordController> = {
             sendMessageToChannel: jest.fn(),
             determineChannel: jest.fn(),
             getUserId: jest.fn()
