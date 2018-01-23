@@ -22,6 +22,11 @@ export interface IProcessedEvent {
 
 const eventColor = '#449DF5';
 
+enum TaskType {
+    newTask,
+    updatedTask
+}
+
 class ProcessedEvent implements IProcessedEvent {
     public readonly projectId: number;
     public readonly body: RichEmbed | string;
@@ -51,9 +56,11 @@ async function processEvent(
             const task: Task = <Task>event.payload;
             switch (event.type) {
                 case 'TaskCreated':
-                    const processedTask = processNewTask(
+                    const processedTask = processTask(
                             task,
-                            (assigneeId: number) => getUserId(assigneeId, mappingController, discordController),
+                            TaskType.newTask,
+                            mappingController,
+                            discordController,
                             baseUrl
                         );
 
@@ -69,13 +76,11 @@ async function processEvent(
                     return left(`Unable to process Task Event: ${processedTask.value}`);
                     
                 case 'TaskUpdated':
-                    const processedUpdatedTask = processUpdatedTask(
+                    const processedUpdatedTask = processTask(
                         task,
-                        (assigneeId: number) => getUserId(
-                            assigneeId,
-                            mappingController, 
-                            discordController
-                        ),
+                        TaskType.updatedTask,
+                        mappingController,
+                        discordController,
                         baseUrl
                     );
 
@@ -172,40 +177,32 @@ export function createEventController(
     };
 }
 
-function processNewTask(
+function processTask(
     task: Task,
-    getUserId: (assigneeId: number) => Either<string, string>,
+    taskType: TaskType,
+    mappingController: IMappingController,
+    discordController: IDiscordController,
     baseUrl: string
 ): Either<string, RichEmbed> {
-    const userId = getUserId(task.assignee_id);
+    const userId = getUserId(task.assignee_id, mappingController, discordController);
 
     if (userId.isLeft()) {
         return left(userId.value); 
     }
 
-    const embed =  new RichEmbed()
-        .setTitle(`*Task Created:* ${task.name}`)
-        .setColor(eventColor)
-        .setURL(baseUrl + task.url_path)
-        .addField('Assignee', userId.value ? `<@${userId.value}>` : 'Not Assigned', true)
-        .addField('Status', `${task.is_completed ? 'Completed' : 'In Progress'}`, true);
+    let title = task.name;
 
-    return right(embed);
-}
-
-function processUpdatedTask(
-    task: Task,
-    getUserId: (assigneeId: number) => Either<string, string>,
-    baseUrl: string
-): Either<string, RichEmbed> {
-    const userId = getUserId(task.assignee_id);
-
-    if (userId.isLeft()) {
-        return left(userId.value); 
+    switch (taskType) {
+        case TaskType.updatedTask: 
+            title = `*Task Updated:* ${task.name}`;
+            break;
+        case TaskType.newTask:
+            title = `*Task Created:* ${task.name}`;
+            break;
     }
 
     const embed =  new RichEmbed()
-        .setTitle(`*Task Updated:* ${task.name}`)
+        .setTitle(title)
         .setColor(eventColor)
         .setURL(baseUrl + task.url_path)
         .addField(
