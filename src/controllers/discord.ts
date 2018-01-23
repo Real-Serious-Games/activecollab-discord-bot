@@ -76,7 +76,7 @@ export class DiscordController implements IDiscordController {
         assert(channel, `Cannot send without a channel: ${channel}`);
 
         channel
-            .send(undefined, message as discord.RichEmbed)
+            .send(undefined, message)
             .catch(console.error);
     }
 }

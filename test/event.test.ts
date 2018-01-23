@@ -12,6 +12,7 @@ import { IDiscordController, DiscordController } from '../src/controllers/discor
 import { basename } from 'path';
 
 const eventColor = '#449DF5';
+const baseUrl = 'https://app.activecollab.com/8008/';
 
 describe('calling processEvent', () => {
     describe('with invalid event', () => {
@@ -20,11 +21,11 @@ describe('calling processEvent', () => {
     
             const eventController = createEventController();
     
-            const actualValue = await eventController.processEvent(invalidEvent);
+            const returnedValue = await eventController.processEvent(invalidEvent);
     
-            expect(actualValue.isLeft()).toBe(true);
-            expect(actualValue.isRight()).toBe(false);
-            expect(actualValue.value)
+            expect(returnedValue.isLeft()).toBe(true);
+            expect(returnedValue.isRight()).toBe(false);
+            expect(returnedValue.value)
                 .toContain('Received invalid event: ');
         });
     
@@ -34,11 +35,11 @@ describe('calling processEvent', () => {
     
             const eventController = createEventController();
     
-            const actualValue = await eventController.processEvent(invalidEvent);
+            const returnedValue = await eventController.processEvent(invalidEvent);
     
-            expect(actualValue.isLeft()).toBe(true);
-            expect(actualValue.isRight()).toBe(false);
-            expect(actualValue.value)
+            expect(returnedValue.isLeft()).toBe(true);
+            expect(returnedValue.isRight()).toBe(false);
+            expect(returnedValue.value)
                 .toContain('Received invalid event: ');
         });
     
@@ -48,11 +49,11 @@ describe('calling processEvent', () => {
     
             const eventController = createEventController();
     
-            const actualValue = await eventController.processEvent(invalidEvent);
+            const returnedValue = await eventController.processEvent(invalidEvent);
     
-            expect(actualValue.isLeft()).toBe(true);
-            expect(actualValue.isRight()).toBe(false);
-            expect(actualValue.value)
+            expect(returnedValue.isLeft()).toBe(true);
+            expect(returnedValue.isRight()).toBe(false);
+            expect(returnedValue.value)
                 .toContain('Received Event of unknown type: ');
         });
     });
@@ -65,10 +66,9 @@ describe('calling processEvent', () => {
                 const baseUrl = 'https://app.activecollab.com/157544/';
     
                 const assignee = 'Test';
-                const isCompleted = true;
     
                 const rawData = testData.getRawNewTask();
-                rawData.payload.is_completed = isCompleted;
+                rawData.payload.is_completed = true;
     
                 const expectedRichEmbed = new RichEmbed()
                     .setTitle(`*Task Created:* ${rawData.payload.name}`)
@@ -92,79 +92,45 @@ describe('calling processEvent', () => {
                     baseUrl
                 );
     
-                const actualValue = (await eventController.processEvent(rawData))
+                const returnedValue = (await eventController.processEvent(rawData))
                     .getOrElseValue(undefined);
     
-                expect(actualValue.body).toEqual(expectedRichEmbed);
-                expect(actualValue.projectId).toEqual(rawData.payload.project_id);
+                expect(returnedValue.body).toEqual(expectedRichEmbed);
+                expect(returnedValue.projectId).toEqual(rawData.payload.project_id);
             });
     
             it('should return formatted task with Status of In Progress when completed false', async () => {
-                expect.assertions(2);
-    
-                const assignee = 'Test';
-                const completed = false;
-                const baseUrl = 'https://app.activecollab.com/157544/';
+                expect.assertions(1);
     
                 const rawData = testData.getRawNewTask();
-                rawData.payload.is_completed = completed;
+                rawData.payload.is_completed = false;
     
                 const expectedRichEmbed = new RichEmbed()
-                    .setTitle(`*Task Created:* ${rawData.payload.name}`)
-                    .setColor(eventColor)
-                    .setURL(baseUrl + rawData.payload.url_path)
-                    .addField('Assignee', `<@${assignee}>`, true)
                     .addField('Status', `In Progress`, true);
     
-                const mockMappingController: Partial<IMappingController> = {
-                    getDiscordUser: jest.fn().mockReturnValue(assignee)
-                };
-    
-                const mockDiscordController: Partial<IDiscordController> = {
-                    getUserId: jest.fn().mockReturnValue(assignee)
-                };
-                
-                const eventController = createEventController(
-                    undefined,
-                    <IMappingController>mockMappingController,
-                    mockDiscordController,
-                    baseUrl
-                );
-                const actualValue = (await eventController.processEvent(rawData))
+                const eventController = createEventController();
+
+                const returnedVale = (await eventController.processEvent(rawData))
                     .getOrElseValue(undefined);
     
-                expect(actualValue.body).toEqual(expectedRichEmbed);
-                expect(actualValue.projectId).toEqual(rawData.payload.project_id);
+                expect(returnedVale.body.fields).toContainEqual(expectedRichEmbed.fields[0]);
             });
     
             it('should return formatted task with Not Assigned when not assigned', async () => {
-                expect.assertions(2);
-    
-                const assignee = 'Test';
-                const baseUrl = 'https://app.activecollab.com/157544/';
+                expect.assertions(1);
     
                 const rawData = testData.getRawNewTask();
                 rawData.payload.assignee_id = undefined;
                 
                 const expectedRichEmbed = new RichEmbed()
-                    .setTitle(`*Task Created:* ${rawData.payload.name}`)
-                    .setColor(eventColor)
-                    .setURL(baseUrl + rawData.payload.url_path)
-                    .addField('Assignee', `Not Assigned`, true)
-                    .addField('Status', `In Progress`, true);
+                    .addField('Assignee', `Not Assigned`, true);
     
-                const eventController = createEventController(
-                    undefined,
-                    undefined,
-                    undefined,
-                    baseUrl
-                );
+                const eventController = createEventController();
     
-                const actualValue = (await eventController.processEvent(rawData))
+                const returnedValue = (await eventController.processEvent(rawData))
                     .getOrElseValue(undefined);
     
-                expect(actualValue.body).toEqual(expectedRichEmbed);
-                expect(actualValue.projectId).toEqual(rawData.payload.project_id);
+                expect(returnedValue.body.fields).toContainEqual(expectedRichEmbed.fields[0]);
             });
         });
 
@@ -172,13 +138,10 @@ describe('calling processEvent', () => {
             it('should return formatted task when task is valid', async () => {
                 expect.assertions(2);
     
-                const baseUrl = 'https://app.activecollab.com/157544/';
-    
                 const assignee = 'Test';
-                const isCompleted = true;
-    
+
                 const rawData = testData.getRawUpdatedTask();
-                rawData.payload.is_completed = isCompleted;
+                rawData.payload.is_completed = true;
     
                 const expectedRichEmbed = new RichEmbed()
                     .setTitle(`*Task Updated:* ${rawData.payload.name}`)
@@ -202,110 +165,65 @@ describe('calling processEvent', () => {
                     baseUrl
                 );
     
-                const actualValue = (await eventController.processEvent(rawData))
+                const returnedValue = (await eventController.processEvent(rawData))
                     .getOrElseValue(undefined);
     
-                expect(actualValue.body).toEqual(expectedRichEmbed);
-                expect(actualValue.projectId).toEqual(rawData.payload.project_id);
+                expect(returnedValue.body).toEqual(expectedRichEmbed);
+                expect(returnedValue.projectId).toEqual(rawData.payload.project_id);
             });
     
             it('should return formatted task with Status of In Progress when completed false', async () => {
-                expect.assertions(2);
-    
-                const assignee = 'Test';
-                const completed = false;
-                const baseUrl = 'https://app.activecollab.com/157544/';
+                expect.assertions(1);
     
                 const rawData = testData.getRawUpdatedTask();
-                rawData.payload.is_completed = completed;
+                rawData.payload.is_completed = false;
     
                 const expectedRichEmbed = new RichEmbed()
-                    .setTitle(`*Task Updated:* ${rawData.payload.name}`)
-                    .setColor(eventColor)
-                    .setURL(baseUrl + rawData.payload.url_path)
-                    .addField('Assignee', `<@${assignee}>`, true)
                     .addField('Status', `In Progress`, true);
     
-                const mockMappingController: Partial<IMappingController> = {
-                    getDiscordUser: jest.fn().mockReturnValue(assignee)
-                };
-    
-                const mockDiscordController: Partial<IDiscordController> = {
-                    getUserId: jest.fn().mockReturnValue(assignee)
-                };
-                
-                const eventController = createEventController(
-                    undefined,
-                    <IMappingController>mockMappingController,
-                    mockDiscordController,
-                    baseUrl
-                );
-                const actualValue = (await eventController.processEvent(rawData))
+                const eventController = createEventController();
+
+                const returnedValue = (await eventController.processEvent(rawData))
                     .getOrElseValue(undefined);
     
-                expect(actualValue.body).toEqual(expectedRichEmbed);
-                expect(actualValue.projectId).toEqual(rawData.payload.project_id);
+                expect(returnedValue.body.fields).toContainEqual(expectedRichEmbed.fields[0]);
             });
     
             it('should return formatted task with Not Assigned when not assigned', async () => {
-                expect.assertions(2);
-    
-                const assignee = 'Test';
-                const baseUrl = 'https://app.activecollab.com/157544/';
+                expect.assertions(1);
     
                 const rawData = testData.getRawUpdatedTask();
                 rawData.payload.assignee_id = undefined;
                 
                 const expectedRichEmbed = new RichEmbed()
-                    .setTitle(`*Task Updated:* ${rawData.payload.name}`)
-                    .setColor(eventColor)
-                    .setURL(baseUrl + rawData.payload.url_path)
-                    .addField('Assignee', `Not Assigned`, true)
-                    .addField('Status', `In Progress`, true);
+                    .addField('Assignee', `Not Assigned`, true);
     
-                const eventController = createEventController(
-                    undefined,
-                    undefined,
-                    undefined,
-                    baseUrl
-                );
+                const eventController = createEventController();
     
-                const actualValue = (await eventController.processEvent(rawData))
+                const returnedValue = (await eventController.processEvent(rawData))
                     .getOrElseValue(undefined);
     
-                expect(actualValue.body).toEqual(expectedRichEmbed);
-                expect(actualValue.projectId).toEqual(rawData.payload.project_id);
+                expect(returnedValue.body.fields).toContainEqual(expectedRichEmbed.fields[0]);
             });
 
             it('should return error when processing task fails', async () => {
                 expect.assertions(3);
     
-                const assignee = 'Test';
-                const completed = false;
-                const baseUrl = 'https://app.activecollab.com/157544/';
-    
-                const rawData = testData.getRawUpdatedTask();
-                rawData.payload.is_completed = completed;
-       
                 const mockMappingController: Partial<IMappingController> = {
                     getDiscordUser: jest.fn(() => { throw new Error(); })
                 };
-    
-                const mockDiscordController: Partial<IDiscordController> = {
-                    getUserId: jest.fn().mockReturnValue(undefined)
-                };
-                
+
                 const eventController = createEventController(
                     undefined,
                     <IMappingController>mockMappingController,
-                    undefined,
-                    baseUrl
                 );
-                const actualValue = await eventController.processEvent(rawData);
+
+                const returnedValue = 
+                    await eventController.processEvent(testData.getRawUpdatedTask());
     
-                expect(actualValue.isLeft()).toBe(true);
-                expect(actualValue.isRight()).toBe(false);
-                expect(actualValue.value)
+                expect(returnedValue.isLeft()).toBe(true);
+                expect(returnedValue.isRight()).toBe(false);
+                expect(returnedValue.value)
                     .toEqual('Unable to process Task Event: Error');
             });
         });
@@ -318,11 +236,11 @@ describe('calling processEvent', () => {
 
             const eventController = createEventController();
 
-            const actualValue = await eventController.processEvent(rawData);
+            const returnedValue = await eventController.processEvent(rawData);
 
-            expect(actualValue.isLeft()).toBe(true);
-            expect(actualValue.isRight()).toBe(false);
-            expect(actualValue.value)
+            expect(returnedValue.isLeft()).toBe(true);
+            expect(returnedValue.isRight()).toBe(false);
+            expect(returnedValue.value)
                 .toEqual('Received Task Event with unknown payload type: undefined');
         });
 
@@ -340,11 +258,11 @@ describe('calling processEvent', () => {
                 <IMappingController>mockMappingController
             );
 
-            const actualValue = await eventController.processEvent(rawData);
+            const returnedValue = await eventController.processEvent(rawData);
 
-            expect(actualValue.isLeft()).toBe(true);
-            expect(actualValue.isRight()).toBe(false);
-            expect(actualValue.value)
+            expect(returnedValue.isLeft()).toBe(true);
+            expect(returnedValue.isRight()).toBe(false);
+            expect(returnedValue.value)
                 .toEqual('Unable to process Task Event: Error: ' + error);
         });
     });
@@ -353,8 +271,6 @@ describe('calling processEvent', () => {
         it('should return formatted comment when comment type is new comment and parent is task', async () => {
             expect.assertions(2);
     
-            const baseUrl = 'https://app.activecollab.com/157544/';
-
             const assignee = 'Test';
             const projectId = 1;
             const taskName = 'Task';
@@ -403,11 +319,11 @@ describe('calling processEvent', () => {
 
             const eventController = createEventController();
 
-            const actualValue = await eventController.processEvent(rawData);
+            const returnedValue = await eventController.processEvent(rawData);
 
-            expect(actualValue.isLeft()).toBe(true);
-            expect(actualValue.isRight()).toBe(false);
-            expect(actualValue.value)
+            expect(returnedValue.isLeft()).toBe(true);
+            expect(returnedValue.isRight()).toBe(false);
+            expect(returnedValue.value)
                 .toEqual('Received Comment Event with unknown payload type: undefined');
         });
 
@@ -419,17 +335,16 @@ describe('calling processEvent', () => {
 
             const eventController = createEventController();
 
-            const actualValue = await eventController.processEvent(rawData);
+            const returnedValue = await eventController.processEvent(rawData);
 
-            expect(actualValue.isLeft()).toBe(true);
-            expect(actualValue.isRight()).toBe(false);
-            expect(actualValue.value)
+            expect(returnedValue.isLeft()).toBe(true);
+            expect(returnedValue.isRight()).toBe(false);
+            expect(returnedValue.value)
                 .toEqual('Received Comment Event with unknown parent type: undefined');
         });
 
         it('should return error value when finding project returns error', async () => {
             expect.assertions(3);
-            const rawData = testData.getRawNewComment();
 
             const mockActiveCollabApi: Partial<IActiveCollabAPI> = {
                 findProjectForTask: jest.fn(() => Promise.reject(new Error('Dummy Error')))
@@ -438,16 +353,17 @@ describe('calling processEvent', () => {
             const eventController = 
                 createEventController(<IActiveCollabAPI>mockActiveCollabApi);
 
-            const actualValue = await eventController.processEvent(rawData);
+            const returnedValue = await eventController.processEvent(testData.getRawNewComment());
 
-            expect(actualValue.isLeft()).toBe(true);
-            expect(actualValue.isRight()).toBe(false);
-            expect(actualValue.value)
+            expect(returnedValue.isLeft()).toBe(true);
+            expect(returnedValue.isRight()).toBe(false);
+            expect(returnedValue.value)
                 .toEqual('Error processing Comment: Error: Dummy Error');
         });
 
         it('should return error value when finding project returns no ID', async () => {
             expect.assertions(3);
+            
             const rawData = testData.getRawNewComment();
 
             const mockActiveCollabApi: Partial<IActiveCollabAPI> = {
@@ -457,16 +373,17 @@ describe('calling processEvent', () => {
             const eventController = 
                 createEventController(<IActiveCollabAPI>mockActiveCollabApi);
 
-            const actualValue = await eventController.processEvent(rawData);
+            const returnedValue = await eventController.processEvent(rawData);
 
-            expect(actualValue.isLeft()).toBe(true);
-            expect(actualValue.isRight()).toBe(false);
-            expect(actualValue.value)
+            expect(returnedValue.isLeft()).toBe(true);
+            expect(returnedValue.isRight()).toBe(false);
+            expect(returnedValue.value)
                 .toEqual(`Project ID not found for Comment with parent: ${rawData.payload.parent_id}`);
         });
 
         it('should return error value when getting task name returns error', async () => {
             expect.assertions(3);
+
             const rawData = testData.getRawNewComment();
             const errorValue = 'error';
 
@@ -480,43 +397,32 @@ describe('calling processEvent', () => {
                     <IActiveCollabAPI>mockActiveCollabApi
                 );
 
-            const actualValue = await eventController.processEvent(rawData);
+            const returnedValue = await eventController.processEvent(rawData);
 
-            expect(actualValue.isLeft()).toBe(true);
-            expect(actualValue.isRight()).toBe(false);
-            expect(actualValue.value)
+            expect(returnedValue.isLeft()).toBe(true);
+            expect(returnedValue.isRight()).toBe(false);
+            expect(returnedValue.value)
                 .toEqual(`Unable to process Comment Event: ${errorValue}`);
         });
 
         it('should return error whengetting user ID fails', async () => {
             expect.assertions(3);
-
-            const assignee = 'Test';
-            const completed = false;
-            const baseUrl = 'https://app.activecollab.com/157544/';
-
-            const rawData = testData.getRawNewComment();
-            rawData.payload.is_completed = completed;
    
             const mockMappingController: Partial<IMappingController> = {
                 getDiscordUser: jest.fn(() => { throw new Error(); })
             };
-
-            const mockDiscordController: Partial<IDiscordController> = {
-                getUserId: jest.fn().mockReturnValue(undefined)
-            };
             
             const eventController = createEventController(
                 undefined,
-                <IMappingController>mockMappingController,
-                undefined,
-                baseUrl
+                <IMappingController>mockMappingController
             );
-            const actualValue = await eventController.processEvent(rawData);
 
-            expect(actualValue.isLeft()).toBe(true);
-            expect(actualValue.isRight()).toBe(false);
-            expect(actualValue.value)
+            const returnedValue = 
+                await eventController.processEvent(testData.getRawNewComment());
+
+            expect(returnedValue.isLeft()).toBe(true);
+            expect(returnedValue.isRight()).toBe(false);
+            expect(returnedValue.value)
                 .toEqual('Unable to process Comment Event: Error');
         });
     });
