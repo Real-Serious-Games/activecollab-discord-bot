@@ -46,7 +46,9 @@ async function createServer() {
         const eventController = createEventController(
             activeCollabApi,
             mappingController,
-            discordController);
+            discordController,
+            config.get('activeCollab:connectionStr')
+        );
 
         const apiController = createApiController(
             discordController,

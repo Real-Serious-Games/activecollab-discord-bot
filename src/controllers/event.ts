@@ -1,4 +1,5 @@
 import { assert } from 'console';
+import { RichEmbed } from 'discord.js';
 
 import { Task } from '../models/taskEvent';
 import { Comment } from '../models/comment';
@@ -16,16 +17,18 @@ export interface IEventController {
 
 export interface IProcessedEvent {
     projectId: number;
-    body: string;
+    body: RichEmbed | string;
 }
+
+const eventColor = '#449DF5';
 
 class ProcessedEvent implements IProcessedEvent {
     public readonly projectId: number;
-    public readonly body: string;
+    public readonly body: RichEmbed | string;
 
     public constructor(
         projectId: number,
-        body: string
+        body: RichEmbed | string
     ) {
         this.projectId = projectId;
         this.body = body;
@@ -36,6 +39,7 @@ async function processEvent(
     activeCollabApi: IActiveCollabAPI,
     mappingController: IMappingController,
     discordController: IDiscordController,
+    baseUrl: string,
     event: Event<Payload>
 ): Promise<Either<string, IProcessedEvent>> {
     if (!event || !event.payload) {
@@ -49,8 +53,8 @@ async function processEvent(
                 case 'TaskCreated':
                     const processedTask = processNewTask(
                             task,
-                            mappingController,
-                            discordController
+                            (assigneeId: number) => getUserId(assigneeId, mappingController, discordController),
+                            baseUrl
                         );
 
                     if (processedTask.isRight()) {
@@ -65,12 +69,26 @@ async function processEvent(
                     return left(`Unable to process Task Event: ${processedTask.value}`);
                     
                 case 'TaskUpdated':
-                    return right(
-                        new ProcessedEvent(
-                            task.project_id,
-                            processUpdatedTask(task)
-                        )
+                    const processedUpdatedTask = processUpdatedTask(
+                        task,
+                        (assigneeId: number) => getUserId(
+                            assigneeId,
+                            mappingController, 
+                            discordController
+                        ),
+                        baseUrl
                     );
+
+                    if (processedUpdatedTask.isRight()) {
+                        return right(
+                            new ProcessedEvent(
+                                task.project_id,
+                                processedUpdatedTask.value
+                            )
+                        );
+                    }
+
+                    return left(`Unable to process Task Event: ${processedUpdatedTask.value}`);
 
                 default:
                     return left(
@@ -94,11 +112,28 @@ async function processEvent(
                             .toUndefined();
 
                         if (projectId !== undefined) {
-                            return right(
-                                new ProcessedEvent(
-                                    projectId,
-                                    processNewComment(comment))
+                            const processsedComment = await processNewComment(
+                                comment,
+                                (authorId: number) => getUserId(
+                                    authorId, 
+                                    mappingController, 
+                                    discordController
+                                ),
+                                projectId,
+                                baseUrl,
+                                activeCollabApi
+                            );
+    
+                            if (processsedComment.isRight()) {
+                                return right(
+                                    new ProcessedEvent(
+                                        projectId,
+                                        processsedComment.value
+                                    )
                                 );
+                            }
+                        
+                            return left(`Unable to process Comment Event: ${processsedComment.value}`);
                         }
 
                         return left(`Project ID not found for Comment with parent: `
@@ -135,13 +170,15 @@ async function processEvent(
 export function createEventController(
     activeCollabApi: IActiveCollabAPI,
     mappingController: IMappingController,
-    discordController: IDiscordController
+    discordController: IDiscordController,
+    baseUrl: string
 ) {
     return {
         processEvent: (e: Event<Payload>) => processEvent(
             activeCollabApi,
             mappingController,
             discordController, 
+            baseUrl,
             e
         )
     };
@@ -149,39 +186,85 @@ export function createEventController(
 
 function processNewTask(
     task: Task,
-    mappingController: IMappingController,
-    discordController: IDiscordController
-): Either<string, string> {
-    const headerLine = `Task Created: **${task.name}**\n`;
-    let assignedLine: string = '';
+    getUserId: (assigneeId: number) => Either<string, string>,
+    baseUrl: string
+): Either<string, RichEmbed> {
+    const userId = getUserId(task.assignee_id);
 
-    if (task.assignee_id) {
-        try {
-            const userId = discordController
-                .getUserId(mappingController.getDiscordUser(task.assignee_id));
-
-            assignedLine = `Assignee: <@${userId}>\n`;
-        } catch (e) {
-            return left(e);
-        }
+    if (userId.isLeft()) {
+        return left(userId.value); 
     }
 
-    const completedLine = task.is_completed ? `Completed: ${task.is_completed}` : ''; 
+    const embed =  new RichEmbed()
+        .setTitle(`*Task Created:* ${task.name}`)
+        .setColor(eventColor)
+        .setURL(baseUrl + task.url_path)
+        .addField('Assignee', userId.value ? `<@${userId.value}>` : 'Not Assigned', true)
+        .addField('Status', `${task.is_completed ? 'Completed' : 'In Progress'}`, true);
 
-    return right(headerLine + assignedLine + completedLine);
+    return right(embed);
 }
 
-function processUpdatedTask(task: Task): string {
-    return  'A task has been updated.\n' +
-            `Task Name: ${task.name}\n` +
-            `Project Name: ${task.project_id}`;
+function processUpdatedTask(
+    task: Task,
+    getUserId: (assigneeId: number) => Either<string, string>,
+    baseUrl: string
+): Either<string, RichEmbed> {
+    const userId = getUserId(task.assignee_id);
+
+    if (userId.isLeft()) {
+        return left(userId.value); 
+    }
+
+    const embed =  new RichEmbed()
+        .setTitle(`*Task Updated:* ${task.name}`)
+        .setColor(eventColor)
+        .setURL(baseUrl + task.url_path)
+        .addField(
+            'Assignee',
+            userId.value ? `<@${userId.value}>` : 'Not Assigned',
+            true
+        )
+        .addField(
+            'Status', 
+            `${task.is_completed ? 'Completed' : 'In Progress'}`,
+            true
+        );
+
+    return right(embed);
 }
 
-function processNewComment(comment: Comment): string {
-    return  '*A new comment has been added.*\n' +
-            `**Comment:** \`${comment.body}\`\n` +
-            `**${comment.parent_type}:** ${comment.parent_id}\n` +
-            `**Author:** ${comment.created_by_id}\n`;
+async function processNewComment(
+    comment: Comment,
+    getUserId: (authorId: number) => Either<string, string>,
+    projectId: number,
+    baseUrl: string,
+    activeCollabApi: IActiveCollabAPI
+): Promise<Either<string, RichEmbed>> {
+    const userId = getUserId(comment.created_by_id);
+
+    if (userId.isLeft()) {
+        return left(userId.value); 
+    }
+
+    try {
+        const taskName = await activeCollabApi.taskIdToName(projectId, comment.parent_id);
+    
+        const embed =  new RichEmbed()
+            .setTitle(`*Comment Added to Task:* ${taskName}`)
+            .setDescription(comment.body)
+            .setColor(eventColor)
+            .setURL(baseUrl + comment.url_path)
+            .addField(
+                'Author',
+                `<@${userId.value}>`,
+                true
+            );
+
+        return right(embed);
+    } catch (e) {
+        return left(e);
+    }    
 }
 
 function processNewProject(project: Project): string {
@@ -189,4 +272,21 @@ function processNewProject(project: Project): string {
             `**Project:** \`${project.name}\`\n` +
             `**Company:** ${project.company_id}\n` +
             `**Author:** ${project.created_by_id}\n`;
+}
+
+function getUserId(
+    assigneeId: number,
+    mappingController: IMappingController,
+    discordController: IDiscordController
+): Either<string, string> {
+    if (assigneeId) {
+        try {
+            return right(discordController
+                .getUserId(mappingController.getDiscordUser(assigneeId)));
+        } catch (e) {
+            return left(e);
+        }
+    }
+
+    return right('');
 }

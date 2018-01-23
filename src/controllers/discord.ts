@@ -5,7 +5,9 @@ import { AssertionError } from 'assert';
 import { IMappingController } from '../controllers/mapping';
 
 export interface IDiscordController {
-    sendMessageToChannel: (message: string, channel: discord.TextChannel) => any;
+    sendMessageToChannel: (
+        message: discord.RichEmbed | string, channel: discord.TextChannel
+    ) => any;
     determineChannel: (projectId: number) => discord.TextChannel;
     getUserId: (username: string) => string;
 }
@@ -68,13 +70,19 @@ export class DiscordController implements IDiscordController {
     }
 
     public sendMessageToChannel(
-        message: string,
+        message: discord.RichEmbed | string,
         channel: discord.TextChannel
     ): void {
         assert(channel, `Cannot send without a channel: ${channel}`);
 
+        if (typeof(message) === 'string') {
+            channel
+                .send(message)
+                .catch(console.error);
+        }
+
         channel
-            .send(message)
+            .send(undefined, message as discord.RichEmbed)
             .catch(console.error);
     }
 }
