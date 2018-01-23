@@ -1,11 +1,10 @@
-import { Event } from './event';
+import { Payload } from './payload';
 
-export interface Comment extends Event {
-    payload: {
-        class: string,
-        parent_type: string,
-        parent_id: number,
-        body: string,
-        [key: string]: any;
-    };
+export interface Comment extends Payload {
+    parent_type: string;
+    parent_id: number;
+    body: string;
+    created_by_id: number;
+    url_path: string;
+    [key: string]: any;
 }

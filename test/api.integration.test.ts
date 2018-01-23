@@ -1,17 +1,17 @@
 import * as request from 'supertest';
-import * as sinon from 'sinon';
 import { Client } from 'discord.js';
 import * as express from 'express';
 import { Logger } from 'structured-log/src';
-
-const chai = require('chai');
-const expect = chai.expect;
+import { right } from 'fp-ts/lib/Either';
 
 import { setupApp } from '../src/app';
 import * as testData from './testData';
 import { Task } from '../src/models/taskEvent';
 import { createApiController } from '../src/controllers/api';
-import { IDiscordController, SendMessageToChannel, DetermineChannel } from '../src/controllers/discord';
+import { IDiscordController, } from '../src/controllers/discord';
+import { IEventController, IProcessedEvent, createEventController } from '../src/controllers/event';
+import { IActiveCollabAPI } from '../src/controllers/activecollab-api';
+import { IMappingController } from '../src/controllers/mapping';
 
 describe('POST /api/webhook', () => {
     it('should return status 200 when webhook secret present', (done) => {
@@ -19,23 +19,36 @@ describe('POST /api/webhook', () => {
 
         const client: Partial<Client> = { };
 
-        const discordControllerStub: IDiscordController = {
-            sendMessageToChannel: <SendMessageToChannel>sinon.stub(),
-            determineChannel: <DetermineChannel>sinon.stub()
+    const discordControllerStub: Partial<IDiscordController> = {
+            sendMessageToChannel: jest.fn(),
+            determineChannel: jest.fn(),
+            getUserId: jest.fn()
+        };
+
+        const mockMappingController: Partial<IMappingController> = {
+            getDiscordUser: jest.fn()
+        };
+
+        const mockEventController: Partial<IEventController> = {
+            processEvent: jest.fn(() => Promise.resolve(right({ })))
         };
 
         const app = express();
         const logger: Partial<Logger> = { };
-        const apiController = createApiController(discordControllerStub, webhookSecret, <Logger>logger);
+        const apiController = createApiController(
+            discordControllerStub as IDiscordController,
+            webhookSecret,
+            <Logger>logger,
+            <IEventController>mockEventController);
 
-        setupApp(app, <Logger>logger, discordControllerStub, apiController);
+        setupApp(app, apiController);
         
         return request(app)
             .post('/api/webhook')
             .set('X-Angie-WebhookSecret', webhookSecret)
-            .send(testData.getRawNewTask())
+            .send(testData.getRawNewComment())
             .end(function(err, res) {
-                expect(res.status).to.equal(200);
+                expect(res.status).toEqual(200);
                 done();
         });
     });
@@ -46,22 +59,30 @@ describe('POST /api/webhook', () => {
         const client: Partial<Client> = {
         };
 
-        const discordControllerStub: IDiscordController = {
-            sendMessageToChannel: <SendMessageToChannel>sinon.stub(),
-            determineChannel: <DetermineChannel>sinon.stub()
+        const discordControllerStub: Partial<IDiscordController> = {
+            sendMessageToChannel: jest.fn(),
+            determineChannel: jest.fn()
+        };
+
+        const eventControllerStub: IEventController = {
+            processEvent: jest.fn()
         };
 
         const app = express();
         const logger: Partial<Logger> = { };
-        const apiController = createApiController(discordControllerStub, webhookSecret, <Logger>logger);
+        const apiController = createApiController(
+            discordControllerStub as IDiscordController,
+            webhookSecret,
+            <Logger>logger,
+            <IEventController>eventControllerStub);
 
-        setupApp(app, <Logger>logger, discordControllerStub, apiController);
+        setupApp(app, apiController);
         
         return request(app)
             .post('/api/webhook')
             .send(testData.getRawNewTask())
             .end(function(err, res) {
-                expect(res.status).to.equal(403);
+                expect(res.status).toEqual(403);
                 done();
         });
     });

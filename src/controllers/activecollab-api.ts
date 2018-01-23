@@ -1,108 +1,115 @@
-import { RequestAPI, UriOptions, UrlOptions } from 'request';
-import { RequestPromise, RequestPromiseOptions } from 'request-promise-native';
+import { IActiveCollabRestClient } from './activecollab-rest';
+import { Task } from '../models/taskEvent';
+import { Project } from '../models/project';
+import { Report, Assignment } from '../models/report';
+import * as _ from 'lodash';
+import { Option, some, none } from 'fp-ts/lib/Option';
 
-export type Request =
-    RequestAPI<RequestPromise, RequestPromiseOptions, UriOptions | UrlOptions>;
-
-function get(
-    request: Request,
-    connectionStr: string,
-    token: string,
-    route: string
-): Promise<Object> {
-    return request.get({
-        url: connectionStr + route,
-        headers: {
-            'X-Angie-AuthApiToken': token
-        },
-        json: true
-    });
-}
-
-function post(
-    request: Request,
-    connectionStr: string,
-    token: string,
-    route: string,
-    body: Object
-): Promise<Object> {
-    return request.post({
-        url: connectionStr + route,
-        headers: {
-            'X-Angie-AuthApiToken': token
-        },
-        json: body
-    });
-}
-
-// Login using an email and password and return the API token
-async function login(
-    request: Request,
-    connectionStr: string,
-    email: string,
-    password: string
+/**
+ * Get the name of a specified task from its ID and project ID.
+ */
+async function taskIdToName(
+    restClient: IActiveCollabRestClient,
+    projectId: number,
+    taskId: number
 ): Promise<string> {
+    const url = `/projects/${projectId}/tasks`;
+    const response = await restClient.get(url);
 
-    const login = await request.post({
-        url: 'https://my.activecollab.com/api/v1/external/login',
-        json: {
-            email: email,
-            password: password
-        },
-        resolveWithFullResponse: true
-    });
-
-    if (login.statusCode !== 200 || !login.body || !login.body.is_ok) {
-        if (login.body && login.body.message) {
-            throw new Error(`Error ${login.statusCode} returned logging in: ${login.body.message}`);
-        }
-        throw new Error(`Recieved response code on login ${login.status}`);
+    if (!Array.isArray(response)) {
+        throw new Error(`Invalid response received trying to GET ${url}.`);
     }
 
-    if (!login.body.user || !login.body.user.intent) {
-        throw new Error ('Could not retrieve user information from login.');
+    const tasks = <Task[]>response;
+    const task = tasks.find(t => t.id === taskId);
+    if (task) {
+        return task.name;
     }
 
-    const issueToken = await request.post({
-        url: connectionStr + '/api/v1/?format=json&path_info=%2Fissue-token-intent',
-        json: {
-            intent: login.body.user.intent,
-            client_name: 'Discord Integration',
-            client_vendor: 'Real Serious Games'
-        },
-        resolveWithFullResponse: true
-    });
+    throw new Error(`Could not find task ID ${taskId} in project ${projectId}`);
+}
 
-    if (issueToken.statusCode !== 200 || !issueToken.body || !issueToken.body.token) {
-        throw new Error(`Error ${issueToken.statusCode} returned requesting token.`);
+/**
+ * Get a specified project from its ID.
+ */
+async function getProjectById(
+    restClient: IActiveCollabRestClient,
+    id: number
+): Promise<Project> {
+    const response = await restClient.get('/projects');
+
+    if (!Array.isArray(response)) {
+        throw new Error('Invalid response received trying to get projects');
+    }
+    const projects = <Project[]>response;
+    const project = projects.find(p => p.id === id);
+    if (project) {
+        return project;
     }
 
-    return issueToken.body.token;
+    throw new Error(`Could not find project with ID ${id}`);
+}
+
+/**
+ * Get all tasks across all projects
+ */
+async function getAllTasksLazy(
+    restClient: IActiveCollabRestClient
+): Promise<_.LoDashImplicitWrapper<Assignment[]>> {
+    const res = await restClient.get('/reports/run', {
+        type: 'AssignmentFilter',
+        include_subtasks: false
+    }) as Report;
+
+    if (!res.all || !res.all.assignments) {
+        throw new Error('Invalid response trying to get report');
+    }
+
+    return _(res.all.assignments)
+        .values()
+        .filter(a => a.type === 'Task');
+}
+
+/**
+ * Get the id of the project the specified task belongs to.
+ */
+async function findProjectForTaskId(
+    restClient: IActiveCollabRestClient,
+    taskId: number
+): Promise<Option<number>> {
+    const tasks = await getAllTasksLazy(restClient);
+    const task = tasks.find(t => t.id === taskId);
+
+    return task ? some(task.project_id) : none;
 }
 
 export interface IActiveCollabAPI {
     /**
-     * Sends an HTTP GET request to the ActiveCollab API
+     * Get the name of a specified task from its ID and project ID.
      */
-    get: (route: string) => Promise<Object>;
+    taskIdToName: (projectId: number, taskId: number) => Promise<string>;
 
     /**
-     * Sends an HTTP POST request to the ActiveCollab API
+     * Get a specified project from its ID.
      */
-    post: (route: string, body: Object) => Promise<Object>;
+    getProjectById: (projectId: number) => Promise<Project>;
+
+    /**
+     * Get all tasks across all projects
+     */
+    getAllTasks: () => Promise<Assignment[]>;
+
+    /**
+     * Get the id of the project the specified task belongs to.
+     */
+    findProjectForTask: (taskId: number) => Promise<Option<number>>;
 }
 
-export async function createActiveCollabApi(
-    request: Request,
-    connectionStr: string,
-    email: string,
-    password: string
-): Promise<IActiveCollabAPI> {
-    // Login
-    const token = await login(request, connectionStr, email, password);
-
+export function createActiveCollabAPI(restClient: IActiveCollabRestClient): IActiveCollabAPI {
     return {
-        get: get.bind(undefined, request, connectionStr, token),
-        post: post.bind(undefined, request, connectionStr, token)
+        taskIdToName: (p, t) => taskIdToName(restClient, p, t),
+        getProjectById: p => getProjectById(restClient, p),
+        getAllTasks: () => getAllTasksLazy(restClient).then(a => a.value()),
+        findProjectForTask: t => findProjectForTaskId(restClient, t)
     };
 }

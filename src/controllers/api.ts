@@ -2,8 +2,8 @@ import { Response, Request } from 'express';
 import { WebhookClient } from 'discord.js';
 import { Logger } from 'structured-log';
 
-import * as eventController from './event';
 import { IDiscordController, DiscordController } from '../controllers/discord';
+import { IEventController } from './event';
 
 type Route = (req: Request, res: Response) => void;
 
@@ -16,28 +16,35 @@ export interface IApiController {
     postActiveCollabWebhook: PostActiveCollabWebhook;
 }
 
-function postActiveCollabWebhook (
+async function postActiveCollabWebhook (
     discordController: IDiscordController,
     webhookSecret: string,
     logger: Logger,
+    eventController: IEventController,
     req: Request,
     res: Response
-): void {
+): Promise<void> {
     if (req.header('X-Angie-WebhookSecret') != webhookSecret) {
         res.sendStatus(403);
         return;
     }
-    const processed = eventController.processEvent(req.body);
+    const processed = await eventController.processEvent(req.body);
 
-    processed.map(value =>
-        discordController.sendMessageToChannel(
-            value,
-            discordController.determineChannel()
-        )
-    );
+    await processed.map(async p => {
+        try {
+            const projectId = await discordController.determineChannel(p.projectId);
 
-    processed.mapLeft(value => 
-        logger.warn('Issue processing event: {value}', value)
+            discordController.sendMessageToChannel(
+                p.body,
+                projectId
+            );
+        } catch (e) {
+            logger.warn('Issue processing event: {value}', e);
+        }
+    });
+
+    processed.mapLeft(e => 
+        logger.warn('Issue processing event: {value}', e)
     );
 
     res.sendStatus(200);
@@ -46,13 +53,15 @@ function postActiveCollabWebhook (
 export function createApiController(
     discordController: IDiscordController,
     webhookSecret: string,
-    logger: Logger
+    logger: Logger,
+    eventController: IEventController
 ): IApiController {
     return {
         postActiveCollabWebhook: postActiveCollabWebhook.bind(
             undefined,
             discordController,
             webhookSecret,
-            logger)
+            logger,
+            eventController)
     };
 }
