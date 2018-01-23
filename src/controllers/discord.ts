@@ -6,7 +6,7 @@ import { IMappingController } from '../controllers/mapping';
 
 export interface IDiscordController {
     sendMessageToChannel: (
-        message: discord.RichEmbed | string, channel: discord.TextChannel
+        message: discord.RichEmbed, channel: discord.TextChannel
     ) => any;
     determineChannel: (projectId: number) => discord.TextChannel;
     getUserId: (username: string) => string;
@@ -70,16 +70,10 @@ export class DiscordController implements IDiscordController {
     }
 
     public sendMessageToChannel(
-        message: discord.RichEmbed | string,
+        message: discord.RichEmbed,
         channel: discord.TextChannel
     ): void {
         assert(channel, `Cannot send without a channel: ${channel}`);
-
-        if (typeof(message) === 'string') {
-            channel
-                .send(message)
-                .catch(console.error);
-        }
 
         channel
             .send(undefined, message as discord.RichEmbed)

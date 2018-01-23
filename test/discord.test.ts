@@ -1,4 +1,4 @@
-import { TextChannel, Client } from 'discord.js';
+import { TextChannel, Client, RichEmbed } from 'discord.js';
 import * as discord from 'discord.js';
 
 import { DiscordController, IDiscordController } from '../src/controllers/discord';
@@ -8,7 +8,7 @@ import { IMappingController } from '../src/controllers/mapping';
 
 describe('calling sendMessageToChannel', () => {
     it('should send message to channel when channel is valid', () => {
-        const message: string = 'Test message';
+        const message: discord.RichEmbed = new RichEmbed();
 
         const channelStub = jest.fn(() => Promise.resolve());
 
@@ -19,13 +19,13 @@ describe('calling sendMessageToChannel', () => {
         const discordController = setupDiscordController();
 
         discordController.sendMessageToChannel(message, <TextChannel>channel);
-        expect(channelStub).toBeCalledWith(message);
+        expect(channelStub).toBeCalledWith(undefined, message);
     }),
 
     it('should error when channel is invalid', () => {
         const discordController = setupDiscordController();
 
-        expect(() => discordController.sendMessageToChannel('', undefined))
+        expect(() => discordController.sendMessageToChannel(undefined, undefined))
             .toThrow('Cannot send without a channel: undefined');
     });
 });
