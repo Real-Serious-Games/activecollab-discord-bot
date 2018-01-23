@@ -31,7 +31,8 @@ async function createServer() {
         const discordController = new DiscordController(
             config.get('discordBotToken'),
             new discord.Client(),
-            mappingController
+            mappingController,
+            config.get('guildName')
         );
 
         const activeCollabRestClient = await createActiveCollabRestClient(
@@ -42,7 +43,12 @@ async function createServer() {
         );
 
         const activeCollabApi = createActiveCollabAPI(activeCollabRestClient);
-        const eventController =  createEventController(activeCollabApi);
+        const eventController = createEventController(
+            activeCollabApi,
+            mappingController,
+            discordController,
+            config.get('activeCollab:connectionStr')
+        );
 
         const apiController = createApiController(
             discordController,
@@ -51,7 +57,7 @@ async function createServer() {
             eventController
         );
 
-        setupApp(app, logger, discordController, apiController);
+        setupApp(app, apiController);
 
         return app.listen(app.get('port'), () => {
             logger.info('  App is running at http://localhost:{port} in {env} mode',

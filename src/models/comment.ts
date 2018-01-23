@@ -4,6 +4,7 @@ export interface Comment extends Payload {
     parent_type: string;
     parent_id: number;
     body: string;
-    [key: string]: any;
     created_by_id: number;
+    url_path: string;
+    [key: string]: any;
 }

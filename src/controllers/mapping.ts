@@ -13,9 +13,9 @@ export interface IMappingController {
     getProjectId: (channelName: string) => number;
     
     /**
-     * Map Discord user to ActiveCollab user
+     * Map Discord user to ActiveCollab user ID
      */
-    getDiscordUser: (activeCollabUser: string) => string;
+    getDiscordUser: (activeCollabUserID: number) => string;
 
     /**
      * Map ActiveCollab user to Discord user
@@ -30,7 +30,7 @@ export interface ChannelMap {
 
 export interface UserMap {
     discordUser: string;
-    activeCollabUser: string;
+    activeCollabUser: number;
 }
 
 function getChannel(
@@ -70,7 +70,7 @@ function getProjectId(
 
 function getDiscordUser(
     usersMap: () => Array<UserMap>,
-    activeCollabUser: string
+    activeCollabUser: number
 ): string {
     if (!activeCollabUser) {
         throw Error(`Invalid ActiveCollab user: ${activeCollabUser}`);
@@ -89,7 +89,7 @@ function getDiscordUser(
 function getActiveCollabUser(
     usersMap: () => Array<UserMap>,
     discordUser: string
-): string {
+): number {
     if (!discordUser) {
         throw Error(`Invalid Discord user: ${discordUser}`);
     }

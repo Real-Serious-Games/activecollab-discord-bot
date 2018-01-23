@@ -3,11 +3,12 @@ import { Client } from 'discord.js';
 import { Logger } from 'structured-log/src';
 import { Task } from '../src/models/taskEvent';
  
-import { IDiscordController, SendMessageToChannel, DetermineChannel } from '../src/controllers/discord';
+import { IDiscordController } from '../src/controllers/discord';
 import { createApiController, IApiController } from '../src/controllers/api';
 import * as testData from './testData';
 import { IEventController, createEventController } from '../src/controllers/event';
 import { IActiveCollabAPI } from '../src/controllers/activecollab-api';
+import { IMappingController } from '../src/controllers/mapping';
 
 describe('postActiveCollabWebhook', () => {
     it('should call send with status 200', async () => {
@@ -93,7 +94,8 @@ describe('postActiveCollabWebhook', () => {
 
         const discordController: Partial<IDiscordController> = {
             determineChannel: jest.fn(() => Promise.reject('Channel error')),
-            sendMessageToChannel: jest.fn()
+            sendMessageToChannel: jest.fn(),
+            getUserId: jest.fn()
         };
 
         const testFramework = createApiTestFramework(
@@ -154,18 +156,24 @@ function createApiTestFramework(
     },
     client: Partial<Client> = {
     },
-    discordController: IDiscordController = {
-        sendMessageToChannel: <SendMessageToChannel>jest.fn(),
-        determineChannel: <DetermineChannel>jest.fn()
+    discordController: Partial<IDiscordController> = {
+        sendMessageToChannel: jest.fn(),
+        determineChannel: jest.fn(),
+        getUserId: jest.fn()
     },
     logger: Partial<Logger> = {
         warn: jest.fn()
     },
+    mockMappingController: Partial<IMappingController> = {
+        getDiscordUser: jest.fn()
+    },
     eventController: IEventController = createEventController(
-        { } as IActiveCollabAPI
+        { } as IActiveCollabAPI,
+        mockMappingController as IMappingController,
+        discordController as IDiscordController
     ),
     apiController = createApiController(
-        discordController,
+        discordController as IDiscordController,
         expectedSecret, 
         <Logger>logger,
         <IEventController>eventController

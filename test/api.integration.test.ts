@@ -2,14 +2,16 @@ import * as request from 'supertest';
 import { Client } from 'discord.js';
 import * as express from 'express';
 import { Logger } from 'structured-log/src';
+import { right } from 'fp-ts/lib/Either';
 
 import { setupApp } from '../src/app';
 import * as testData from './testData';
 import { Task } from '../src/models/taskEvent';
 import { createApiController } from '../src/controllers/api';
-import { IDiscordController, SendMessageToChannel, DetermineChannel } from '../src/controllers/discord';
-import { IEventController, createEventController } from '../src/controllers/event';
+import { IDiscordController, } from '../src/controllers/discord';
+import { IEventController, IProcessedEvent, createEventController } from '../src/controllers/event';
 import { IActiveCollabAPI } from '../src/controllers/activecollab-api';
+import { IMappingController } from '../src/controllers/mapping';
 
 describe('POST /api/webhook', () => {
     it('should return status 200 when webhook secret present', (done) => {
@@ -17,29 +19,34 @@ describe('POST /api/webhook', () => {
 
         const client: Partial<Client> = { };
 
-        const discordControllerStub: IDiscordController = {
-            sendMessageToChannel: <SendMessageToChannel>jest.fn(),
-            determineChannel: <DetermineChannel>jest.fn()
+        const discordControllerStub: Partial<IDiscordController> = {
+            sendMessageToChannel: jest.fn(),
+            determineChannel: jest.fn(),
+            getUserId: jest.fn()
         };
 
-        const eventController: IEventController = createEventController(
-            { } as IActiveCollabAPI
-        );
+        const mockMappingController: Partial<IMappingController> = {
+            getDiscordUser: jest.fn()
+        };
+
+        const mockEventController: Partial<IEventController> = {
+            processEvent: jest.fn(() => Promise.resolve(right({ })))
+        };
 
         const app = express();
         const logger: Partial<Logger> = { };
         const apiController = createApiController(
-            discordControllerStub,
+            discordControllerStub as IDiscordController,
             webhookSecret,
             <Logger>logger,
-            <IEventController>eventController);
+            <IEventController>mockEventController);
 
-        setupApp(app, <Logger>logger, discordControllerStub, apiController);
+        setupApp(app, apiController);
         
         return request(app)
             .post('/api/webhook')
             .set('X-Angie-WebhookSecret', webhookSecret)
-            .send(testData.getRawNewTask())
+            .send(testData.getRawNewComment())
             .end(function(err, res) {
                 expect(res.status).toEqual(200);
                 done();
@@ -52,9 +59,9 @@ describe('POST /api/webhook', () => {
         const client: Partial<Client> = {
         };
 
-        const discordControllerStub: IDiscordController = {
-            sendMessageToChannel: <SendMessageToChannel>jest.fn(),
-            determineChannel: <DetermineChannel>jest.fn()
+        const discordControllerStub: Partial<IDiscordController> = {
+            sendMessageToChannel: jest.fn(),
+            determineChannel: jest.fn()
         };
 
         const eventControllerStub: IEventController = {
@@ -64,12 +71,12 @@ describe('POST /api/webhook', () => {
         const app = express();
         const logger: Partial<Logger> = { };
         const apiController = createApiController(
-            discordControllerStub,
+            discordControllerStub as IDiscordController,
             webhookSecret,
             <Logger>logger,
             <IEventController>eventControllerStub);
 
-        setupApp(app, <Logger>logger, discordControllerStub, apiController);
+        setupApp(app, apiController);
         
         return request(app)
             .post('/api/webhook')
