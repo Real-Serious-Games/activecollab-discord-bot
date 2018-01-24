@@ -178,6 +178,9 @@ export function createEventController(
         if (userId.isLeft()) {
             return left(`Unable to process Comment Event: ${userId.value}`); 
         }
+
+        const url = `${baseUrl}/projects/${projectId}/${comment.parent_type}/`
+            + comment.parent_id;
         
         try {
             const taskName = await activeCollabApi.taskIdToName(projectId, comment.parent_id);
@@ -186,7 +189,7 @@ export function createEventController(
                 .setTitle(`*Comment Added to Task:* ${taskName}`)
                 .setDescription(comment.body)
                 .setColor(eventColor)
-                .setURL(baseUrl + comment.url_path)
+                .setURL(url)
                 .addField(
                     'Author',
                     `<@${userId.value}>`,
