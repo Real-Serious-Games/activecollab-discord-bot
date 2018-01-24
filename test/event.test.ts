@@ -12,7 +12,7 @@ import { IDiscordController, DiscordController } from '../src/controllers/discor
 import { basename } from 'path';
 
 const eventColor = '#449DF5';
-const baseUrl = 'https://app.activecollab.com/8008/';
+const baseUrl = 'https://app.activecollab.com/8008';
 
 describe('calling processEvent', () => {
     describe('with invalid event', () => {
@@ -281,7 +281,8 @@ describe('calling processEvent', () => {
                 .setTitle(`*Comment Added to Task:* ${taskName}`)
                 .setDescription(rawData.payload.body)
                 .setColor(eventColor)
-                .setURL(baseUrl + rawData.payload.url_path)
+                .setURL(`${baseUrl}/projects/${projectId}/` 
+                    + `${rawData.payload.parent_type}/${rawData.payload.parent_id}`)
                 .addField('Author', `<@${assignee}>`, true);
 
             const mockMappingController: Partial<IMappingController> = {
