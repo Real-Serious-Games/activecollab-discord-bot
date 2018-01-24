@@ -5,6 +5,10 @@ import { Report, Assignment } from '../models/report';
 import * as _ from 'lodash';
 import { Option, some, none } from 'fp-ts/lib/Option';
 
+interface TaskResponse {
+    tasks: Array<Task>;
+}
+
 /**
  * Get the name of a specified task from its ID and project ID.
  */
@@ -14,14 +18,14 @@ async function taskIdToName(
     taskId: number
 ): Promise<string> {
     const url = `/projects/${projectId}/tasks`;
-    const response = await restClient.get(url);
+    const response = await restClient.get(url) as TaskResponse;
 
-    if (!Array.isArray(response)) {
+    if (!response.tasks || !Array.isArray(response.tasks)) {
         throw new Error(`Invalid response received trying to GET ${url}: `
             + JSON.stringify(response, undefined, 4));
     }
 
-    const tasks = <Task[]>response;
+    const tasks = response.tasks;
     const task = tasks.find(t => t.id === taskId);
     if (task) {
         return task.name;
