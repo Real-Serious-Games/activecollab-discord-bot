@@ -10,7 +10,7 @@ import { Either, left, right } from 'fp-ts/lib/Either';
 import { IActiveCollabAPI } from '../controllers/activecollab-api';
 import { IMappingController } from '../controllers/mapping';
 import { IDiscordController } from '../controllers/discord';
-import { map } from 'fp-ts/lib/Option';
+import { map, none } from 'fp-ts/lib/Option';
 import { disconnect } from 'cluster';
 
 export interface IEventController {
@@ -86,7 +86,7 @@ export function createEventController(
                 
                 if (comment.parent_type !== 'Task') {
                     return left(`Received Comment Event with unknown parent type: `
-                    + `${comment.parent_type}`);
+                        + `${comment.parent_type}`);
                 }
                 
                 switch (event.type) {
@@ -105,7 +105,7 @@ export function createEventController(
                         }
                         
                         return left(`Project ID not found for Comment with parent: `
-                        + `${comment.parent_id}`);
+                            + `${comment.parent_id}`);
                         
                     } catch (e) {
                         return left(`Error processing Comment: ${e}`);
@@ -113,8 +113,8 @@ export function createEventController(
                     
                     default:
                     return left(
-                        'Received Comment Event with unknown payload type: ' +
-                        event.type
+                        'Received Comment Event with unknown payload type: ' 
+                            + event.type
                     );
                 }
             }
@@ -129,12 +129,13 @@ export function createEventController(
         taskType: TaskType,
         baseUrl: string
     ): Either<string, RichEmbed> {
-        const userId = task.assignee_id != undefined 
-            ? getUserId(task.assignee_id) 
-            : right('');
+        // An assignee ID of 0 means that no one has been assigned to the task
+        const assigneeValue = task.assignee_id === 0 
+            ? right('Not Assigned')
+            : getUserId(task.assignee_id).map(id => `<@${id}>`);
         
-        if (userId.isLeft()) {
-            return left('Unable to process Task Event: ' + userId.value); 
+        if (assigneeValue.isLeft()) {
+            return left('Unable to process Task Event: ' + assigneeValue.value); 
         }
         
         let title = task.name;
@@ -155,7 +156,7 @@ export function createEventController(
             .setURL(baseUrl + task.url_path)
             .addField(
                 'Assignee',
-                userId.value ? `<@${userId.value}>` : 'Not Assigned',
+                assigneeValue.value,
                 true
             )
             .addField(
