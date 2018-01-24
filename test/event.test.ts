@@ -12,7 +12,7 @@ import { IDiscordController, DiscordController } from '../src/controllers/discor
 import { basename } from 'path';
 
 const eventColor = '#449DF5';
-const baseUrl = 'https://app.activecollab.com/8008/';
+const baseUrl = 'https://app.activecollab.com/8008';
 
 describe('calling processEvent', () => {
     describe('with invalid event', () => {
