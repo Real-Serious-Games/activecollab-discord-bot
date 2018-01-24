@@ -120,7 +120,7 @@ describe('calling processEvent', () => {
                 expect.assertions(1);
     
                 const rawData = testData.getRawNewTask();
-                rawData.payload.assignee_id = undefined;
+                rawData.payload.assignee_id = 0;
                 
                 const expectedRichEmbed = new RichEmbed()
                     .addField('Assignee', `Not Assigned`, true);
@@ -193,7 +193,7 @@ describe('calling processEvent', () => {
                 expect.assertions(1);
     
                 const rawData = testData.getRawUpdatedTask();
-                rawData.payload.assignee_id = undefined;
+                rawData.payload.assignee_id = 0;
                 
                 const expectedRichEmbed = new RichEmbed()
                     .addField('Assignee', `Not Assigned`, true);
