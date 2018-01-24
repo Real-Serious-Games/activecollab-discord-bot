@@ -1,17 +1,17 @@
 import { assert } from 'console';
 import { RichEmbed } from 'discord.js';
+import { map } from 'fp-ts/lib/Option';
+import { disconnect } from 'cluster';
+import { Either, left, right } from 'fp-ts/lib/Either';
 
 import { Task } from '../models/taskEvent';
 import { Comment } from '../models/comment';
 import { Event } from '../models/event';
 import { Project } from '../models/project';
 import { Payload } from '../models/payload';
-import { Either, left, right } from 'fp-ts/lib/Either';
 import { IActiveCollabAPI } from '../controllers/activecollab-api';
 import { IMappingController } from '../controllers/mapping';
 import { IDiscordController } from '../controllers/discord';
-import { map, none } from 'fp-ts/lib/Option';
-import { disconnect } from 'cluster';
 
 export interface IEventController {
     processEvent: (event: Event<Payload>) => 
