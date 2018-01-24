@@ -17,7 +17,8 @@ async function taskIdToName(
     const response = await restClient.get(url);
 
     if (!Array.isArray(response)) {
-        throw new Error(`Invalid response received trying to GET ${url}.`);
+        throw new Error(`Invalid response received trying to GET ${url}: `
+            + JSON.stringify(response, undefined, 4));
     }
 
     const tasks = <Task[]>response;
@@ -39,7 +40,8 @@ async function getProjectById(
     const response = await restClient.get('/projects');
 
     if (!Array.isArray(response)) {
-        throw new Error('Invalid response received trying to get projects');
+        throw new Error('Invalid response received trying to get projects: ' 
+            + JSON.stringify(response, undefined, 4));
     }
     const projects = <Project[]>response;
     const project = projects.find(p => p.id === id);
@@ -62,7 +64,8 @@ async function getAllTasksLazy(
     }) as Report;
 
     if (!res.all || !res.all.assignments) {
-        throw new Error('Invalid response trying to get report');
+        throw new Error('Invalid response trying to get report: ' 
+            + JSON.stringify(res, undefined, 4));
     }
 
     return _(res.all.assignments)
