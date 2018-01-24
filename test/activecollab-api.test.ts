@@ -72,6 +72,74 @@ describe('ActiveCollab API', () => {
         });
     });
 
+    describe('getTaskListNameById', () => {
+        it('requests specified project', async () => {
+            expect.assertions(1);
+            const projectId = 123;
+            const taskListId = 1;
+
+            const mockGet = jest.fn();
+            mockGet.mockReturnValue(Promise.resolve([{
+                id: taskListId,
+                name: 'Test task list',
+                project_id: projectId
+            }]));
+
+            const api = createActiveCollabAPI(setupMockRestClient(mockGet));
+
+            await api.getTaskListNameById(projectId, taskListId);
+
+            expect(mockGet).toBeCalledWith(`/projects/${projectId}/task-lists`);
+        });
+
+        it('returns name of task list with specified id', async () => {
+            expect.assertions(1);
+            const projectId = 123;
+            const taskListId = 3445;
+            const expectedName = 'Test task';
+
+            const mockGet = jest.fn();
+            mockGet.mockReturnValue(Promise.resolve([{
+                id: taskListId,
+                name: expectedName,
+                project_id: projectId
+            }]));
+
+            const api = createActiveCollabAPI(setupMockRestClient(mockGet));
+
+            const taskName = await api.getTaskListNameById(projectId, taskListId);
+
+            expect(taskName).toEqual(expectedName);
+        });
+
+        it('throws error when no task list with specified id exists', async () => {
+            expect.assertions(1);
+
+            const taskListId = 111;
+            const projectId = 123;
+
+            const mockGet = jest.fn();
+            mockGet.mockReturnValue(Promise.resolve([]));
+
+            const api = createActiveCollabAPI(setupMockRestClient(mockGet));
+
+            await expect(api.getTaskListNameById(projectId, taskListId))
+                .rejects.toMatchObject(new Error(`Could not find task list ID ${taskListId} in project ${projectId}`));
+        });
+
+        it('throws error on invalid response', async () => {
+            expect.assertions(1);
+
+            const mockGet = jest.fn();
+            mockGet.mockReturnValue(Promise.resolve({}));
+
+            const api = createActiveCollabAPI(setupMockRestClient(mockGet));
+
+            await expect(api.getTaskListNameById(1, 1))
+                .rejects.toMatchObject(new Error('Invalid response received trying to GET /projects/1/tasks-lists: {}'));
+        });
+    });
+
     describe('getProjectById', () => {
         it('requests list of projects', async () => {
             expect.assertions(1);
