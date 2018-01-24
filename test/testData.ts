@@ -58,6 +58,60 @@ export function getRawNewTask(): Event<Task> {
     };
 };
 
+export function getRawTaskCompleted(): Event<Task> {
+    const payload:Task = {
+        "id": 312,
+        "class": "Task",
+        "url_path": "\/projects\/22\/tasks\/312",
+        "name": "Test task",
+        "assignee_id": 0,
+        "delegated_by_id": 0,
+        "completed_on": 1516775072,
+        "completed_by_id": 18,
+        "is_completed": true,
+        "comments_count": 0,
+        "attachments": [
+        
+        ],
+        "labels": [
+        
+        ],
+        "is_trashed": false,
+        "trashed_on": null,
+        "trashed_by_id": 0,
+        "project_id": 22,
+        "is_hidden_from_clients": false,
+        "body": "",
+        "body_formatted": "",
+        "created_on": 1515633839,
+        "created_by_id": 5,
+        "created_by_name": "Rory Dungan",
+        "created_by_email": "rory.dungan@realseriousgames.com",
+        "updated_on": 1516775072,
+        "updated_by_id": 18,
+        "task_number": 10,
+        "task_list_id": 166,
+        "position": 1,
+        "is_important": true,
+        "start_on": null,
+        "due_on": null,
+        "estimate": 0,
+        "job_type_id": 0,
+        "fake_assignee_name": null,
+        "fake_assignee_email": null,
+        "total_subtasks": 0,
+        "completed_subtasks": 0,
+        "open_subtasks": 0,
+        "created_from_recurring_task_id": 0
+    };
+
+    return {
+        "payload": payload,
+        "timestamp": 1516775072,
+        "type": "TaskCompleted"
+    };
+}
+
 export function getRawUpdatedTask(): Event<Task> {
     const payload:Task = {
         "id": 288,

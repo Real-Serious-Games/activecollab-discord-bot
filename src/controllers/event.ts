@@ -26,8 +26,9 @@ export interface IProcessedEvent {
 const eventColor = '#449DF5';
 
 enum TaskType {
-    newTask,
-    updatedTask
+    NewTask,
+    UpdatedTask,
+    TaskCompleted
 }
 
 class ProcessedEvent implements IProcessedEvent {
@@ -49,7 +50,6 @@ export function createEventController(
     discordController: IDiscordController,
     baseUrl: string
 ) {
-    
     async function processEvent(
         event: Event<Payload>
     ): Promise<Either<string, IProcessedEvent>> {
@@ -62,23 +62,30 @@ export function createEventController(
                 const task: Task = <Task>event.payload;
                 switch (event.type) {
                     case 'TaskCreated':
-                    return processTask(
-                        task,
-                        TaskType.newTask,
-                        baseUrl
-                    ).map(p => new ProcessedEvent(task.project_id, p));
+                        return processTask(
+                            task,
+                            TaskType.NewTask,
+                            baseUrl
+                        ).map(p => new ProcessedEvent(task.project_id, p));
                     
                     case 'TaskUpdated':
-                    return processTask(
-                        task,
-                        TaskType.updatedTask,
-                        baseUrl
-                    ).map(p => new ProcessedEvent(task.project_id, p));
-                    
+                        return processTask(
+                            task,
+                            TaskType.UpdatedTask,
+                            baseUrl
+                        ).map(p => new ProcessedEvent(task.project_id, p));
+
+                    case 'TaskCompleted':
+                        return processTask(
+                            task,
+                            TaskType.TaskCompleted,
+                            baseUrl
+                        ).map(p => new ProcessedEvent(task.project_id, p));
+                        
                     default:
-                    return left(
-                        `Received Task Event with unknown payload type: ${event.type}`                       
-                    );
+                        return left(
+                            `Received Task Event with unknown payload type: ${event.type}`                       
+                        );
                 }
             }
             case 'Comment': {
@@ -141,12 +148,16 @@ export function createEventController(
         let title = task.name;
         
         switch (taskType) {
-            case TaskType.updatedTask: 
+            case TaskType.UpdatedTask: 
                 title = `*Task Updated:* ${task.name}`;
                 break;
                 
-            case TaskType.newTask:
+            case TaskType.NewTask:
                 title = `*Task Created:* ${task.name}`;
+                break;
+
+            case TaskType.TaskCompleted: 
+                title = `*Task Completed:* ${task.name}`;
                 break;
         }
         

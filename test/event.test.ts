@@ -59,6 +59,63 @@ describe('calling processEvent', () => {
     });
 
     describe('with task event', () => {
+        describe('when task is completed', () => {
+            it('should return formatted task when task is valid', async () => {
+                expect.assertions(2);
+    
+                const baseUrl = 'https://app.activecollab.com/157544/';
+    
+                const assignee = 'Test';
+    
+                const rawData = testData.getRawTaskCompleted();
+                rawData.payload.assignee_id = 1;
+    
+                const expectedRichEmbed = new RichEmbed()
+                    .setTitle(`*Task Completed:* ${rawData.payload.name}`)
+                    .setColor(eventColor)
+                    .setURL(baseUrl + rawData.payload.url_path)
+                    .addField('Assignee', `<@${assignee}>`, true)
+                    .addField('Status', `Completed`, true);
+    
+                const mockMappingController: Partial<IMappingController> = {
+                    getDiscordUser: jest.fn().mockReturnValue(assignee)
+                };
+    
+                const mockDiscordController: Partial<IDiscordController> = {
+                    getUserId: jest.fn().mockReturnValue(assignee)
+                };
+    
+                const eventController = createEventController(
+                    undefined,
+                    <IMappingController>mockMappingController,
+                    mockDiscordController           
+                );
+    
+                const returnedValue = (await eventController.processEvent(rawData))
+                    .getOrElseValue(undefined);
+    
+                expect(returnedValue.body).toEqual(expectedRichEmbed);
+                expect(returnedValue.projectId).toEqual(rawData.payload.project_id);
+            });
+    
+            it('should return formatted task with Not Assigned when not assigned', async () => {
+                expect.assertions(1);
+    
+                const rawData = testData.getRawTaskCompleted();
+                rawData.payload.assignee_id = 0;
+                
+                const expectedRichEmbed = new RichEmbed()
+                    .addField('Assignee', `Not Assigned`, true);
+    
+                const eventController = createEventController();
+    
+                const returnedValue = (await eventController.processEvent(rawData))
+                    .getOrElseValue(undefined);
+    
+                expect(returnedValue.body.fields).toContainEqual(expectedRichEmbed.fields[0]);
+            });
+        });
+
         describe('when task event is new task', () => {
             it('should return formatted task when task is valid', async () => {
                 expect.assertions(2);
@@ -88,8 +145,7 @@ describe('calling processEvent', () => {
                 const eventController = createEventController(
                     undefined,
                     <IMappingController>mockMappingController,
-                    mockDiscordController,
-                    baseUrl
+                    mockDiscordController
                 );
     
                 const returnedValue = (await eventController.processEvent(rawData))
