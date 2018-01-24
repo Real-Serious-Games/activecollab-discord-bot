@@ -94,7 +94,7 @@ export function createEventController(
                     try {
                         const projectId = 
                         (await activeCollabApi.findProjectForTask(comment.parent_id))
-                        .toUndefined();
+                            .toUndefined();
                         
                         if (projectId !== undefined) {
                             return (await processNewComment(
@@ -179,7 +179,9 @@ export function createEventController(
             return left(`Unable to process Comment Event: ${userId.value}`); 
         }
 
-        const url = `${baseUrl}/projects/${projectId}/${comment.parent_type}/`
+        // When comments on more than just tasks are supported add switch to 
+        // determine correct parent URL from parent type
+        const url = `${baseUrl}/projects/${projectId}/tasks/`
             + comment.parent_id;
         
         try {

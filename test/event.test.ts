@@ -282,7 +282,7 @@ describe('calling processEvent', () => {
                 .setDescription(rawData.payload.body)
                 .setColor(eventColor)
                 .setURL(`${baseUrl}/projects/${projectId}/` 
-                    + `${rawData.payload.parent_type}/${rawData.payload.parent_id}`)
+                    + `tasks/${rawData.payload.parent_id}`)
                 .addField('Author', `<@${assignee}>`, true);
 
             const mockMappingController: Partial<IMappingController> = {
