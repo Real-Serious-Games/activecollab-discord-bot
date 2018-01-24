@@ -281,7 +281,8 @@ describe('calling processEvent', () => {
                 .setTitle(`*Comment Added to Task:* ${taskName}`)
                 .setDescription(rawData.payload.body)
                 .setColor(eventColor)
-                .setURL(baseUrl + rawData.payload.url_path)
+                .setURL(`${baseUrl}/projects/${projectId}/` 
+                    + `${rawData.payload.parent_type}/${rawData.payload.parent_id}`)
                 .addField('Author', `<@${assignee}>`, true);
 
             const mockMappingController: Partial<IMappingController> = {
