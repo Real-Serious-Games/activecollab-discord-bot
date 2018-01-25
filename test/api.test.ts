@@ -10,187 +10,230 @@ import * as testData from './testData';
 import { IEventController, createEventController } from '../src/controllers/event';
 import { IActiveCollabAPI } from '../src/controllers/activecollab-api';
 import { IMappingController } from '../src/controllers/mapping';
+import { disconnect } from 'cluster';
 
 describe('postActiveCollabWebhook', () => {
-    it('should call send with status 200', async () => {
+    it('should call send with status 200 when header valid', async () => {
         expect.assertions(1);
 
-        const testFramework = createApiTestFramework();
+        const webhookSecret = 'secret';
 
-        await testFramework
-            .apiController
+        const apiController = new ApiControllerBuilder()
+            .WithWebhookSecret(webhookSecret)
+            .Build();
+
+        const res: Partial<Response> = createResponse();
+
+        await apiController
             .postActiveCollabWebhook(
-                <Request>testFramework.req,
-                <Response>testFramework.res
+                new RequestBuilder()
+                    .WithWebhookSecret(webhookSecret)
+                    .Build() as Request,
+                res as Response
             );
 
-        expect(testFramework.res.sendStatus).toBeCalledWith(200);
+        expect(res.sendStatus).toBeCalledWith(200);
     });
 
-    it('should return 403 status when missing auth header', async () => {
+    it('should return 403 status when missing webhook secret in auth header', async () => {
         expect.assertions(1);
         
-        const authHeaderMissing = true;
-        const testFramework = createApiTestFramework(undefined, undefined, authHeaderMissing);
+        const webhookSecret = 'secret';
 
-        await testFramework
-            .apiController
+        const apiController = new ApiControllerBuilder()
+            .WithWebhookSecret(webhookSecret)
+            .Build();
+
+        const res: Partial<Response> = createResponse();
+
+        await apiController
             .postActiveCollabWebhook(
-                <Request>testFramework.req,
-                <Response>testFramework.res
+                new RequestBuilder()
+                    .WithWebhookSecret(undefined)
+                    .Build() as Request,
+                res as Response
             );
 
-        expect(testFramework.res.sendStatus).toBeCalledWith(403);
+        expect(res.sendStatus).toBeCalledWith(403);
     });
 
-    it('should return 403 status when auth header wrong', async () => {
+    it('should return 403 status when secret in auth header incorrect', async () => {
         expect.assertions(1);
         
-        const secret = 'secret';
-        const wrongSecret = 'wrong secret';
+        const webhookSecret = 'secret';
+        const wrongWebhookSecret = 'wrongSecret';
 
-        const testFramework = createApiTestFramework(secret, wrongSecret);
+        const apiController = new ApiControllerBuilder()
+            .WithWebhookSecret(webhookSecret)
+            .Build();
 
-        await testFramework
-            .apiController
+        const res: Partial<Response> = createResponse();
+
+        await apiController
             .postActiveCollabWebhook(
-                <Request>testFramework.req,
-                <Response>testFramework.res
+                new RequestBuilder()
+                    .WithWebhookSecret(wrongWebhookSecret)
+                    .Build() as Request,
+                res as Response
             );
 
-        expect(testFramework.res.sendStatus).toBeCalledWith(403);
+        expect(res.sendStatus).toBeCalledWith(403);
     });
 
     it('should call logger and not sendMessageToChannel when error processing event', async () => {
         expect.assertions(2);
 
-        const eventController: Partial<IEventController> = {
+        const webhookSecret = 'secret';
+        const mockEventController: Partial<IEventController> = {
             processEvent: jest.fn().mockReturnValue(left('Error'))
         };
+        const mockDiscordController = createMockDiscordController();
+        const mockLogger = createMockLogger();
 
-        const testFramework = createApiTestFramework(
-            undefined,
-            undefined, 
-            undefined, 
-            undefined, 
-            undefined,
-            undefined,
-            undefined,
-            undefined,
-            undefined,
-            undefined,
-            <IEventController>eventController
-        );
+        const apiController = new ApiControllerBuilder()
+            .WithWebhookSecret(webhookSecret)
+            .WithDiscordController(mockDiscordController as IDiscordController)
+            .WithEventController(mockEventController as IEventController)
+            .WithLogger(mockLogger as Logger)
+            .Build();
 
-        await testFramework
-            .apiController
+        await apiController
             .postActiveCollabWebhook(
-                <Request>testFramework.req,
-                <Response>testFramework.res
+                new RequestBuilder().Build() as Request,
+                createResponse() as Response
             );
 
-        expect(testFramework.discordController.sendMessageToChannel).toHaveBeenCalledTimes(0);
-        expect(testFramework.logger.warn).toHaveBeenCalled();
+        expect(mockDiscordController.sendMessageToChannel).toHaveBeenCalledTimes(0);
+        expect(mockLogger.warn).toHaveBeenCalled();
     });
 
-    it('should call logger and not sendMessageToChannel when unable to determine channel', async () => {
+    it('should call logger and not sendMessageToChannel determine channel throws error', async () => {
         expect.assertions(2);
         
-        const body = testData.getRawNewTask();
-
-        const discordController: Partial<IDiscordController> = {
+        const mockDiscordController: Partial<IDiscordController> = {
             determineChannel: jest.fn(() => Promise.reject('Channel error')),
-            sendMessageToChannel: jest.fn(),
-            getUserId: jest.fn()
+            sendMessageToChannel: jest.fn()
         };
+        const mockLogger = createMockLogger();
 
-        const testFramework = createApiTestFramework(
-            undefined,
-            undefined, 
-            undefined, 
-            body, 
-            undefined,
-            undefined,
-            undefined,
-            <IDiscordController>discordController
-        );
+        const apiController = new ApiControllerBuilder()
+            .WithDiscordController(mockDiscordController as IDiscordController)
+            .WithLogger(mockLogger as Logger)
+            .Build();
 
-        await testFramework
-            .apiController
+        await apiController
             .postActiveCollabWebhook(
-                <Request>testFramework.req,
-                <Response>testFramework.res
+                new RequestBuilder().Build() as Request,
+                createResponse() as Response
             );
 
-        expect(testFramework.discordController.sendMessageToChannel).toHaveBeenCalledTimes(0);
-        expect(testFramework.logger.warn).toHaveBeenCalled();
+        expect(mockDiscordController.sendMessageToChannel).toHaveBeenCalledTimes(0);
+        expect(mockLogger.warn).toHaveBeenCalled();
     });
 
     it('should call sendMessageToChannel when known request body', async () => {       
         expect.assertions(2);
-        
-        const testFramework = createApiTestFramework();
-        const body = testData.getRawNewTask;
 
-        await testFramework
-            .apiController
+        const mockDiscordController = createMockDiscordController();
+        const mockLogger = createMockLogger();
+
+        const apiController = new ApiControllerBuilder()
+            .WithDiscordController(mockDiscordController as IDiscordController)
+            .WithLogger(mockLogger as Logger)
+            .Build();
+
+        await apiController
             .postActiveCollabWebhook(
-                <Request>testFramework.req,
-                <Response>testFramework.res
+                new RequestBuilder().Build() as Request,
+                createResponse() as Response
             );
 
-        expect(testFramework.discordController.sendMessageToChannel).toHaveBeenCalled();
-        expect(testFramework.logger.warn).toHaveBeenCalledTimes(0);
+        expect(mockDiscordController.sendMessageToChannel).toHaveBeenCalled();
+        expect(mockLogger.warn).toHaveBeenCalledTimes(0);
     });
 
 });
 
-function createApiTestFramework(
-    expectedSecret = 'secret',
-    responseSecret = 'secret',
-    responseSecretUndefined = false,
-    bodyToTest = testData.getRawNewTask(),
-    req: Partial<Request> = {
-        body: bodyToTest,
-        header: jest.fn().mockReturnValue(
-            responseSecretUndefined 
-            ? undefined 
-            : responseSecret)
-    },
-    res: Partial<Response> = {
+const defaultWebhookSecret = 'secret';
+
+function createResponse(): Partial<Response> {
+    return {
         sendStatus: jest.fn()
-    },
-    client: Partial<Client> = {
-    },
-    discordController: Partial<IDiscordController> = {
+    };
+}
+
+function createMockDiscordController(): Partial<IDiscordController> {
+    return {
         sendMessageToChannel: jest.fn(),
         determineChannel: jest.fn(),
-        getUserId: jest.fn()
-    },
-    logger: Partial<Logger> = {
-        warn: jest.fn()
-    },
-    mockMappingController: Partial<IMappingController> = {
-        getDiscordUser: jest.fn()
-    },
-    eventController: Partial<IEventController> = {
-        processEvent: jest.fn().mockReturnValue(right({ projectId: 1, body: { }}))
-    },
-    apiController = createApiController(
-        discordController as IDiscordController,
-        expectedSecret, 
-        <Logger>logger,
-        <IEventController>eventController
-    )
-) {
+    };   
+}
+
+function createMockLogger(): Partial<Logger> {
     return {
-        webhookSecret: expectedSecret,
-        req: req,
-        res: res,
-        client: client,
-        discordController: discordController,
-        apiController: apiController,
-        logger: logger,
-        eventControllerStub: eventController
+        warn: jest.fn()
     };
+}
+
+class ApiControllerBuilder {
+    private discordController: Partial<IDiscordController> 
+        = createMockDiscordController();
+    
+    private eventController: Partial<IEventController> = {
+        processEvent: jest.fn().mockReturnValue(right({ projectId: 1, body: { }}))
+    };
+
+    private logger: Partial<Logger> = createMockLogger();
+
+    private webhookSecret = defaultWebhookSecret;
+
+    public WithDiscordController(
+        discordController: IDiscordController
+    ): ApiControllerBuilder {
+        this.discordController = discordController;
+        return this;
+    }
+
+    public WithEventController(
+        eventController: IEventController
+    ): ApiControllerBuilder {
+        this.eventController = eventController;
+        return this;
+    }
+
+    public WithLogger(logger: Logger): ApiControllerBuilder {
+        this.logger = logger;
+        return this;
+    }
+
+    public WithWebhookSecret(webhookSecret: string): ApiControllerBuilder {
+        this.webhookSecret = webhookSecret;
+        return this;
+    }
+
+    public Build(): IApiController {
+        return createApiController(
+            this.discordController as IDiscordController,
+            this.webhookSecret,
+            this.logger,
+            this.eventController as IEventController
+        );
+    }
+}
+
+class RequestBuilder {
+    private body = 'body';
+    private header = jest.fn().mockReturnValue(defaultWebhookSecret);
+
+    public WithWebhookSecret(webhookSecret: string): RequestBuilder {
+        this.header = jest.fn().mockReturnValue(webhookSecret);
+        return this;
+    }
+
+    public Build(): Partial<Request> {
+        return {
+            body: this.body,
+            header: this.header
+        };
+    }
 }
