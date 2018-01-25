@@ -10,5 +10,6 @@ export interface Task extends Payload {
     assignee_id: number;
     is_completed: boolean;
     url_path: string;
+    task_list_id: number;
     [key: string]: any;
 }
