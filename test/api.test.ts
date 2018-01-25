@@ -19,16 +19,16 @@ describe('postActiveCollabWebhook', () => {
         const webhookSecret = 'secret';
 
         const apiController = new ApiControllerBuilder()
-            .WithWebhookSecret(webhookSecret)
-            .Build();
+            .withWebhookSecret(webhookSecret)
+            .build();
 
         const res: Partial<Response> = createResponse();
 
         await apiController
             .postActiveCollabWebhook(
                 new RequestBuilder()
-                    .WithWebhookSecret(webhookSecret)
-                    .Build() as Request,
+                    .withWebhookSecret(webhookSecret)
+                    .build() as Request,
                 res as Response
             );
 
@@ -41,16 +41,16 @@ describe('postActiveCollabWebhook', () => {
         const webhookSecret = 'secret';
 
         const apiController = new ApiControllerBuilder()
-            .WithWebhookSecret(webhookSecret)
-            .Build();
+            .withWebhookSecret(webhookSecret)
+            .build();
 
         const res: Partial<Response> = createResponse();
 
         await apiController
             .postActiveCollabWebhook(
                 new RequestBuilder()
-                    .WithWebhookSecret(undefined)
-                    .Build() as Request,
+                    .withWebhookSecret(undefined)
+                    .build() as Request,
                 res as Response
             );
 
@@ -64,16 +64,16 @@ describe('postActiveCollabWebhook', () => {
         const wrongWebhookSecret = 'wrongSecret';
 
         const apiController = new ApiControllerBuilder()
-            .WithWebhookSecret(webhookSecret)
-            .Build();
+            .withWebhookSecret(webhookSecret)
+            .build();
 
         const res: Partial<Response> = createResponse();
 
         await apiController
             .postActiveCollabWebhook(
                 new RequestBuilder()
-                    .WithWebhookSecret(wrongWebhookSecret)
-                    .Build() as Request,
+                    .withWebhookSecret(wrongWebhookSecret)
+                    .build() as Request,
                 res as Response
             );
 
@@ -91,15 +91,15 @@ describe('postActiveCollabWebhook', () => {
         const mockLogger = createMockLogger();
 
         const apiController = new ApiControllerBuilder()
-            .WithWebhookSecret(webhookSecret)
-            .WithDiscordController(mockDiscordController as IDiscordController)
-            .WithEventController(mockEventController as IEventController)
-            .WithLogger(mockLogger as Logger)
-            .Build();
+            .withWebhookSecret(webhookSecret)
+            .withDiscordController(mockDiscordController as IDiscordController)
+            .withEventController(mockEventController as IEventController)
+            .withLogger(mockLogger as Logger)
+            .build();
 
         await apiController
             .postActiveCollabWebhook(
-                new RequestBuilder().Build() as Request,
+                new RequestBuilder().build() as Request,
                 createResponse() as Response
             );
 
@@ -117,13 +117,13 @@ describe('postActiveCollabWebhook', () => {
         const mockLogger = createMockLogger();
 
         const apiController = new ApiControllerBuilder()
-            .WithDiscordController(mockDiscordController as IDiscordController)
-            .WithLogger(mockLogger as Logger)
-            .Build();
+            .withDiscordController(mockDiscordController as IDiscordController)
+            .withLogger(mockLogger as Logger)
+            .build();
 
         await apiController
             .postActiveCollabWebhook(
-                new RequestBuilder().Build() as Request,
+                new RequestBuilder().build() as Request,
                 createResponse() as Response
             );
 
@@ -138,20 +138,19 @@ describe('postActiveCollabWebhook', () => {
         const mockLogger = createMockLogger();
 
         const apiController = new ApiControllerBuilder()
-            .WithDiscordController(mockDiscordController as IDiscordController)
-            .WithLogger(mockLogger as Logger)
-            .Build();
+            .withDiscordController(mockDiscordController as IDiscordController)
+            .withLogger(mockLogger as Logger)
+            .build();
 
         await apiController
             .postActiveCollabWebhook(
-                new RequestBuilder().Build() as Request,
+                new RequestBuilder().build() as Request,
                 createResponse() as Response
             );
 
         expect(mockDiscordController.sendMessageToChannel).toHaveBeenCalled();
         expect(mockLogger.warn).toHaveBeenCalledTimes(0);
     });
-
 });
 
 const defaultWebhookSecret = 'secret';
@@ -187,31 +186,31 @@ class ApiControllerBuilder {
 
     private webhookSecret = defaultWebhookSecret;
 
-    public WithDiscordController(
+    public withDiscordController(
         discordController: IDiscordController
     ): ApiControllerBuilder {
         this.discordController = discordController;
         return this;
     }
 
-    public WithEventController(
+    public withEventController(
         eventController: IEventController
     ): ApiControllerBuilder {
         this.eventController = eventController;
         return this;
     }
 
-    public WithLogger(logger: Logger): ApiControllerBuilder {
+    public withLogger(logger: Logger): ApiControllerBuilder {
         this.logger = logger;
         return this;
     }
 
-    public WithWebhookSecret(webhookSecret: string): ApiControllerBuilder {
+    public withWebhookSecret(webhookSecret: string): ApiControllerBuilder {
         this.webhookSecret = webhookSecret;
         return this;
     }
 
-    public Build(): IApiController {
+    public build(): IApiController {
         return createApiController(
             this.discordController as IDiscordController,
             this.webhookSecret,
@@ -225,12 +224,12 @@ class RequestBuilder {
     private body = 'body';
     private header = jest.fn().mockReturnValue(defaultWebhookSecret);
 
-    public WithWebhookSecret(webhookSecret: string): RequestBuilder {
+    public withWebhookSecret(webhookSecret: string): RequestBuilder {
         this.header = jest.fn().mockReturnValue(webhookSecret);
         return this;
     }
 
-    public Build(): Partial<Request> {
+    public build(): Partial<Request> {
         return {
             body: this.body,
             header: this.header
