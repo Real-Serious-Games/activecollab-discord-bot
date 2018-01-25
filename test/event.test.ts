@@ -1,6 +1,5 @@
-import { Response, Request } from 'express';
 import { some, none } from 'fp-ts/lib/Option';
-import { RichEmbed, BaseOpus } from 'discord.js';
+import { RichEmbed } from 'discord.js';
 
 import * as testData from './testData';
 import { Task } from '../src/models/taskEvent';
@@ -9,7 +8,6 @@ import { IActiveCollabAPI } from '../src/controllers/activecollab-api';
 import { getRawUpdatedTask } from './testData';
 import { IMappingController } from '../src/controllers/mapping';
 import { IDiscordController, DiscordController } from '../src/controllers/discord';
-import { basename } from 'path';
 
 const eventColor = '#449DF5';
 const baseUrl = 'https://app.activecollab.com/8008';
@@ -59,245 +57,138 @@ describe('calling processEvent', () => {
     });
 
     describe('with task event', () => {
-        describe('when task is completed', () => {
-            it('should return formatted task when task is valid', async () => {
-                expect.assertions(2);
+        it('should return formatted task with Not Assigned when not assigned', async () => {
+            expect.assertions(1);
     
-                const baseUrl = 'https://app.activecollab.com/157544/';
+            const rawData = testData.getRawTaskCompleted();
+            rawData.payload.assignee_id = 0;
+            
+            const expectedRichEmbed = new RichEmbed()
+                .addField('Assignee', `Not Assigned`, true);
     
-                const assignee = 'Test';
+            const eventController = createEventController();
     
-                const rawData = testData.getRawTaskCompleted();
-                rawData.payload.assignee_id = 1;
+            const returnedValue = (await eventController.processEvent(rawData))
+                .getOrElseValue(undefined);
     
-                const expectedRichEmbed = new RichEmbed()
-                    .setTitle(`*Task Completed:* ${rawData.payload.name}`)
-                    .setColor(eventColor)
-                    .setURL(baseUrl + rawData.payload.url_path)
-                    .addField('Assignee', `<@${assignee}>`, true)
-                    .addField('Status', `Completed`, true);
-    
-                const mockMappingController: Partial<IMappingController> = {
-                    getDiscordUser: jest.fn().mockReturnValue(assignee)
-                };
-    
-                const mockDiscordController: Partial<IDiscordController> = {
-                    getUserId: jest.fn().mockReturnValue(assignee)
-                };
-    
-                const eventController = createEventController(
-                    undefined,
-                    <IMappingController>mockMappingController,
-                    mockDiscordController           
-                );
-    
-                const returnedValue = (await eventController.processEvent(rawData))
-                    .getOrElseValue(undefined);
-    
-                expect(returnedValue.body).toEqual(expectedRichEmbed);
-                expect(returnedValue.projectId).toEqual(rawData.payload.project_id);
-            });
-    
-            it('should return formatted task with Not Assigned when not assigned', async () => {
-                expect.assertions(1);
-    
-                const rawData = testData.getRawTaskCompleted();
-                rawData.payload.assignee_id = 0;
-                
-                const expectedRichEmbed = new RichEmbed()
-                    .addField('Assignee', `Not Assigned`, true);
-    
-                const eventController = createEventController();
-    
-                const returnedValue = (await eventController.processEvent(rawData))
-                    .getOrElseValue(undefined);
-    
-                expect(returnedValue.body.fields).toContainEqual(expectedRichEmbed.fields[0]);
-            });
+            expect(returnedValue.body.fields).toContainEqual(expectedRichEmbed.fields[0]);
         });
 
-        describe('when task event is new task', () => {
-            it('should return formatted task when task is valid', async () => {
-                expect.assertions(2);
-    
-                const baseUrl = 'https://app.activecollab.com/157544/';
-    
-                const assignee = 'Test';
-    
-                const rawData = testData.getRawNewTask();
-                rawData.payload.is_completed = true;
-    
-                const expectedRichEmbed = new RichEmbed()
-                    .setTitle(`*Task Created:* ${rawData.payload.name}`)
-                    .setColor(eventColor)
-                    .setURL(baseUrl + rawData.payload.url_path)
-                    .addField('Assignee', `<@${assignee}>`, true)
-                    .addField('Status', `Completed`, true);
-    
-                const mockMappingController: Partial<IMappingController> = {
-                    getDiscordUser: jest.fn().mockReturnValue(assignee)
-                };
-    
-                const mockDiscordController: Partial<IDiscordController> = {
-                    getUserId: jest.fn().mockReturnValue(assignee)
-                };
-    
-                const eventController = createEventController(
-                    undefined,
-                    <IMappingController>mockMappingController,
-                    mockDiscordController
-                );
-    
-                const returnedValue = (await eventController.processEvent(rawData))
-                    .getOrElseValue(undefined);
-    
-                expect(returnedValue.body).toEqual(expectedRichEmbed);
-                expect(returnedValue.projectId).toEqual(rawData.payload.project_id);
-            });
-    
-            it('should return formatted task with Status of In Progress when completed false', async () => {
-                expect.assertions(1);
-    
-                const rawData = testData.getRawNewTask();
-                rawData.payload.is_completed = false;
-    
-                const expectedRichEmbed = new RichEmbed()
-                    .addField('Status', `In Progress`, true);
-    
-                const eventController = createEventController();
+        it('when task is completed task should return formatted task', async () => {
+            expect.assertions(2);
 
-                const returnedVale = (await eventController.processEvent(rawData))
-                    .getOrElseValue(undefined);
-    
-                expect(returnedVale.body.fields).toContainEqual(expectedRichEmbed.fields[0]);
-            });
-    
-            it('should return formatted task with Not Assigned when not assigned', async () => {
-                expect.assertions(1);
-    
-                const rawData = testData.getRawNewTask();
-                rawData.payload.assignee_id = 0;
-                
-                const expectedRichEmbed = new RichEmbed()
-                    .addField('Assignee', `Not Assigned`, true);
-    
-                const eventController = createEventController();
-    
-                const returnedValue = (await eventController.processEvent(rawData))
-                    .getOrElseValue(undefined);
-    
-                expect(returnedValue.body.fields).toContainEqual(expectedRichEmbed.fields[0]);
-            });
+            const rawData = testData.getRawTaskCompleted();
+
+            const expectedRichEmbed = new RichEmbed()
+                .setTitle(`*Task Completed:* ${rawData.payload.name}`);
+
+            const eventController = createEventController();
+
+            const returnedValue = (await eventController.processEvent(rawData))
+                .getOrElseValue(undefined);
+
+            expect(returnedValue.body.title).toEqual(expectedRichEmbed.title);
+            expect(returnedValue.projectId).toEqual(rawData.payload.project_id);
         });
 
-        describe('when task event is updated task', () => {
-            it('should return formatted task when task is valid', async () => {
-                expect.assertions(2);
-    
-                const assignee = 'Test';
+        it('when task is new task should return formatted task', async () => {
+            expect.assertions(2);
 
-                const rawData = testData.getRawUpdatedTask();
-                rawData.payload.is_completed = true;
-    
-                const expectedRichEmbed = new RichEmbed()
-                    .setTitle(`*Task Updated:* ${rawData.payload.name}`)
-                    .setColor(eventColor)
-                    .setURL(baseUrl + rawData.payload.url_path)
-                    .addField('Assignee', `<@${assignee}>`, true)
-                    .addField('Status', `Completed`, true);
-    
-                const mockMappingController: Partial<IMappingController> = {
-                    getDiscordUser: jest.fn().mockReturnValue(assignee)
-                };
-    
-                const mockDiscordController: Partial<IDiscordController> = {
-                    getUserId: jest.fn().mockReturnValue(assignee)
-                };
-    
-                const eventController = createEventController(
-                    undefined,
-                    <IMappingController>mockMappingController,
-                    mockDiscordController,
-                    baseUrl
-                );
-    
-                const returnedValue = (await eventController.processEvent(rawData))
-                    .getOrElseValue(undefined);
-    
-                expect(returnedValue.body).toEqual(expectedRichEmbed);
-                expect(returnedValue.projectId).toEqual(rawData.payload.project_id);
-            });
-    
-            it('should return formatted task with Status of In Progress when completed false', async () => {
-                expect.assertions(1);
-    
-                const rawData = testData.getRawUpdatedTask();
-                rawData.payload.is_completed = false;
-    
-                const expectedRichEmbed = new RichEmbed()
-                    .addField('Status', `In Progress`, true);
-    
-                const eventController = createEventController();
+            const rawData = testData.getRawNewTask();
+            rawData.payload.is_completed = true;
 
-                const returnedValue = (await eventController.processEvent(rawData))
-                    .getOrElseValue(undefined);
-    
-                expect(returnedValue.body.fields).toContainEqual(expectedRichEmbed.fields[0]);
-            });
-    
-            it('should return formatted task with Not Assigned when not assigned', async () => {
-                expect.assertions(1);
-    
-                const rawData = testData.getRawUpdatedTask();
-                rawData.payload.assignee_id = 0;
-                
-                const expectedRichEmbed = new RichEmbed()
-                    .addField('Assignee', `Not Assigned`, true);
-    
-                const eventController = createEventController();
-    
-                const returnedValue = (await eventController.processEvent(rawData))
-                    .getOrElseValue(undefined);
-    
-                expect(returnedValue.body.fields).toContainEqual(expectedRichEmbed.fields[0]);
-            });
+            const expectedRichEmbed = new RichEmbed()
+                .setTitle(`*Task Created:* ${rawData.payload.name}`);
 
-            it('should return error when processing task fails', async () => {
-                expect.assertions(3);
-    
-                const mockMappingController: Partial<IMappingController> = {
-                    getDiscordUser: jest.fn(() => { throw new Error(); })
-                };
+            const eventController = createEventController();
 
-                const eventController = createEventController(
-                    undefined,
-                    <IMappingController>mockMappingController,
-                );
+            const returnedValue = (await eventController.processEvent(rawData))
+                .getOrElseValue(undefined);
 
-                const returnedValue = 
-                    await eventController.processEvent(testData.getRawUpdatedTask());
-    
-                expect(returnedValue.isLeft()).toBe(true);
-                expect(returnedValue.isRight()).toBe(false);
-                expect(returnedValue.value)
-                    .toEqual('Unable to process Task Event: Error');
-            });
+            expect(returnedValue.body.title).toEqual(expectedRichEmbed.title);
+            expect(returnedValue.projectId).toEqual(rawData.payload.project_id);
         });
 
-        it('should return error value when task type unknown', async () => {
+        it('when task is updated task should return formatted task', async () => {
+            expect.assertions(2);
+
+            const assignee = 'Test';
+            const status = 'Status';
+
+            const rawData = testData.getRawUpdatedTask();
+
+            const expectedRichEmbed = new RichEmbed()
+                .setTitle(`*Task Updated:* ${rawData.payload.name}`)
+                .setColor(eventColor)
+                .setURL(baseUrl + rawData.payload.url_path)
+                .addField('Assignee', `<@${assignee}>`, true)
+                .addField('Status', status, true);
+
+            const mockMappingController: Partial<IMappingController> = {
+                getDiscordUser: jest.fn().mockReturnValue(assignee)
+            };
+
+            const mockDiscordController: Partial<IDiscordController> = {
+                getUserId: jest.fn().mockReturnValue(assignee)
+            };
+
+            const mockActiveCollabApi: Partial<IActiveCollabAPI> = {
+                getTaskListNameById: jest.fn().mockReturnValue(status)
+            };
+
+            const eventController = createEventController(
+                mockActiveCollabApi,
+                <IMappingController>mockMappingController,
+                mockDiscordController,
+                baseUrl
+            );
+
+            const returnedValue = (await eventController.processEvent(rawData))
+                .getOrElseValue(undefined);
+
+            expect(returnedValue.body).toEqual(expectedRichEmbed);
+            expect(returnedValue.projectId).toEqual(rawData.payload.project_id);
+        });
+
+        it('should return error when processing task fails', async () => {
+            expect.assertions(3);
+
+            const mockMappingController: Partial<IMappingController> = {
+                getDiscordUser: jest.fn(() => { throw new Error(); })
+            };
+
+            const eventController = createEventController(
+                undefined,
+                <IMappingController>mockMappingController,
+            );
+
+            const returnedValue = 
+                await eventController.processEvent(testData.getRawUpdatedTask());
+
+            expect(returnedValue.isLeft()).toBe(true);
+            expect(returnedValue.isRight()).toBe(false);
+            expect(returnedValue.value)
+                .toEqual('Unable to process Task Event: Error');
+        });
+
+        it('should return error value when error getting task list name', async () => {
             expect.assertions(3);
             
             const rawData = testData.getRawUpdatedTask();
-            rawData.type = undefined;
+            const error = 'error';
 
-            const eventController = createEventController();
+            const mockActiveCollabApi: Partial<IActiveCollabAPI> = {
+                getTaskListNameById: jest.fn(() => Promise.reject(error))
+            };
+
+            const eventController = createEventController(mockActiveCollabApi);
 
             const returnedValue = await eventController.processEvent(rawData);
 
             expect(returnedValue.isLeft()).toBe(true);
             expect(returnedValue.isRight()).toBe(false);
             expect(returnedValue.value)
-                .toEqual('Received Task Event with unknown payload type: undefined');
+                .toEqual('Unable to process Task Event: ' + error);
         });
 
         it('should return error value when error getting assigned', async () => {
@@ -320,6 +211,22 @@ describe('calling processEvent', () => {
             expect(returnedValue.isRight()).toBe(false);
             expect(returnedValue.value)
                 .toEqual('Unable to process Task Event: Error: ' + error);
+        });
+        
+        it('should return error value when task type unknown', async () => {
+            expect.assertions(3);
+            
+            const rawData = testData.getRawUpdatedTask();
+            rawData.type = undefined;
+
+            const eventController = createEventController();
+
+            const returnedValue = await eventController.processEvent(rawData);
+
+            expect(returnedValue.isLeft()).toBe(true);
+            expect(returnedValue.isRight()).toBe(false);
+            expect(returnedValue.value)
+                .toEqual('Received Task Event with unknown payload type: undefined');
         });
     });
 
@@ -487,7 +394,8 @@ describe('calling processEvent', () => {
 
 function createEventController(
     activeCollabApi: Partial<IActiveCollabAPI> = { 
-        findProjectForTask: jest.fn(() => Promise.resolve(some(1))) 
+        findProjectForTask: jest.fn(() => Promise.resolve(some(1))) ,
+        getTaskListNameById: jest.fn().mockReturnValue('status')
     },
     mappingController: Partial<IMappingController> = { 
         getDiscordUser: jest.fn().mockReturnValue('author') 

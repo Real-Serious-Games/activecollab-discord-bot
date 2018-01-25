@@ -62,25 +62,25 @@ export function createEventController(
                 const task: Task = <Task>event.payload;
                 switch (event.type) {
                     case 'TaskCreated':
-                        return processTask(
+                        return (await processTask(
                             task,
                             TaskType.NewTask,
                             baseUrl
-                        ).map(p => new ProcessedEvent(task.project_id, p));
+                        )).map(p => new ProcessedEvent(task.project_id, p));
                     
                     case 'TaskUpdated':
-                        return processTask(
+                        return (await processTask(
                             task,
                             TaskType.UpdatedTask,
                             baseUrl
-                        ).map(p => new ProcessedEvent(task.project_id, p));
+                        )).map(p => new ProcessedEvent(task.project_id, p));
 
                     case 'TaskCompleted':
-                        return processTask(
+                        return (await processTask(
                             task,
                             TaskType.TaskCompleted,
                             baseUrl
-                        ).map(p => new ProcessedEvent(task.project_id, p));
+                        )).map(p => new ProcessedEvent(task.project_id, p));
                         
                     default:
                         return left(
@@ -131,18 +131,28 @@ export function createEventController(
     }
     
     
-    function processTask(
+    async function processTask(
         task: Task,
         taskType: TaskType,
         baseUrl: string
-    ): Either<string, RichEmbed> {
+    ): Promise<Either<string, RichEmbed>> {
         // An assignee ID of 0 means that no one has been assigned to the task
         const assigneeValue = task.assignee_id === 0 
             ? right('Not Assigned')
             : getUserId(task.assignee_id).map(id => `<@${id}>`);
-        
+
         if (assigneeValue.isLeft()) {
             return left('Unable to process Task Event: ' + assigneeValue.value); 
+        }
+
+        let status: string;
+
+        try {
+            status = await activeCollabApi.getTaskListNameById(
+                task.project_id, task.task_list_id
+            );
+        } catch (e) {
+            return left('Unable to process Task Event: ' + e); 
         }
         
         let title = task.name;
@@ -172,7 +182,7 @@ export function createEventController(
             )
             .addField(
                 'Status', 
-                task.is_completed ? 'Completed' : 'In Progress',
+                status,
                 true
             );
         

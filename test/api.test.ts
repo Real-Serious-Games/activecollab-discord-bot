@@ -1,8 +1,9 @@
 import { Response, Request } from 'express';
 import { Client } from 'discord.js';
 import { Logger } from 'structured-log/src';
+import { right, left } from 'fp-ts/lib/Either';
+
 import { Task } from '../src/models/taskEvent';
- 
 import { IDiscordController } from '../src/controllers/discord';
 import { createApiController, IApiController } from '../src/controllers/api';
 import * as testData from './testData';
@@ -60,20 +61,25 @@ describe('postActiveCollabWebhook', () => {
         expect(testFramework.res.sendStatus).toBeCalledWith(403);
     });
 
-    it('should call logger and not sendMessageToChannel when unknown request body', async () => {
+    it('should call logger and not sendMessageToChannel when error processing event', async () => {
         expect.assertions(2);
-        
-        const body = testData.getRawNewTask();
-        body.payload.class = undefined;
+
+        const eventController: Partial<IEventController> = {
+            processEvent: jest.fn().mockReturnValue(left('Error'))
+        };
 
         const testFramework = createApiTestFramework(
             undefined,
             undefined, 
             undefined, 
-            body, 
+            undefined, 
             undefined,
             undefined,
-            undefined
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            <IEventController>eventController
         );
 
         await testFramework
@@ -167,11 +173,9 @@ function createApiTestFramework(
     mockMappingController: Partial<IMappingController> = {
         getDiscordUser: jest.fn()
     },
-    eventController: IEventController = createEventController(
-        { } as IActiveCollabAPI,
-        mockMappingController as IMappingController,
-        discordController as IDiscordController
-    ),
+    eventController: Partial<IEventController> = {
+        processEvent: jest.fn().mockReturnValue(right({ projectId: 1, body: { }}))
+    },
     apiController = createApiController(
         discordController as IDiscordController,
         expectedSecret, 
