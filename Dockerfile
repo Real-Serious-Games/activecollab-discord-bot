@@ -13,14 +13,16 @@ WORKDIR /usr/src/app
 # where available (npm@5+)
 COPY package*.json ./
 
-RUN npm install --only=production
+# Set the port for prod, this will override the default set in app.ts
+ENV port 80
+
+RUN npm install
 # If you are building your code for production
 # RUN npm install --only=production
 
 # Bundle app source
 COPY . .
 
-EXPOSE 8080
+EXPOSE 80
 
-CMD [ "npm", "build" ]
 CMD [ "npm", "start" ]

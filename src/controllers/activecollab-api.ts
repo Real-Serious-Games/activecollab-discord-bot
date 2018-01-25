@@ -7,6 +7,10 @@ import { IActiveCollabRestClient } from './activecollab-rest';
 import { Task } from '../models/taskEvent';
 import { Project } from '../models/project';
 
+interface TaskResponse {
+    tasks: Array<Task>;
+}
+
 /**
  * Get the name of a specified task from its ID and project ID.
  */
@@ -16,13 +20,14 @@ async function taskIdToName(
     taskId: number
 ): Promise<string> {
     const url = `/projects/${projectId}/tasks`;
-    const response = await restClient.get(url);
+    const response = await restClient.get(url) as TaskResponse;
 
-    if (!Array.isArray(response)) {
-        throw new Error(`Invalid response received trying to GET ${url}.`);
+    if (!response.tasks || !Array.isArray(response.tasks)) {
+        throw new Error(`Invalid response received trying to GET ${url}: `
+            + JSON.stringify(response, undefined, 4));
     }
 
-    const tasks = <Task[]>response;
+    const tasks = response.tasks;
     const task = tasks.find(t => t.id === taskId);
     if (task) {
         return task.name;
@@ -66,7 +71,8 @@ async function getProjectById(
     const response = await restClient.get('/projects');
 
     if (!Array.isArray(response)) {
-        throw new Error('Invalid response received trying to get projects');
+        throw new Error('Invalid response received trying to get projects: ' 
+            + JSON.stringify(response, undefined, 4));
     }
     const projects = <Project[]>response;
     const project = projects.find(p => p.id === id);
@@ -89,7 +95,8 @@ async function getAllTasksLazy(
     }) as Report;
 
     if (!res.all || !res.all.assignments) {
-        throw new Error('Invalid response trying to get report');
+        throw new Error('Invalid response trying to get report: ' 
+            + JSON.stringify(res, undefined, 4));
     }
 
     return _(res.all.assignments)

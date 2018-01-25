@@ -12,11 +12,13 @@ describe('ActiveCollab API', () => {
             const taskId = 0;
 
             const mockGet = jest.fn();
-            mockGet.mockReturnValue(Promise.resolve([{
-                id: taskId,
-                name: 'Test task',
-                project_id: projectId
-            }]));
+            mockGet.mockReturnValue(Promise.resolve({ 
+                'tasks': [{
+                    id: taskId,
+                    name: 'Test task',
+                    project_id: projectId
+                }]
+            }));
 
             const api = createActiveCollabAPI(setupMockRestClient(mockGet));
 
@@ -32,11 +34,13 @@ describe('ActiveCollab API', () => {
             const expectedName = 'Test task';
 
             const mockGet = jest.fn();
-            mockGet.mockReturnValue(Promise.resolve([{
-                id: taskId,
-                name: expectedName,
-                project_id: projectId
-            }]));
+            mockGet.mockReturnValue(Promise.resolve({ 
+                'tasks': [{
+                    id: taskId,
+                    name: expectedName,
+                    project_id: projectId
+                }]
+            }));
 
             const api = createActiveCollabAPI(setupMockRestClient(mockGet));
 
@@ -52,7 +56,7 @@ describe('ActiveCollab API', () => {
             const projectId = 123;
 
             const mockGet = jest.fn();
-            mockGet.mockReturnValue(Promise.resolve([]));
+            mockGet.mockReturnValue(Promise.resolve({'tasks': []}));
 
             const api = createActiveCollabAPI(setupMockRestClient(mockGet));
 
@@ -69,7 +73,7 @@ describe('ActiveCollab API', () => {
             const api = createActiveCollabAPI(setupMockRestClient(mockGet));
 
             await expect(api.taskIdToName(1, 1))
-                .rejects.toMatchObject(new Error('Invalid response received trying to GET /projects/1/tasks.'));
+                .rejects.toMatchObject(new Error('Invalid response received trying to GET /projects/1/tasks: {}'));
         });
     });
 
@@ -164,7 +168,7 @@ describe('ActiveCollab API', () => {
 
             const api = createActiveCollabAPI(setupMockRestClient(mockGet));
             const expectedError =
-                new Error('Invalid response received trying to get projects');
+                new Error('Invalid response received trying to get projects: {}');
 
             await expect(api.getProjectById(1))
                 .rejects.toMatchObject(expectedError);
@@ -226,7 +230,7 @@ describe('ActiveCollab API', () => {
 
             const api = createActiveCollabAPI(setupMockRestClient(mockGet));
 
-            const expectedError = new Error('Invalid response trying to get report');
+            const expectedError = new Error('Invalid response trying to get report: {}');
             await expect(api.getAllTasks()).rejects.toMatchObject(expectedError);
         });
 
