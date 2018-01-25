@@ -1,10 +1,11 @@
-import { IActiveCollabRestClient } from './activecollab-rest';
-import { Task } from '../models/taskEvent';
-import { Project } from '../models/project';
 import { Report, Assignment } from '../models/report';
 import * as _ from 'lodash';
 import { Option, some, none } from 'fp-ts/lib/Option';
+
 import { TaskList } from '../models/taskList';
+import { IActiveCollabRestClient } from './activecollab-rest';
+import { Task } from '../models/taskEvent';
+import { Project } from '../models/project';
 
 /**
  * Get the name of a specified task from its ID and project ID.

@@ -1,7 +1,8 @@
+import { none, some } from 'fp-ts/lib/Option';
+
 import { createActiveCollabAPI } from '../src/controllers/activecollab-api';
 import { IActiveCollabRestClient, QueryParams } from '../src/controllers/activecollab-rest';
 import { getEmptyReport } from './testData';
-import { none, some } from 'fp-ts/lib/Option';
 
 describe('ActiveCollab API', () => {
     describe('taskIdToName', () => {
