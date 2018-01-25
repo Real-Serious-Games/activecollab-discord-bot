@@ -26,8 +26,10 @@ export interface IProcessedEvent {
 const eventColor = '#449DF5';
 
 enum TaskType {
-    newTask,
-    updatedTask
+    TaskCreated,
+    TaskUpdated,
+    TaskCompleted,
+    TaskListChanged
 }
 
 class ProcessedEvent implements IProcessedEvent {
@@ -49,7 +51,6 @@ export function createEventController(
     discordController: IDiscordController,
     baseUrl: string
 ) {
-    
     async function processEvent(
         event: Event<Payload>
     ): Promise<Either<string, IProcessedEvent>> {
@@ -62,23 +63,37 @@ export function createEventController(
                 const task: Task = <Task>event.payload;
                 switch (event.type) {
                     case 'TaskCreated':
-                    return processTask(
-                        task,
-                        TaskType.newTask,
-                        baseUrl
-                    ).map(p => new ProcessedEvent(task.project_id, p));
+                        return (await processTask(
+                            task,
+                            TaskType.TaskCreated,
+                            baseUrl
+                        )).map(p => new ProcessedEvent(task.project_id, p));
                     
                     case 'TaskUpdated':
-                    return processTask(
-                        task,
-                        TaskType.updatedTask,
-                        baseUrl
-                    ).map(p => new ProcessedEvent(task.project_id, p));
-                    
+                        return (await processTask(
+                            task,
+                            TaskType.TaskUpdated,
+                            baseUrl
+                        )).map(p => new ProcessedEvent(task.project_id, p));
+
+                    case 'TaskCompleted':
+                        return (await processTask(
+                            task,
+                            TaskType.TaskCompleted,
+                            baseUrl
+                        )).map(p => new ProcessedEvent(task.project_id, p));
+
+                    case 'TaskListChanged':
+                        return (await processTask(
+                            task,
+                            TaskType.TaskListChanged,
+                            baseUrl
+                        )).map(p => new ProcessedEvent(task.project_id, p));
+                        
                     default:
-                    return left(
-                        `Received Task Event with unknown payload type: ${event.type}`                       
-                    );
+                        return left(
+                            `Received Task Event with unknown payload type: ${event.type}`                       
+                        );
                 }
             }
             case 'Comment': {
@@ -123,30 +138,44 @@ export function createEventController(
         }
     }
     
-    
-    function processTask(
+    async function processTask(
         task: Task,
         taskType: TaskType,
         baseUrl: string
-    ): Either<string, RichEmbed> {
+    ): Promise<Either<string, RichEmbed>> {
         // An assignee ID of 0 means that no one has been assigned to the task
         const assigneeValue = task.assignee_id === 0 
             ? right('Not Assigned')
             : getUserId(task.assignee_id).map(id => `<@${id}>`);
-        
+
         if (assigneeValue.isLeft()) {
             return left('Unable to process Task Event: ' + assigneeValue.value); 
+        }
+
+        let status: string;
+
+        try {
+            status = await activeCollabApi.getTaskListNameById(
+                task.project_id, task.task_list_id
+            );
+        } catch (e) {
+            return left('Unable to process Task Event: ' + e); 
         }
         
         let title = task.name;
         
         switch (taskType) {
-            case TaskType.updatedTask: 
-                title = `*Task Updated:* ${task.name}`;
-                break;
-                
-            case TaskType.newTask:
+            case TaskType.TaskCreated:
                 title = `*Task Created:* ${task.name}`;
+                break;
+
+            case TaskType.TaskCompleted: 
+                title = `*Task Completed:* ${task.name}`;
+                break;
+
+            case TaskType.TaskUpdated: 
+            case TaskType.TaskListChanged: 
+                title = `*Task Updated:* ${task.name}`;
                 break;
         }
         
@@ -161,7 +190,7 @@ export function createEventController(
             )
             .addField(
                 'Status', 
-                task.is_completed ? 'Completed' : 'In Progress',
+                status,
                 true
             );
         
