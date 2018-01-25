@@ -18,6 +18,10 @@ module.exports = {
     testMatch: [
         '**/test/**/*.test.(ts|js)'
     ],
+    coveragePathIgnorePatterns: [
+        '/node_modules/',
+        'testData.ts'
+    ],
     testEnvironment: 'node',
     mapCoverage: true,
     transform: {
