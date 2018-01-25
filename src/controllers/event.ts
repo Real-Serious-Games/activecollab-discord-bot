@@ -26,9 +26,10 @@ export interface IProcessedEvent {
 const eventColor = '#449DF5';
 
 enum TaskType {
-    NewTask,
-    UpdatedTask,
-    TaskCompleted
+    TaskCreated,
+    TaskUpdated,
+    TaskCompleted,
+    TaskListChanged
 }
 
 class ProcessedEvent implements IProcessedEvent {
@@ -64,14 +65,14 @@ export function createEventController(
                     case 'TaskCreated':
                         return (await processTask(
                             task,
-                            TaskType.NewTask,
+                            TaskType.TaskCreated,
                             baseUrl
                         )).map(p => new ProcessedEvent(task.project_id, p));
                     
                     case 'TaskUpdated':
                         return (await processTask(
                             task,
-                            TaskType.UpdatedTask,
+                            TaskType.TaskUpdated,
                             baseUrl
                         )).map(p => new ProcessedEvent(task.project_id, p));
 
@@ -79,6 +80,13 @@ export function createEventController(
                         return (await processTask(
                             task,
                             TaskType.TaskCompleted,
+                            baseUrl
+                        )).map(p => new ProcessedEvent(task.project_id, p));
+
+                    case 'TaskListChanged':
+                        return (await processTask(
+                            task,
+                            TaskType.TaskListChanged,
                             baseUrl
                         )).map(p => new ProcessedEvent(task.project_id, p));
                         
@@ -130,7 +138,6 @@ export function createEventController(
         }
     }
     
-    
     async function processTask(
         task: Task,
         taskType: TaskType,
@@ -158,16 +165,17 @@ export function createEventController(
         let title = task.name;
         
         switch (taskType) {
-            case TaskType.UpdatedTask: 
-                title = `*Task Updated:* ${task.name}`;
-                break;
-                
-            case TaskType.NewTask:
+            case TaskType.TaskCreated:
                 title = `*Task Created:* ${task.name}`;
                 break;
 
             case TaskType.TaskCompleted: 
                 title = `*Task Completed:* ${task.name}`;
+                break;
+
+            case TaskType.TaskUpdated: 
+            case TaskType.TaskListChanged: 
+                title = `*Task Updated:* ${task.name}`;
                 break;
         }
         

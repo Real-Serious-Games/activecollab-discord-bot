@@ -118,7 +118,7 @@ export function getRawTaskListChangedTask(): Event<Task> {
         "class": "Task",
         "url_path": "\/projects\/22\/tasks\/312",
         "name": "Test task",
-        "assignee_id": 0,
+        "assignee_id": 1,
         "delegated_by_id": 0,
         "completed_on": null,
         "completed_by_id": null,

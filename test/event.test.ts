@@ -150,6 +150,47 @@ describe('calling processEvent', () => {
             expect(returnedValue.projectId).toEqual(rawData.payload.project_id);
         });
 
+        it('when task is task list changed should return formatted task', async () => {
+            expect.assertions(2);
+
+            const assignee = 'Test';
+            const status = 'Status';
+
+            const rawData = testData.getRawTaskListChangedTask();
+
+            const expectedRichEmbed = new RichEmbed()
+                .setTitle(`*Task Updated:* ${rawData.payload.name}`)
+                .setColor(eventColor)
+                .setURL(baseUrl + rawData.payload.url_path)
+                .addField('Assignee', `<@${assignee}>`, true)
+                .addField('Status', status, true);
+
+            const mockMappingController: Partial<IMappingController> = {
+                getDiscordUser: jest.fn().mockReturnValue(assignee)
+            };
+
+            const mockDiscordController: Partial<IDiscordController> = {
+                getUserId: jest.fn().mockReturnValue(assignee)
+            };
+
+            const mockActiveCollabApi: Partial<IActiveCollabAPI> = {
+                getTaskListNameById: jest.fn().mockReturnValue(status)
+            };
+
+            const eventController = createEventController(
+                mockActiveCollabApi,
+                <IMappingController>mockMappingController,
+                mockDiscordController,
+                baseUrl
+            );
+
+            const returnedValue = (await eventController.processEvent(rawData))
+                .getOrElseValue(undefined);
+
+            expect(returnedValue.body).toEqual(expectedRichEmbed);
+            expect(returnedValue.projectId).toEqual(rawData.payload.project_id);
+        });
+
         it('should return error when processing task fails', async () => {
             expect.assertions(3);
 
