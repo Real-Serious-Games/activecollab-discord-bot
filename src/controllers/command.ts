@@ -7,6 +7,10 @@ import { IActiveCollabAPI } from '../controllers/activecollab-api';
 import { IMappingController } from '../controllers/mapping';
 import { parse } from 'url';
 
+export interface ICommandController {
+    listTasksForUser: (user: User) => Promise<RichEmbed>;
+}
+
 const eventColor = '#449DF5';
 
 interface IProjectDictionary {
