@@ -174,6 +174,21 @@ describe('ActiveCollab API', () => {
                 .rejects.toMatchObject(expectedError);
         });
 
+        it('throws error if no project with the specified ID exists', async () => {
+            expect.assertions(1);
+
+            const mockGet = jest.fn().mockReturnValue([{
+                id: 1,
+                name: 'Test project'
+            }]);
+
+            const api = createActiveCollabAPI(setupMockRestClient(mockGet));
+            const expectedError = new Error('Could not find project with ID: 2');
+
+            await expect(api.getProjectById(2))
+                .rejects.toMatchObject(expectedError);
+        });
+
         it('returns project matching specified id', async () => {
             expect.assertions(1);
 
@@ -189,21 +204,114 @@ describe('ActiveCollab API', () => {
             const actual = await api.getProjectById(expectedId);
             expect(actual).toMatchObject(expected);
         });
+    });
 
-        it('throws error if no project with specified ID exists', async () => {
-            expect.assertions(1);
+    describe('getAllProjects', () => {
+        it('requests list of projects', async () => {
+            expect.assertions(2);
 
-            const mockGet = jest.fn().mockReturnValue([]);
+            const projectToGet = [{
+                id: 1,
+                name: 'Test project'
+            }];
+
+            const mockGet = jest.fn().mockReturnValue(projectToGet);
 
             const api = createActiveCollabAPI(setupMockRestClient(mockGet));
 
-            const testId = 22;
-            const expectedError = new Error(`Could not find project with ID ${testId}`);
+            expect(await api.getAllProjects()).toEqual(projectToGet);
+            expect(mockGet).toBeCalledWith(`/projects`);
+        });
 
-            await expect(api.getProjectById(testId))
+        it('throws error if data from API is invalid', async () => {
+            expect.assertions(1);
+
+            const mockGet = jest.fn().mockReturnValue(Promise.resolve({}));
+
+            const api = createActiveCollabAPI(setupMockRestClient(mockGet));
+            const expectedError =
+                new Error('Invalid response received trying to get projects: {}');
+
+            await expect(api.getAllProjects())
                 .rejects.toMatchObject(expectedError);
         });
     });
+
+    describe('getTasksByUserId', () => {
+        it('requests AssignmentFilter report', async () => {
+            expect.assertions(1);
+
+            const mockGet = jest.fn().mockReturnValue(getEmptyReport());
+
+            const api = createActiveCollabAPI(setupMockRestClient(mockGet));
+
+            await api.getTasksByUserId(1);
+
+            const expectedQuery: QueryParams = {
+                type: 'AssignmentFilter',
+                include_subtasks: false
+            };
+
+            expect(mockGet).toBeCalledWith('/reports/run', expectedQuery);
+        });
+
+        it('throws error if response invalid', async () => {
+            expect.assertions(1);
+
+            const mockGet = jest.fn().mockReturnValue({});
+
+            const api = createActiveCollabAPI(setupMockRestClient(mockGet));
+
+            const expectedError = new Error('Invalid response trying to get tasks: {}');
+            await expect(api.getTasksByUserId(1)).rejects.toMatchObject(expectedError);
+        });
+
+        it('returns only tasks from api where user ID matches', async () => {
+            expect.assertions(2);
+
+            const userId = 1;
+
+            const testTask = {
+                id: 2,
+                type: 'Task',
+                project_id: 20,
+                name: 'Test task',
+                assignee_id: userId
+            };
+
+            const testTaskWithWrongUser = {
+                id: 2,
+                type: 'Task',
+                project_id: 20,
+                name: 'Test task',
+                assignee_id: 2
+            };
+
+            const mockGet = jest.fn().mockReturnValue({
+                all: {
+                    label: 'All Assignments',
+                    assignments: {
+                        1: {
+                            id: 1,
+                            type: 'Note',
+                            project_id: 20,
+                            name: 'this is not a task'
+                        },
+                        2: testTask,
+                        3: testTaskWithWrongUser
+                    }
+                }
+            });
+
+            const api = createActiveCollabAPI(setupMockRestClient(mockGet));
+
+            const tasks = await api.getTasksByUserId(userId);
+
+            expect(tasks).toContain(testTask);
+            expect(tasks).toHaveLength(1);
+        });
+    });
+
 
     describe('getAllTasks', () => {
         it('requests AssignmentFilter report', async () => {

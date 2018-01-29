@@ -68,25 +68,44 @@ async function getProjectById(
     restClient: IActiveCollabRestClient,
     id: number
 ): Promise<Project> {
-    const response = await restClient.get('/projects');
+    try {
+        const projects = (await getAllProjectsLazy(restClient)).value();
 
-    if (!Array.isArray(response)) {
-        throw new Error('Invalid response received trying to get projects: ' 
-            + JSON.stringify(response, undefined, 4));
-    }
-    const projects = <Project[]>response;
-    const project = projects.find(p => p.id === id);
-    if (project) {
-        return project;
-    }
+        const project = projects.find(p => p.id === id);
+        if (project) {
+            return project;
+        }
 
-    throw new Error(`Could not find project with ID ${id}`);
+        throw new Error(`Could not find project with ID: ${id}`);
+
+    } catch (e) {
+        throw e;
+    }
+}
+
+/**
+ * Get tasks from user ID.
+ */
+async function getAssignmentTasksByUserId(
+    restClient: IActiveCollabRestClient,
+    id: number
+): Promise<Assignment[]> {
+    try {
+        const tasks = (await getAllAssignmentTasksLazy(restClient)).value();
+
+        return tasks
+            .filter(a => a.assignee_id === id);
+
+    } catch (e) {
+        throw new Error('Invalid response trying to get tasks: ' 
+            + JSON.stringify(e, undefined, 4));
+    }
 }
 
 /**
  * Get all tasks across all projects
  */
-async function getAllTasksLazy(
+async function getAllAssignmentTasksLazy(
     restClient: IActiveCollabRestClient
 ): Promise<_.LoDashImplicitWrapper<Assignment[]>> {
     const res = await restClient.get('/reports/run', {
@@ -105,13 +124,30 @@ async function getAllTasksLazy(
 }
 
 /**
+ * Get all tasks across all projects
+ */
+async function getAllProjectsLazy(
+    restClient: IActiveCollabRestClient
+): Promise<_.LoDashImplicitWrapper<Project[]>> {
+    const response = await restClient.get('/projects');
+
+    if (!Array.isArray(response)) {
+        throw new Error('Invalid response received trying to get projects: ' 
+            + JSON.stringify(response, undefined, 4));
+    }
+
+    return _(response)
+        .values(); 
+}
+
+/**
  * Get the id of the project the specified task belongs to.
  */
 async function findProjectForTaskId(
     restClient: IActiveCollabRestClient,
     taskId: number
 ): Promise<Option<number>> {
-    const tasks = await getAllTasksLazy(restClient);
+    const tasks = await getAllAssignmentTasksLazy(restClient);
     const task = tasks.find(t => t.id === taskId);
 
     return task ? some(task.project_id) : none;
@@ -134,9 +170,19 @@ export interface IActiveCollabAPI {
     getProjectById: (projectId: number) => Promise<Project>;
 
     /**
+     * Get tasks by user ID.
+     */
+    getTasksByUserId: (userId: number) => Promise<Task[]>;
+
+    /**
      * Get all tasks across all projects
      */
     getAllTasks: () => Promise<Assignment[]>;
+
+    /**
+     * Get all projects
+     */
+    getAllProjects: () => Promise<Project[]>;
 
     /**
      * Get the id of the project the specified task belongs to.
@@ -149,7 +195,9 @@ export function createActiveCollabAPI(restClient: IActiveCollabRestClient): IAct
         taskIdToName: (p, t) => taskIdToName(restClient, p, t),
         getTaskListNameById: (p, t) => getTaskListNameById(restClient, p, t),
         getProjectById: p => getProjectById(restClient, p),
-        getAllTasks: () => getAllTasksLazy(restClient).then(a => a.value()),
+        getTasksByUserId: p => getAssignmentTasksByUserId(restClient, p),
+        getAllTasks: () => getAllAssignmentTasksLazy(restClient).then(a => a.value()),
+        getAllProjects: () => getAllProjectsLazy(restClient).then(a => a.value()),
         findProjectForTask: t => findProjectForTaskId(restClient, t)
     };
 }
