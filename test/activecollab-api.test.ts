@@ -245,7 +245,7 @@ describe('ActiveCollab API', () => {
 
             const api = createActiveCollabAPI(setupMockRestClient(mockGet));
 
-            await api.getTasksByUserId(1);
+            await api.getAssignmentTasksByUserId(1);
 
             const expectedQuery: QueryParams = {
                 type: 'AssignmentFilter',
@@ -263,7 +263,7 @@ describe('ActiveCollab API', () => {
             const api = createActiveCollabAPI(setupMockRestClient(mockGet));
 
             const expectedError = new Error('Invalid response trying to get tasks: {}');
-            await expect(api.getTasksByUserId(1)).rejects.toMatchObject(expectedError);
+            await expect(api.getAssignmentTasksByUserId(1)).rejects.toMatchObject(expectedError);
         });
 
         it('returns only tasks from api where user ID matches', async () => {
@@ -305,7 +305,7 @@ describe('ActiveCollab API', () => {
 
             const api = createActiveCollabAPI(setupMockRestClient(mockGet));
 
-            const tasks = await api.getTasksByUserId(userId);
+            const tasks = await api.getAssignmentTasksByUserId(userId);
 
             expect(tasks).toContain(testTask);
             expect(tasks).toHaveLength(1);
@@ -321,7 +321,7 @@ describe('ActiveCollab API', () => {
 
             const api = createActiveCollabAPI(setupMockRestClient(mockGet));
 
-            await api.getAllTasks();
+            await api.getAllAssignmentTasks();
 
             const expectedQuery: QueryParams = {
                 type: 'AssignmentFilter',
@@ -339,7 +339,7 @@ describe('ActiveCollab API', () => {
             const api = createActiveCollabAPI(setupMockRestClient(mockGet));
 
             const expectedError = new Error('Invalid response trying to get report: {}');
-            await expect(api.getAllTasks()).rejects.toMatchObject(expectedError);
+            await expect(api.getAllAssignmentTasks()).rejects.toMatchObject(expectedError);
         });
 
         it('returns only tasks from api', async () => {
@@ -369,7 +369,7 @@ describe('ActiveCollab API', () => {
 
             const api = createActiveCollabAPI(setupMockRestClient(mockGet));
 
-            const tasks = await api.getAllTasks();
+            const tasks = await api.getAllAssignmentTasks();
 
             expect(tasks).toContain(testTask);
             expect(tasks).toHaveLength(1);

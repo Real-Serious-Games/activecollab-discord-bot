@@ -172,12 +172,12 @@ export interface IActiveCollabAPI {
     /**
      * Get tasks by user ID.
      */
-    getTasksByUserId: (userId: number) => Promise<Task[]>;
+    getAssignmentTasksByUserId: (userId: number) => Promise<Assignment[]>;
 
     /**
      * Get all tasks across all projects
      */
-    getAllTasks: () => Promise<Assignment[]>;
+    getAllAssignmentTasks: () => Promise<Assignment[]>;
 
     /**
      * Get all projects
@@ -195,8 +195,8 @@ export function createActiveCollabAPI(restClient: IActiveCollabRestClient): IAct
         taskIdToName: (p, t) => taskIdToName(restClient, p, t),
         getTaskListNameById: (p, t) => getTaskListNameById(restClient, p, t),
         getProjectById: p => getProjectById(restClient, p),
-        getTasksByUserId: p => getAssignmentTasksByUserId(restClient, p),
-        getAllTasks: () => getAllAssignmentTasksLazy(restClient).then(a => a.value()),
+        getAssignmentTasksByUserId: p => getAssignmentTasksByUserId(restClient, p),
+        getAllAssignmentTasks: () => getAllAssignmentTasksLazy(restClient).then(a => a.value()),
         getAllProjects: () => getAllProjectsLazy(restClient).then(a => a.value()),
         findProjectForTask: t => findProjectForTaskId(restClient, t)
     };
