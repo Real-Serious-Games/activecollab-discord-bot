@@ -237,7 +237,7 @@ describe('ActiveCollab API', () => {
         });
     });
 
-    describe('getTasksByUserId', () => {
+    describe('getAssignmentTasksByUserId', () => {
         it('requests AssignmentFilter report', async () => {
             expect.assertions(1);
 
@@ -313,7 +313,7 @@ describe('ActiveCollab API', () => {
     });
 
 
-    describe('getAllTasks', () => {
+    describe('getAllAssignmentTasks', () => {
         it('requests AssignmentFilter report', async () => {
             expect.assertions(1);
 

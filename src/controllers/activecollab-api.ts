@@ -68,19 +68,14 @@ async function getProjectById(
     restClient: IActiveCollabRestClient,
     id: number
 ): Promise<Project> {
-    try {
-        const projects = (await getAllProjectsLazy(restClient)).value();
+    const projects = await getAllProjectsLazy(restClient);
 
-        const project = projects.find(p => p.id === id);
-        if (project) {
-            return project;
-        }
-
-        throw new Error(`Could not find project with ID: ${id}`);
-
-    } catch (e) {
-        throw e;
+    const project = projects.find(p => p.id === id);
+    if (project) {
+        return project;
     }
+
+    throw new Error(`Could not find project with ID: ${id}`);
 }
 
 /**
@@ -91,10 +86,9 @@ async function getAssignmentTasksByUserId(
     id: number
 ): Promise<Assignment[]> {
     try {
-        const tasks = (await getAllAssignmentTasksLazy(restClient)).value();
-
-        return tasks
-            .filter(a => a.assignee_id === id);
+        return (await getAllAssignmentTasksLazy(restClient))
+            .filter(a => a.assignee_id === id)
+            .value();
 
     } catch (e) {
         throw new Error('Invalid response trying to get tasks: ' 

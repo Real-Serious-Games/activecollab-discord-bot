@@ -181,15 +181,12 @@ describe('when client receives messages', () => {
 
         const message = {
             content: '!list my tasks',
-            author: 'author'
+            author: 'author',
+            reply: jest.fn(() => Promise.resolve())
         };
 
         client.emit('message', message);
 
-        message.content = '!list tasks';
-
-        client.emit('message', message);
-        
         expect(commandControllerMock.listTasksForUser).toHaveBeenCalled();
     });
 });

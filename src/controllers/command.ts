@@ -1,4 +1,6 @@
 import { Logger } from 'structured-log';
+import * as _ from 'lodash';
+import { none, some } from 'fp-ts/lib/Option';
 
 import { Message, RichEmbed, User } from 'discord.js';
 import { Assignment } from '../models/report';
@@ -25,31 +27,33 @@ async function listTasksForUser(
     try {
         user = mappingController.getActiveCollabUser(discordUser.username + discordUser.tag);
     } catch (e) {
+        logger.warn(`Error getting ActiveCollab user for Discord user ` 
+            + ` ${discordUser.username + discordUser.tag}: ${e}`);
         return new RichEmbed()
-        .setTitle(`Unable to find user: <@${discordUser.id}>`)
-        .setColor(eventColor);
+            .setTitle(`Unable to find user: <@${discordUser.id}>`)
+            .setColor(eventColor);
     }
 
-    let tasks: Array<Assignment>;
-    let projects: Array<Project>;
+    let tasks: _.LoDashImplicitArrayWrapper<Assignment>;
+    let projects: _.LoDashImplicitArrayWrapper<Project>;
 
     try {
-        tasks = await activecollabApi.getAssignmentTasksByUserId(user);
-        projects = await activecollabApi.getAllProjects();
+        tasks = _(await activecollabApi.getAssignmentTasksByUserId(user));
+        projects = _(await activecollabApi.getAllProjects());
     } catch (e) {
-        logger.warn(e);
+        logger.warn(`Error getting tasks and projects: ${e}`);
         return new RichEmbed()
             .setTitle(`There was an error getting tasks for <@${discordUser.id}>`)
             .setColor(eventColor);
     }
 
-    if (tasks.length < 1) {
+    if (tasks.size() < 1) {
         return new RichEmbed()
             .setTitle(`No tasks for <@${discordUser.id}>`)
             .setColor(eventColor);
     }
 
-    if (projects.length < 1) {
+    if (projects.size() < 1) {
         return new RichEmbed()
             .setTitle(`A project needs to exist to get tasks`)
             .setColor(eventColor);
@@ -59,45 +63,27 @@ async function listTasksForUser(
         .setTitle(`Tasks for <@${discordUser.id}>`)
         .setColor(eventColor);
 
-    // Sort tasks by project so they can be grouped by project
-    tasks = tasks.sort((a, b) => a.project_id - b.project_id);
-
-    // Project name for current group of tasks
-    let currentTitle = '';
-    let currentProject = tasks[0].project_id;
-    // Group of tasks
-    let currentBody = '';
-
-    tasks.forEach(task => {
-        // If the current task is part of a different project group to the last one
-        // finalise the group and setup for next group
-        if (currentProject !== task.project_id) {
-            taskList.addField(currentTitle, currentBody);
-
-            currentBody = '';
-            currentTitle = '';
-            currentProject = task.project_id;
-        }
-
-        // Get the project name 
-        if (currentTitle === '') {
-            const project = projects.find(project => project.id === task.project_id);
-            if (project !== undefined) {
-                currentTitle = project.name;
+    tasks.groupBy(t => t.project_id)
+        .map(taskGroup => {
+            const projectId = taskGroup[0].project_id;
+            const project = projects.find(p => p.id === projectId);
+            if (!project) {
+                return none;
             }
-        }
 
-        // Update body with formatted task, if the title is empty it means a 
-        // project wasnt found for the task so disregard
-        if (currentTitle !== '') {
-            currentBody += `• [${task.name}](${task.permalink})\n`;
-        }
-    });
+            const body = taskGroup.reduce(
+                (acc, curr) => acc + `• [${curr.name}](${curr.permalink})\n`, 
+                ''
+            );
 
-    // Add last task group
-    if (currentTitle !== '' && currentBody !== '') {
-        taskList.addField(currentTitle, currentBody);
-    }
+            return some({
+                title: project.name,
+                body: body
+            });
+        })
+        .forEach(m => m.map(
+            summary => taskList.addField(summary.title, summary.body)
+        ));
 
     return taskList;
 }

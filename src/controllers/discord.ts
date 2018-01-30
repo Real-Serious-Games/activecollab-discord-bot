@@ -40,8 +40,7 @@ export class DiscordController implements IDiscordController {
             switch (message.content) {
                 case '!list my tasks':
                     message.reply(await commandController
-                        .listTasksForUser(message.author)
-                    );
+                        .listTasksForUser(message.author));
             }
         });
     }
