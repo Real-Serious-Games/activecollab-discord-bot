@@ -181,7 +181,7 @@ describe('when client receives messages', () => {
 
         const message = {
             content: '!list my tasks',
-            authoer: 'author'
+            author: 'author'
         };
 
         client.emit('message', message);

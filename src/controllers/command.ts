@@ -13,10 +13,6 @@ export interface ICommandController {
 
 const eventColor = '#449DF5';
 
-interface IProjectDictionary {
-    [key: number]: Array<Assignment>;
-}
-
 async function listTasksForUser(
     activecollabApi: IActiveCollabAPI,
     mappingController: IMappingController,
@@ -63,31 +59,44 @@ async function listTasksForUser(
         .setTitle(`Tasks for <@${discordUser.id}>`)
         .setColor(eventColor);
 
-    const projectsDictionary: IProjectDictionary = { };
+    // Sort tasks by project so they can be grouped by project
+    tasks = tasks.sort((a, b) => a.project_id - b.project_id);
 
-    // Populate a dictionary with project ID as the key and an array
-    // of tasks as the value
+    // Project name for current group of tasks
+    let currentTitle = '';
+    let currentProject = tasks[0].project_id;
+    // Group of tasks
+    let currentBody = '';
+
     tasks.forEach(task => {
-        if (projectsDictionary[task.project_id] == undefined) {
-            projectsDictionary[task.project_id] = [ task ];
-        } else {
-            projectsDictionary[task.project_id].push(task);
+        // If the current task is part of a different project group to the last one
+        // finalise the group and setup for next group
+        if (currentProject !== task.project_id) {
+            taskList.addField(currentTitle, currentBody);
+
+            currentBody = '';
+            currentTitle = '';
+            currentProject = task.project_id;
+        }
+
+        // Get the project name 
+        if (currentTitle === '') {
+            const project = projects.find(project => project.id === task.project_id);
+            if (project !== undefined) {
+                currentTitle = project.name;
+            }
+        }
+
+        // Update body with formatted task, if the title is empty it means a 
+        // project wasnt found for the task so disregard
+        if (currentTitle !== '') {
+            currentBody += `• [${task.name}](${task.permalink})\n`;
         }
     });
 
-    // For each project create a field with the project name as the title
-    // and the last of tasks as the body
-    for (const p in projectsDictionary) {
-        const project = projects.find(project => project.id === parseInt(p));
-        let value = '';
-
-        if (project != undefined) {
-            projectsDictionary[p].forEach(task => {
-                value += `• [${task.name}](${task.permalink})\n`;
-            });
-
-            taskList.addField(project.name, value);
-        }
+    // Add last task group
+    if (currentTitle !== '' && currentBody !== '') {
+        taskList.addField(currentTitle, currentBody);
     }
 
     return taskList;
