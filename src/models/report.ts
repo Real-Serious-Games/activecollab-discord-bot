@@ -16,4 +16,6 @@ export interface Assignment {
     type: string;
     project_id: number;
     name: string;
+    assignee_id: number;
+    permalink: string;
 }
