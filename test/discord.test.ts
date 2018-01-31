@@ -5,6 +5,7 @@ import { DiscordController, IDiscordController } from '../src/controllers/discor
 import { createClient } from 'http';
 import { AssertionError } from 'assert';
 import { IMappingController } from '../src/controllers/mapping';
+import { ICommandController } from '../src/controllers/command';
 
 describe('calling sendMessageToChannel', () => {
     it('should send message to channel when channel is valid', () => {
@@ -13,13 +14,13 @@ describe('calling sendMessageToChannel', () => {
         const channelStub = jest.fn(() => Promise.resolve());
 
         const channel: Partial<TextChannel> = {
-            send: channelStub
+            sendEmbed: channelStub
         };
 
         const discordController = setupDiscordController();
 
         discordController.sendMessageToChannel(message, <TextChannel>channel);
-        expect(channelStub).toBeCalledWith(undefined, message);
+        expect(channelStub).toBeCalledWith(message);
     }),
 
     it('should error when channel is invalid', () => {
@@ -161,6 +162,37 @@ describe('calling getUserId', () => {
     });
 });
 
+describe('when client receives messages', () => {
+    it('should call commandController.listTasksForUser when command is "!list my tasks"', () => {
+        const client = new Client();
+
+        client.login = jest.fn(() => Promise.resolve());
+
+        const commandControllerMock: Partial<ICommandController> = {
+            listTasksForUser: jest.fn(() => Promise.resolve(new RichEmbed()))
+        };
+
+        const discordController = setupDiscordController(
+            undefined,
+            client,
+            undefined,
+            commandControllerMock
+        );
+
+        const message = {
+            content: '!list my tasks',
+            author: 'author',
+            channel: {
+                sendEmbed: jest.fn(() => Promise.resolve())
+            }
+        };
+
+        client.emit('message', message);
+
+        expect(commandControllerMock.listTasksForUser).toHaveBeenCalled();
+    });
+});
+
 function setupTestFramework(
     channelToReturn: string = 'activecollab-notifications',
     shouldReturnUndefinedChannel: boolean = false
@@ -205,7 +237,8 @@ function setupTestFramework(
 function setupDiscordController(
     token = '',
     client?: Client,
-    mappingController?: Partial<IMappingController>
+    mappingController?: Partial<IMappingController>,
+    commandController?: Partial<ICommandController>
 ) {
     if (!client) {
         client = <Client>setupMockDiscordClient();
@@ -217,10 +250,17 @@ function setupDiscordController(
         };
     }
 
+    if (!commandController) {
+        commandController = {
+            listTasksForUser: jest.fn(() => Promise.resolve(new RichEmbed()))
+        };
+    }
+
     return new DiscordController(
         token,
         client,
-        <IMappingController>mappingController,
+        mappingController as IMappingController,
+        commandController as ICommandController,
         'REAL SERIOUS GAMGES'
     );
 }

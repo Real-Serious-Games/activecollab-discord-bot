@@ -20,7 +20,7 @@ export interface IMappingController {
     /**
      * Map ActiveCollab user to Discord user
      */
-    getActiveCollabUser: (discordUser: string) => string;
+    getActiveCollabUser: (discordUser: string) => number;
 }
 
 export interface ChannelMap {

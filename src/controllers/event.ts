@@ -210,8 +210,7 @@ export function createEventController(
 
         // When comments on more than just tasks are supported add switch to 
         // determine correct parent URL from parent type
-        const url = `${baseUrl}/projects/${projectId}/tasks/`
-            + comment.parent_id;
+        const url = `${baseUrl}/projects/${projectId}/tasks/${comment.parent_id}`;
         
         try {
             const taskName = await activeCollabApi.taskIdToName(projectId, comment.parent_id);

@@ -11,6 +11,7 @@ import { createEventController } from './controllers/event';
 import { createActiveCollabAPI } from './controllers/activecollab-api';
 import { createActiveCollabRestClient } from './controllers/activecollab-rest';
 import { createMappingController, ChannelMap, UserMap } from './controllers/mapping';
+import { createCommandController } from './controllers/command';
 
 async function createServer() {
     // Setup config
@@ -27,13 +28,6 @@ async function createServer() {
             () => getConfigValue('channels'),
             () => getConfigValue('users')
         );
-    
-        const discordController = new DiscordController(
-            getConfigValue('discordBotToken'),
-            new discord.Client(),
-            mappingController,
-            getConfigValue('guildName')
-        );
 
         const activeCollabRestClient = await createActiveCollabRestClient(
             request,
@@ -43,6 +37,21 @@ async function createServer() {
         );
 
         const activeCollabApi = createActiveCollabAPI(activeCollabRestClient);
+
+        const commandController = createCommandController(
+            activeCollabApi,
+            mappingController,
+            logger
+        );
+    
+        const discordController = new DiscordController(
+            config.get('discordBotToken'),
+            new discord.Client(),
+            mappingController,
+            commandController,
+            config.get('guildName')
+        );
+
         const eventController = createEventController(
             activeCollabApi,
             mappingController,

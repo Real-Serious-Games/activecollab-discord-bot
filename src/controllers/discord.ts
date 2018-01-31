@@ -3,6 +3,7 @@ import * as config from 'confucious';
 import { assert } from 'console';
 import { AssertionError } from 'assert';
 import { IMappingController } from '../controllers/mapping';
+import { ICommandController } from '../controllers/command';
 
 export interface IDiscordController {
     sendMessageToChannel: (
@@ -21,6 +22,7 @@ export class DiscordController implements IDiscordController {
         token: string,
         discordClient: discord.Client,
         mappingController: IMappingController,
+        commandController: ICommandController,
         guildName: string
     ) {
         this.client = discordClient;
@@ -33,6 +35,14 @@ export class DiscordController implements IDiscordController {
 
         this.client.login(token)
             .catch(console.error);
+
+        this.client.on('message', async message => {
+            switch (message.content) {
+                case '!list my tasks':
+                    message.channel.sendEmbed(await commandController
+                        .listTasksForUser(message.author));
+            }
+        });
     }
 
     public determineChannel(projectId: number): discord.TextChannel {
@@ -76,7 +86,7 @@ export class DiscordController implements IDiscordController {
         assert(channel, `Cannot send without a channel: ${channel}`);
 
         channel
-            .send(undefined, message)
+            .sendEmbed(message)
             .catch(console.error);
     }
 }
