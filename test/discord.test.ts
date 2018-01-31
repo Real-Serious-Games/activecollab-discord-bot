@@ -14,13 +14,13 @@ describe('calling sendMessageToChannel', () => {
         const channelStub = jest.fn(() => Promise.resolve());
 
         const channel: Partial<TextChannel> = {
-            send: channelStub
+            sendEmbed: channelStub
         };
 
         const discordController = setupDiscordController();
 
         discordController.sendMessageToChannel(message, <TextChannel>channel);
-        expect(channelStub).toBeCalledWith(undefined, message);
+        expect(channelStub).toBeCalledWith(message);
     }),
 
     it('should error when channel is invalid', () => {
@@ -182,7 +182,9 @@ describe('when client receives messages', () => {
         const message = {
             content: '!list my tasks',
             author: 'author',
-            reply: jest.fn(() => Promise.resolve())
+            channel: {
+                sendEmbed: jest.fn(() => Promise.resolve())
+            }
         };
 
         client.emit('message', message);

@@ -83,7 +83,7 @@ describe('listTasksForUser', () => {
         ];
         
         const expectedReturn = new RichEmbed()
-            .setTitle(`Tasks for <@${discordUser.id}>`)
+            .setTitle(`Tasks for ${discordUser.username}`)
             .setColor(eventColor)
             .addField(project1.name,
                 `• [${project1.task1}](${project1.task1Url})\n` + 
@@ -157,11 +157,100 @@ describe('listTasksForUser', () => {
         ];
         
         const expectedReturn = new RichEmbed()
-            .setTitle(`Tasks for <@${discordUser.id}>`)
+            .setTitle(`Tasks for ${discordUser.username}`)
             .setColor(eventColor)
             .addField(project1.name,
                 `• [${project1.task1}](${project1.task1Url})\n` + 
                 `• [${project1.task2}](${project1.task2Url})\n`);
+
+        const activeCollabApiMock = createActiveCollabApiMock(
+            jest.fn(() => Promise.resolve(tasksToReturn)),
+            jest.fn(() => Promise.resolve(projectsToReturn))
+        );
+
+        const commandController = new CommandControllerBuilder()
+            .withActiveCollabApi(activeCollabApiMock as IActiveCollabAPI)
+            .Build();
+
+        expect((await commandController.listTasksForUser(<User>discordUser)))
+            .toEqual(expectedReturn);
+    });
+
+    it('should should split into RichEmbeds with fields of at most 1024 characters', async () => {
+        expect.assertions(1);
+        
+        const project1 = {
+            id: 0,
+            name: 'Project 1',
+            task1: 'Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis, sem. Nulla consequat massa quis enim. Donec pede justo, fringilla vel, aliquet nec, vulputate eget, arcu. In enim justo, rhoncus ut, imperdiet a',
+            task1Url: '\/projects\/2\/tasks\/288',
+            task2: 'Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis, sem. Nulla consequat massa quis enim. Donec pede justo, fringilla vel, aliquet nec, vulputate eget, arcu. In enim justo, rhoncus ut, imperdiet a',
+            task2Url: '\/projects\/2\/tasks\/2838',
+            task3: 'Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis, sem. Nulla consequat massa quis enim. Donec pede justo, fringilla vel, aliquet nec, vulputate eget, arcu. In enim justo, rhoncus ut, imperdiet a',
+            task3Url: '\/projects\/2\/tasks\/2838'
+        };
+        const project2 = {
+            id: 1,
+            name: 'Project 2',
+            task1: 'Task A',
+            task1Url: '\/projects\/2\/tasks\/2848',
+            task2: 'Task B',
+            task2Url: '\/projects\/2\/tasks\/28238'
+        };
+
+        const projectsToReturn: Array<Partial<Project>> = [{
+            id: project1.id,
+            name: project1.name
+        },
+        {
+            id: project2.id,
+            name: project2.name
+        }];
+
+        const tasksToReturn: Array<Assignment> = [{
+            id: 0,
+            type: 'Task',
+            project_id: project1.id,
+            name: project1.task1,
+            assignee_id: 0,
+            permalink: project1.task1Url
+        },
+        {
+            id: 1,
+            type: 'Task',
+            project_id: project1.id,
+            name: project1.task2,
+            assignee_id: 0,
+            permalink: project1.task2Url
+        },
+        {
+            id: 2,
+            type: 'Task',
+            project_id: project1.id,
+            name: project1.task3,
+            assignee_id: 0,
+            permalink: project1.task2Url
+        },
+        {
+            id: 3,
+            type: 'Task',
+            project_id: project2.id,
+            name: project2.task1,
+            assignee_id: 0,
+            permalink: project2.task1Url
+        }
+    ];
+        
+        const expectedReturn = new RichEmbed()
+            .setTitle(`Tasks for ${discordUser.username}`)
+            .setColor(eventColor)
+            .addField(project1.name,
+                `• [${project1.task1}](${project1.task1Url})\n` + 
+                `• [${project1.task2}](${project1.task2Url})\n`)
+            .addField(project1.name,
+                `• [${project1.task3}](${project1.task3Url})\n`)
+            .addField(project2.name, 
+                `• [${project2.task1}](${project2.task1Url})\n`);
 
         const activeCollabApiMock = createActiveCollabApiMock(
             jest.fn(() => Promise.resolve(tasksToReturn)),

@@ -1,6 +1,5 @@
 import { Logger } from 'structured-log';
 import * as _ from 'lodash';
-import { none, some } from 'fp-ts/lib/Option';
 
 import { Message, RichEmbed, User } from 'discord.js';
 import { Assignment } from '../models/report';
@@ -14,6 +13,7 @@ export interface ICommandController {
 }
 
 const eventColor = '#449DF5';
+const maxFieldLength = 1024;
 
 async function listTasksForUser(
     activecollabApi: IActiveCollabAPI,
@@ -25,10 +25,10 @@ async function listTasksForUser(
     let user: number;
 
     try {
-        user = mappingController.getActiveCollabUser(discordUser.username + discordUser.tag);
+        user = mappingController.getActiveCollabUser(discordUser.tag);
     } catch (e) {
         logger.warn(`Error getting ActiveCollab user for Discord user ` 
-            + ` ${discordUser.username + discordUser.tag}: ${e}`);
+            + ` ${discordUser.tag}: ${e}`);
         return new RichEmbed()
             .setTitle(`Unable to find user: <@${discordUser.id}>`)
             .setColor(eventColor);
@@ -60,30 +60,37 @@ async function listTasksForUser(
     }
 
     const taskList = new RichEmbed()
-        .setTitle(`Tasks for <@${discordUser.id}>`)
+        .setTitle(`Tasks for ${discordUser.username}`)
         .setColor(eventColor);
 
     tasks.groupBy(t => t.project_id)
-        .map(taskGroup => {
+        .forEach(taskGroup => {
             const projectId = taskGroup[0].project_id;
             const project = projects.find(p => p.id === projectId);
             if (!project) {
-                return none;
+                return;
             }
 
-            const body = taskGroup.reduce(
-                (acc, curr) => acc + `• [${curr.name}](${curr.permalink})\n`, 
-                ''
-            );
+            let currentChars = 0;
 
-            return some({
-                title: project.name,
-                body: body
+            taskGroup.forEach(t => { 
+                const task = `• [${t.name}](${t.permalink})\n`;
+                const newLength = currentChars + task.length;
+
+                if (taskList.fields !== undefined 
+                    && taskList.fields.length > 0 
+                    && currentChars !== 0 // If characters is 0 we're doing a new project
+                    && newLength <= maxFieldLength
+                ) {
+                    currentChars = newLength;
+
+                    taskList.fields[taskList.fields.length - 1].value += task;
+                } else {
+                    currentChars = (task + project.name).length;
+                    taskList.addField(project.name, task);
+                }
             });
-        })
-        .forEach(m => m.map(
-            summary => taskList.addField(summary.title, summary.body)
-        ));
+        });
 
     return taskList;
 }
