@@ -25,15 +25,15 @@ async function createServer() {
 
     try {
         const mappingController = createMappingController(
-            () => config.get('channels'),
-            () => config.get('users')
+            () => getConfigValue('channels'),
+            () => getConfigValue('users')
         );
 
         const activeCollabRestClient = await createActiveCollabRestClient(
             request,
-            config.get('activeCollab:connectionStr'),
-            config.get('activeCollab:email'),
-            config.get('activeCollab:password')
+            getConfigValue('activeCollab:connectionStr'),
+            getConfigValue('activeCollab:email'),
+            getConfigValue('activeCollab:password')
         );
 
         const activeCollabApi = createActiveCollabAPI(activeCollabRestClient);
@@ -56,12 +56,12 @@ async function createServer() {
             activeCollabApi,
             mappingController,
             discordController,
-            config.get('activeCollab:connectionStr')
+            getConfigValue('activeCollab:connectionStr')
         );
 
         const apiController = createApiController(
             discordController,
-            config.get('webhookSecret'),
+            getConfigValue('webhookSecret'),
             logger,
             eventController
         );
@@ -76,12 +76,23 @@ async function createServer() {
             logger.info('  Press CTRL-C to stop\n');
         });
     } catch (e) {
-        logger.fatal('Unable to setup server: {e}', JSON.stringify(e, undefined, 4));
+        logger.fatal('Unable to setup server: {e}', e);
         throw e;
     }
 }
 
+function getConfigValue(key: string): any {
+    const value = config.get(key);
+
+    if (value == undefined) {
+        throw new Error(`Missing config: ${key}`);
+    }
+
+    return value;
+}
+
+
 export = createServer()
     .catch(e => {
-        console.log(  `Server Error: ${JSON.stringify(e, undefined, 4)}`);
+        console.log(  `Server Error: ${e}`);
      });
