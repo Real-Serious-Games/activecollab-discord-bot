@@ -39,7 +39,7 @@ export class DiscordController implements IDiscordController {
         this.client.on('message', async message => {
             switch (message.content) {
                 case '!list my tasks':
-                    message.reply(await commandController
+                    message.channel.sendEmbed(await commandController
                         .listTasksForUser(message.author));
             }
         });
@@ -86,7 +86,7 @@ export class DiscordController implements IDiscordController {
         assert(channel, `Cannot send without a channel: ${channel}`);
 
         channel
-            .send(undefined, message)
+            .sendEmbed(message)
             .catch(console.error);
     }
 }
