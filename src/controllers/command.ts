@@ -25,10 +25,10 @@ async function listTasksForUser(
     let user: number;
 
     try {
-        user = mappingController.getActiveCollabUser(discordUser.username + discordUser.tag);
+        user = mappingController.getActiveCollabUser(discordUser.tag);
     } catch (e) {
         logger.warn(`Error getting ActiveCollab user for Discord user ` 
-            + ` ${discordUser.username + discordUser.tag}: ${e}`);
+            + ` ${discordUser.tag}: ${e}`);
         return new RichEmbed()
             .setTitle(`Unable to find user: <@${discordUser.id}>`)
             .setColor(eventColor);
