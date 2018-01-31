@@ -2,6 +2,24 @@
 
 This is a Discord bot for Active Collab. It can send notifications to specified channels for task and comment events in Active Collab as well as respond to commands. It is written in TypeScript and runs on Node.js and Express.
 
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+
+
+- [Getting Started](#getting-started)
+  - [Prerequisites](#prerequisites)
+  - [Installing](#installing)
+    - [Setup Discord App](#setup-discord-app)
+    - [Create Active Collab User](#create-active-collab-user)
+    - [Setup Config](#setup-config)
+    - [Running the Server](#running-the-server)
+  - [Running with Docker](#running-with-docker)
+  - [Deployment](#deployment)
+- [Getting involved](#getting-involved)
+  - [Running tests](#running-tests)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 ## Getting Started
 
 These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.
