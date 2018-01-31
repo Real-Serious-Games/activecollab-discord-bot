@@ -14,6 +14,7 @@ export interface ICommandController {
 }
 
 const eventColor = '#449DF5';
+const maxFieldLength = 1024;
 
 async function listTasksForUser(
     activecollabApi: IActiveCollabAPI,
@@ -60,30 +61,37 @@ async function listTasksForUser(
     }
 
     const taskList = new RichEmbed()
-        .setTitle(`Tasks for <@${discordUser.id}>`)
+        .setTitle(`Tasks for ${discordUser.username}`)
         .setColor(eventColor);
 
     tasks.groupBy(t => t.project_id)
-        .map(taskGroup => {
+        .forEach(taskGroup => {
             const projectId = taskGroup[0].project_id;
             const project = projects.find(p => p.id === projectId);
             if (!project) {
-                return none;
+                return;
             }
 
-            const body = taskGroup.reduce(
-                (acc, curr) => acc + `• [${curr.name}](${curr.permalink})\n`, 
-                ''
-            );
+            let currentChars = 0;
 
-            return some({
-                title: project.name,
-                body: body
+            taskGroup.forEach(t => { 
+                const task = `• [${t.name}](${t.permalink})\n`;
+                const newLength = currentChars + task.length;
+
+                if (taskList.fields !== undefined 
+                    && taskList.fields.length > 0 
+                    && currentChars != 0 
+                    && newLength <= maxFieldLength
+                ) {
+                    currentChars = newLength;
+
+                    taskList.fields[taskList.fields.length - 1].value += task;
+                } else {
+                    currentChars = (task + project.name).length;
+                    taskList.addField(project.name, task);
+                }
             });
-        })
-        .forEach(m => m.map(
-            summary => taskList.addField(summary.title, summary.body)
-        ));
+        });
 
     return taskList;
 }
