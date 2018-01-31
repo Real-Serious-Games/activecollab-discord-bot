@@ -1,6 +1,5 @@
 import { Logger } from 'structured-log';
 import * as _ from 'lodash';
-import { none, some } from 'fp-ts/lib/Option';
 
 import { Message, RichEmbed, User } from 'discord.js';
 import { Assignment } from '../models/report';
@@ -80,7 +79,7 @@ async function listTasksForUser(
 
                 if (taskList.fields !== undefined 
                     && taskList.fields.length > 0 
-                    && currentChars != 0 
+                    && currentChars !== 0 // If characters is 0 we're doing a new project
                     && newLength <= maxFieldLength
                 ) {
                     currentChars = newLength;
