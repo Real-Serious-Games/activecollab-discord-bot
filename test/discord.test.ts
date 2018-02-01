@@ -163,7 +163,7 @@ describe('calling getUserId', () => {
 });
 
 describe('when client receives messages', () => {
-    it('should call commandController.listTasksForUser when command is "!list my tasks"', () => {
+    it('should call commandController.listTasksForUser when command is "!tasks list"', () => {
         const client = new Client();
 
         client.login = jest.fn(() => Promise.resolve());
@@ -180,7 +180,7 @@ describe('when client receives messages', () => {
         );
 
         const message = {
-            content: '!list my tasks',
+            content: '!tasks list',
             author: 'author',
             channel: {
                 sendEmbed: jest.fn(() => Promise.resolve())
@@ -189,7 +189,110 @@ describe('when client receives messages', () => {
 
         client.emit('message', message);
 
-        expect(commandControllerMock.listTasksForUser).toHaveBeenCalled();
+        expect(commandControllerMock.listTasksForUser).toHaveBeenCalledWith(message.author);
+    });
+
+    it('should call commandController.listTasksForUser when command is "!tasks list for @user"', () => {
+        const mentionedUser = 'user';
+        
+        const client = new Client();
+
+        client.login = jest.fn(() => Promise.resolve());
+
+        const commandControllerMock: Partial<ICommandController> = {
+            listTasksForUser: jest.fn(() => Promise.resolve(new RichEmbed()))
+        };
+
+        const discordController = setupDiscordController(
+            undefined,
+            client,
+            undefined,
+            commandControllerMock
+        );
+
+        const message = {
+            content: '!tasks list for @user',
+            author: {
+                bot: false
+            },
+            mentions: {
+                users: {
+                    first: jest.fn().mockReturnValue(mentionedUser)
+                }
+            },
+            channel: {
+                sendEmbed: jest.fn(() => Promise.resolve())
+            }
+        };
+
+        client.emit('message', message);
+
+        expect(commandControllerMock.listTasksForUser).toHaveBeenCalledWith(mentionedUser);
+    });
+
+    it('should do nothing when message doesnt start with prefix or message sent with bot', () => {
+        const client = new Client();
+
+        client.login = jest.fn(() => Promise.resolve());
+
+        const commandControllerMock: Partial<ICommandController> = {
+            listTasksForUser: jest.fn(() => Promise.resolve(new RichEmbed()))
+        };
+
+        const discordController = setupDiscordController(
+            undefined,
+            client,
+            undefined,
+            commandControllerMock
+        );
+
+        let message = {
+            content: 'tasks list for @user',
+            author: {
+                bot: false
+            }
+        };
+
+        client.emit('message', message);
+
+        message = {
+            content: '!tasks list for @user',
+            author: {
+                bot: true
+            }
+        };
+
+        client.emit('message', message);
+
+        expect(commandControllerMock.listTasksForUser).toHaveBeenCalledTimes(0);
+    });
+
+    it('should do nothing when message is empty and starts with prefix', () => {
+        const client = new Client();
+
+        client.login = jest.fn(() => Promise.resolve());
+
+        const commandControllerMock: Partial<ICommandController> = {
+            listTasksForUser: jest.fn(() => Promise.resolve(new RichEmbed()))
+        };
+
+        const discordController = setupDiscordController(
+            undefined,
+            client,
+            undefined,
+            commandControllerMock
+        );
+
+        const message = {
+            content: '!',
+            author: {
+                bot: false
+            }
+        };
+
+        client.emit('message', message);
+
+        expect(commandControllerMock.listTasksForUser).toHaveBeenCalledTimes(0);
     });
 });
 
@@ -261,6 +364,7 @@ function setupDiscordController(
         client,
         mappingController as IMappingController,
         commandController as ICommandController,
+        '!',
         'REAL SERIOUS GAMGES'
     );
 }

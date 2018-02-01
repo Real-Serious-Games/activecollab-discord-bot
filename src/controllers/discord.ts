@@ -23,6 +23,7 @@ export class DiscordController implements IDiscordController {
         discordClient: discord.Client,
         mappingController: IMappingController,
         commandController: ICommandController,
+        commandPrefix: string,
         guildName: string
     ) {
         this.client = discordClient;
@@ -37,10 +38,32 @@ export class DiscordController implements IDiscordController {
             .catch(console.error);
 
         this.client.on('message', async message => {
-            switch (message.content) {
-                case '!list my tasks':
-                    message.channel.sendEmbed(await commandController
-                        .listTasksForUser(message.author));
+            if (!message.content.startsWith(commandPrefix) || message.author.bot) {
+                return;
+            }
+
+            console.log('Command received: ' + message.content);
+
+            const args = message.content.slice(commandPrefix.length).trim().split(/ +/g);
+            const command = args.shift();
+
+            if (command === undefined || command === '') {
+                return;
+            }
+
+            command.toLowerCase();
+
+            if (command === 'tasks') {
+                if (args[0] === 'list') {
+                    message.channel.send('Getting tasks...');
+                    if (args.length === 3 && args[1].toLowerCase() === 'for') {
+                        message.channel.send(await commandController
+                            .listTasksForUser(message.mentions.users.first()));
+                    } else {
+                        message.channel.send(await commandController
+                            .listTasksForUser(message.author));
+                    }
+                }
             }
         });
     }
@@ -86,7 +109,7 @@ export class DiscordController implements IDiscordController {
         assert(channel, `Cannot send without a channel: ${channel}`);
 
         channel
-            .sendEmbed(message)
+            .send(message)
             .catch(console.error);
     }
 }
