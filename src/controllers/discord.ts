@@ -1,7 +1,6 @@
 import * as discord from 'discord.js';
 import * as config from 'confucious';
 import { assert } from 'console';
-import { AssertionError } from 'assert';
 
 import { IMappingController } from '../controllers/mapping';
 import { ICommandController } from '../controllers/command';
