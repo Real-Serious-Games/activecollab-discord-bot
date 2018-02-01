@@ -15,7 +15,8 @@
     "tslint": "tslint -c tslint.json -p tsconfig.json",
     "debug": "npm run build && npm run watch-debug",
     "serve-debug": "nodemon --inspect dist/server.js",
-    "watch-debug": "concurrently -k -p \"[{name}]\" -n \"TypeScript,Node\" -c \"cyan.bold,green.bold\" \"npm run watch-ts\" \"npm run serve-debug\""
+    "watch-debug": "concurrently -k -p \"[{name}]\" -n \"TypeScript,Node\" -c \"cyan.bold,green.bold\" \"npm run watch-ts\" \"npm run serve-debug\"",
+    "update-coverage": "cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js"
   },
   "repository": {
     "type": "git",
@@ -58,7 +59,7 @@
   "dependencies": {
     "body-parser": "^1.18.2",
     "bufferutil": "^3.0.3",
-    "confucious": "0.0.11",
+    "confucious": "0.0.12",
     "discord.js": "^11.2.1",
     "erlpack": "github:hammerandchisel/erlpack",
     "express": "^4.16.2",

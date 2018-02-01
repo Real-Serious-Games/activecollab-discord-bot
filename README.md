@@ -1,6 +1,25 @@
 # Active Collab Discord Bot
+[![Build Status](https://travis-ci.org/Real-Serious-Games/activecollab-discord-bot.svg)](https://travis-ci.org/Real-Serious-Games/activecollab-discord-bot)
 
-This is a Discord bot for Active Collab, it can send notifications to specified channels for task and comment events in Active Collab as well as respond to commands. It is written in TypeScript and runs on Node.js and Express.
+This is a Discord bot for Active Collab. It can send notifications to specified channels for task and comment events in Active Collab as well as respond to commands. It is written in TypeScript and runs on Node.js and Express.
+
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+
+
+- [Getting Started](#getting-started)
+  - [Prerequisites](#prerequisites)
+  - [Installing](#installing)
+    - [Setup Discord App](#setup-discord-app)
+    - [Create Active Collab User](#create-active-collab-user)
+    - [Setup Config](#setup-config)
+    - [Running the Server](#running-the-server)
+  - [Running with Docker](#running-with-docker)
+  - [Deployment](#deployment)
+- [Getting involved](#getting-involved)
+  - [Running tests](#running-tests)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 ## Getting Started
 
@@ -8,10 +27,10 @@ These instructions will get you a copy of the project up and running on your loc
 
 ### Prerequisites
 
-* [NPM](https://www.npmjs.com)
-* [Node](https://nodejs.org/en/)
+* [Node](https://nodejs.org/en/) version 8.
 * A [Discord](https://discordapp.com) account to create the Discord App with
-* A Discord account with *Manage Server* permissions for your guild, this can be the same account as above
+* A Discord account with *Manage Server* permissions for your guild. This can be the same account as above
+* An ActiveCollab instance with an account the bot can log in as.
 * (optional) [Docker](https://www.docker.com)
 
 ### Installing
@@ -85,20 +104,6 @@ Create *config.json* in the root directory of the project.
 npm start
 ```
 
-Or to rebuild and run the server when the source changes:
-
-```
-npm run watch
-```
-
-### Running tests
-
-The bot uses Jest as a test framework, to run tests automatically on source change:
-
-```
-npm run test
-```
-
 ### Running with Docker
 
 Running the bot using the Docker container automatically exposes port 80 and uses the production configuration.
@@ -110,18 +115,28 @@ docker run -p 8080:80 activecollab-discord-bot
 
 ### Deployment
 
-You can deploy with or without the Docker container, however if you deploy without it you will need to configure the project to use production mode.
+You can deploy with or without the Docker container.
 
 Once you have deployed the bot Active Collab needs to be configured to POST to it, to do so go to https://app.activecollab.com, sign in and browse to Add-Ons. From there configure the Webhooks add-on specifying the target URL (<server address>/api/webhook) and the secret which you have specified in *config.json*.
 
-### Built with
+## Getting involved
 
-- Node.js
-- TypeScript
-- Express
-- Discord.js
-- Jest
+If you find a bug or want to add a feature, feel free to [raise an issue](https://github.com/Real-Serious-Games/activecollab-discord-bot/issues) or create a pull request. If you are creating a new pull request, please make sure that your new code has good test coverage and passes the build (including TSLint). You should also make sure that your editor supports [EditorConfig](http://editorconfig.org/) so that it can be set up to match the style of our existing code.
 
-### License
+To rebuild and run the server when the source changes:
 
-This project is licensed under the MIT License.
+```
+npm run watch
+```
+
+### Running tests
+
+The bot uses Jest as a test framework, which can be run from the command line:
+```
+npm run test
+```
+
+The test runner can also run in the background and automatically re-run tests when it detects code changes:
+```
+npm run watch-test
+```
