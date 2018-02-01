@@ -2,6 +2,7 @@ import * as discord from 'discord.js';
 import * as config from 'confucious';
 import { assert } from 'console';
 import { AssertionError } from 'assert';
+
 import { IMappingController } from '../controllers/mapping';
 import { ICommandController } from '../controllers/command';
 
@@ -45,16 +46,16 @@ export class DiscordController implements IDiscordController {
             console.log('Command received: ' + message.content);
 
             const args = message.content.slice(commandPrefix.length).trim().split(/ +/g);
-            const command = args.shift();
+            let command = args.shift();
 
             if (command === undefined || command === '') {
                 return;
             }
 
-            command.toLowerCase();
+            command = command.toLowerCase();
 
             if (command === 'tasks') {
-                if (args[0] === 'list') {
+                if (args[0].toLowerCase() === 'list') {
                     message.channel.send('Getting tasks...');
                     if (args.length === 3 && args[1].toLowerCase() === 'for') {
                         message.channel.send(await commandController
@@ -63,7 +64,22 @@ export class DiscordController implements IDiscordController {
                         message.channel.send(await commandController
                             .listTasksForUser(message.author));
                     }
+                } else {
+                    message.channel.send(`Unknown command, *${message.content}*, ` 
+                        + `use *!tasks help* or *!tasks commands* for list of commands.`);
                 }
+            }
+            else if (command === 'help' || command === 'commands') {
+                message.channel.send(new discord.RichEmbed()
+                    .setTitle('Commands')
+                    .addField('!tasks', 
+                        '*!tasks list* - lists your tasks.\n' +
+                        '*!tasks list for @user* - lists tasks for mentioned user.\n'
+                    )
+                );
+            } else {
+                message.channel.send(`Unknown command, *${message.content}*, `
+                    + `use *!help* or *!commands*`);
             }
         });
     }

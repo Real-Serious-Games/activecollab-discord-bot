@@ -14,7 +14,7 @@ describe('calling sendMessageToChannel', () => {
         const channelStub = jest.fn(() => Promise.resolve());
 
         const channel: Partial<TextChannel> = {
-            sendEmbed: channelStub
+            send: channelStub
         };
 
         const discordController = setupDiscordController();
@@ -163,7 +163,7 @@ describe('calling getUserId', () => {
 });
 
 describe('when client receives messages', () => {
-    it('should call commandController.listTasksForUser when command is "!tasks list"', () => {
+    it('should call commandController.listTasksForUser when command is "!TASKS LIST"', () => {
         const client = new Client();
 
         client.login = jest.fn(() => Promise.resolve());
@@ -180,16 +180,81 @@ describe('when client receives messages', () => {
         );
 
         const message = {
-            content: '!tasks list',
+            content: '!TASKS LIST',
             author: 'author',
             channel: {
-                sendEmbed: jest.fn(() => Promise.resolve())
+                send: jest.fn(() => Promise.resolve())
             }
         };
 
         client.emit('message', message);
 
         expect(commandControllerMock.listTasksForUser).toHaveBeenCalledWith(message.author);
+    });
+
+    it('should send message when command is unknown', () => {
+        const unknownCommand = '!unknown';
+        
+        const client = new Client();
+
+        client.login = jest.fn(() => Promise.resolve());
+
+        const commandControllerMock: Partial<ICommandController> = {
+            listTasksForUser: jest.fn(() => Promise.resolve(new RichEmbed()))
+        };
+
+        const discordController = setupDiscordController(
+            undefined,
+            client,
+            undefined,
+            commandControllerMock
+        );
+
+        const message = {
+            content: unknownCommand,
+            author: 'author',
+            channel: {
+                send: jest.fn(() => Promise.resolve())
+            }
+        };
+
+        client.emit('message', message);
+
+        expect(message.channel.send).toHaveBeenCalledWith(`Unknown command, ` 
+            + `*${unknownCommand}*, use *!help* or *!commands*`);
+    });
+
+    it('should send message when command is unknown task command', () => {
+        const unknownCommand = '!tasks unknown';
+        
+        const client = new Client();
+
+        client.login = jest.fn(() => Promise.resolve());
+
+        const commandControllerMock: Partial<ICommandController> = {
+            listTasksForUser: jest.fn(() => Promise.resolve(new RichEmbed()))
+        };
+
+        const discordController = setupDiscordController(
+            undefined,
+            client,
+            undefined,
+            commandControllerMock
+        );
+
+        const message = {
+            content: unknownCommand,
+            author: 'author',
+            channel: {
+                send: jest.fn(() => Promise.resolve())
+            }
+        };
+
+        client.emit('message', message);
+
+        expect(message.channel.send).toHaveBeenCalledWith(`Unknown command, ` 
+            + `*${unknownCommand}*, use *!tasks help* or *!tasks commands* ` 
+            + `for list of commands.`);
     });
 
     it('should call commandController.listTasksForUser when command is "!tasks list for @user"', () => {
@@ -221,13 +286,75 @@ describe('when client receives messages', () => {
                 }
             },
             channel: {
-                sendEmbed: jest.fn(() => Promise.resolve())
+                send: jest.fn(() => Promise.resolve())
             }
         };
 
         client.emit('message', message);
 
         expect(commandControllerMock.listTasksForUser).toHaveBeenCalledWith(mentionedUser);
+    });
+
+    it('should send list of commands when command is !help', () => {
+        const client = new Client();
+
+        client.login = jest.fn(() => Promise.resolve());
+        const discordController = setupDiscordController(
+            undefined,
+            client
+        );
+
+        const message = {
+            content: '!help',
+            author: {
+                bot: false
+            },
+            channel: {
+                send: jest.fn(() => Promise.resolve())
+            }
+        };
+
+        const expectedHelp = new RichEmbed()
+            .setTitle('Commands')
+            .addField('!tasks', 
+                '*!tasks list* - lists your tasks.\n' +
+                '*!tasks list for @user* - lists tasks for mentioned user.\n'
+        );
+
+        client.emit('message', message);
+
+        expect(message.channel.send).toHaveBeenCalledWith(expectedHelp);
+    });
+
+    it('should send list of commands when command is !commands', () => {
+        const client = new Client();
+
+        client.login = jest.fn(() => Promise.resolve());
+        const discordController = setupDiscordController(
+            undefined,
+            client
+        );
+
+        const message = {
+            content: '!commands',
+            author: {
+                bot: false
+            },
+            channel: {
+                send: jest.fn(() => Promise.resolve())
+            }
+        };
+
+        const expectedHelp = new RichEmbed()
+            .setTitle('Commands')
+            .addField('!tasks', 
+                '*!tasks list* - lists your tasks.\n' +
+                '*!tasks list for @user* - lists tasks for mentioned user.\n'
+        );
+
+        client.emit('message', message);
+
+        expect(message.channel.send).toHaveBeenCalledWith(expectedHelp);
     });
 
     it('should do nothing when message doesnt start with prefix or message sent with bot', () => {
