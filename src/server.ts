@@ -49,6 +49,7 @@ async function createServer() {
             new discord.Client(),
             mappingController,
             commandController,
+            logger,
             getConfigValue('commandPrefix'),
             getConfigValue('guildName')
         );

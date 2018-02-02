@@ -1,6 +1,7 @@
 import * as discord from 'discord.js';
 import * as config from 'confucious';
 import { assert } from 'console';
+import { Logger } from 'structured-log';
 
 import { IMappingController } from '../controllers/mapping';
 import { ICommandController } from '../controllers/command';
@@ -23,6 +24,7 @@ export class DiscordController implements IDiscordController {
         discordClient: discord.Client,
         mappingController: IMappingController,
         commandController: ICommandController,
+        logger: Logger,
         commandPrefix: string,
         guildName: string
     ) {
@@ -51,16 +53,40 @@ export class DiscordController implements IDiscordController {
 
             command = command.toLowerCase();
 
+            // TODO: break out into functions
             if (command === 'tasks') {
                 if (args[0].toLowerCase() === 'list') {
                     message.channel.send('Getting tasks...');
+
                     if (args.length === 3 && args[1].toLowerCase() === 'for') {
+
                         message.channel.send(await commandController
                             .listTasksForUser(message.mentions.users.first()));
+
+                    } else if (args.length === 1 && args[0].toLowerCase() === 'due') {
+
+                        if (message.channel.type !== 'text') {
+                            return;
+                        }
+
+                        const channelName = (<discord.TextChannel>message.channel).name;
+
+                        try {
+                            const projectId = mappingController
+                                .getProjectId(channelName);
+
+                            message.channel.send(await commandController
+                                .tasksDueThisWeekForProject(projectId));
+                        } catch (e) {
+                            message.channel.send('Unable to find ActiveCollab' 
+                                + ' project for channel ' + channelName);
+                            logger.warn('Error getting tasks due for week: ' + e);
+                        }
                     } else {
                         message.channel.send(await commandController
                             .listTasksForUser(message.author));
                     }
+
                 } else {
                     message.channel.send(`Unknown command, *${message.content}*, ` 
                         + `use *!tasks help* or *!tasks commands* for list of commands.`);

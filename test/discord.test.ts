@@ -1,5 +1,6 @@
 import { TextChannel, Client, RichEmbed } from 'discord.js';
 import * as discord from 'discord.js';
+import { Logger } from 'structured-log';
 
 import { DiscordController, IDiscordController } from '../src/controllers/discord';
 import { createClient } from 'http';
@@ -190,6 +191,44 @@ describe('when client receives messages', () => {
         client.emit('message', message);
 
         expect(commandControllerMock.listTasksForUser).toHaveBeenCalledWith(message.author);
+    });
+
+    it('should call commandController.tasksDueThisWeekForProject when command is ' 
+        + ' "!tasks due" and command sent from project channel', () => {
+        const client = new Client();
+
+        client.login = jest.fn(() => Promise.resolve());
+
+        const projectId = 0;
+
+        const commandControllerMock: Partial<ICommandController> = {
+            listTasksForUser: jest.fn(() => Promise.resolve(new RichEmbed()))
+        };
+
+        const mappingControllerMock = {
+            getProjectId: jest.fn().mockReturnValue(projectId)
+        };
+
+        const discordController = setupDiscordController(
+            undefined,
+            client,
+            mappingControllerMock,
+            commandControllerMock
+        );
+
+        const message = {
+            content: '!tasks due',
+            author: 'author',
+            channel: {
+                send: jest.fn(() => Promise.resolve()),
+                name: 'channel'
+            }
+        };
+
+        client.emit('message', message);
+
+        expect(commandControllerMock.tasksDueThisWeekForProject)
+            .toHaveBeenCalledWith(projectId);
     });
 
     it('should send message when command is unknown', () => {
@@ -468,7 +507,8 @@ function setupDiscordController(
     token = '',
     client?: Client,
     mappingController?: Partial<IMappingController>,
-    commandController?: Partial<ICommandController>
+    commandController?: Partial<ICommandController>, 
+    logger?: Partial<Logger>
 ) {
     if (!client) {
         client = <Client>setupMockDiscordClient();
@@ -486,11 +526,18 @@ function setupDiscordController(
         };
     }
 
+    if (!logger) {
+        logger = {
+            warn: jest.fn()
+        };
+    }
+
     return new DiscordController(
         token,
         client,
         mappingController as IMappingController,
         commandController as ICommandController,
+        logger,
         '!',
         'REAL SERIOUS GAMGES'
     );
