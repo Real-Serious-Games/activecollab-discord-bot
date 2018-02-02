@@ -85,12 +85,10 @@ describe('tasksDueThisWeekForProject', () => {
                 return taskLists[taskId];
             });
 
-        const activeCollabApiMock = createActiveCollabApiMock(
-            undefined,
-            undefined,
-            getTaskListNameById,
-            jest.fn(() => Promise.resolve(tasksToReturn))
-        );
+        const activeCollabApiMock = new ActiveCollabApiMockBuilder()
+            .WithGetTaskListNameById(getTaskListNameById)
+            .WithGetAllAssignmentTasks(jest.fn(() => Promise.resolve(tasksToReturn)))
+            .Build();
 
         const commandController = new CommandControllerBuilder()
             .withActiveCollabApi(activeCollabApiMock as IActiveCollabAPI)
@@ -145,12 +143,10 @@ describe('tasksDueThisWeekForProject', () => {
 
         const getTaskListNameById = jest.fn().mockReturnValue(taskList);
 
-        const activeCollabApiMock = createActiveCollabApiMock(
-            undefined,
-            undefined,
-            getTaskListNameById,
-            jest.fn(() => Promise.resolve(tasksToReturn))
-        );
+        const activeCollabApiMock = new ActiveCollabApiMockBuilder()
+            .WithGetTaskListNameById(getTaskListNameById)
+            .WithGetAllAssignmentTasks(jest.fn(() => Promise.resolve(tasksToReturn)))
+            .Build();
 
         const commandController = new CommandControllerBuilder()
             .withActiveCollabApi(activeCollabApiMock as IActiveCollabAPI)
@@ -167,12 +163,9 @@ describe('tasksDueThisWeekForProject', () => {
         
         const expectedReturn = `No tasks found that are due this week.`;
 
-        const activeCollabApiMock = createActiveCollabApiMock(
-            undefined,
-            undefined,
-            undefined,
-            jest.fn(() => Promise.resolve([]))
-        );
+        const activeCollabApiMock = new ActiveCollabApiMockBuilder()
+            .WithGetAllAssignmentTasks(jest.fn(() => Promise.resolve([])))
+            .Build();
 
         const commandController = new CommandControllerBuilder()
             .withActiveCollabApi(activeCollabApiMock as IActiveCollabAPI)
@@ -207,12 +200,10 @@ describe('tasksDueThisWeekForProject', () => {
 
         const logger = createMockLogger();
 
-        const activeCollabApiMock = createActiveCollabApiMock(
-            undefined,
-            undefined,
-            jest.fn(() => Promise.reject(error)),
-            jest.fn(() => Promise.resolve(tasksToReturn))
-        );
+        const activeCollabApiMock = new ActiveCollabApiMockBuilder()
+            .WithGetTaskListNameById(jest.fn(() => Promise.reject(error)))
+            .WithGetAllAssignmentTasks(jest.fn(() => Promise.resolve(tasksToReturn)))
+            .Build();
 
         const commandController = new CommandControllerBuilder()
             .withLogger(logger)
@@ -246,12 +237,9 @@ describe('tasksDueThisWeekForProject', () => {
 
         const logger = createMockLogger();
 
-        const activeCollabApiMock = createActiveCollabApiMock(
-            undefined,
-            undefined,
-            undefined,
-            jest.fn(() => Promise.reject(error))
-        );
+        const activeCollabApiMock = new ActiveCollabApiMockBuilder()
+            .WithGetAllAssignmentTasks(jest.fn(() => Promise.reject(error)))
+            .Build();
 
         const commandController = new CommandControllerBuilder()
             .withLogger(logger)
@@ -338,10 +326,10 @@ describe('listTasksForUser', () => {
                 `• [${project2.task1}](${project2.task1Url})\n` +
                 `• [${project2.task2}](${project2.task2Url})\n`);
 
-        const activeCollabApiMock = createActiveCollabApiMock(
-            jest.fn(() => Promise.resolve(tasksToReturn)),
-            jest.fn(() => Promise.resolve(projectsToReturn))
-        );
+        const activeCollabApiMock = new ActiveCollabApiMockBuilder()
+            .WithGetAssignmentTasksByUserId(jest.fn(() => Promise.resolve(tasksToReturn)))
+            .WithGetAllProjects(jest.fn(() => Promise.resolve(projectsToReturn)))
+            .Build();
 
         const commandController = new CommandControllerBuilder()
             .withActiveCollabApi(activeCollabApiMock as IActiveCollabAPI)
@@ -409,10 +397,10 @@ describe('listTasksForUser', () => {
                 `• [${project1.task1}](${project1.task1Url})\n` + 
                 `• [${project1.task2}](${project1.task2Url})\n`);
 
-        const activeCollabApiMock = createActiveCollabApiMock(
-            jest.fn(() => Promise.resolve(tasksToReturn)),
-            jest.fn(() => Promise.resolve(projectsToReturn))
-        );
+        const activeCollabApiMock = new ActiveCollabApiMockBuilder()
+            .WithGetAssignmentTasksByUserId(jest.fn(() => Promise.resolve(tasksToReturn)))
+            .WithGetAllProjects(jest.fn(() => Promise.resolve(projectsToReturn)))
+            .Build();
 
         const commandController = new CommandControllerBuilder()
             .withActiveCollabApi(activeCollabApiMock as IActiveCollabAPI)
@@ -484,8 +472,7 @@ describe('listTasksForUser', () => {
             name: project2.task1,
             assignee_id: 0,
             permalink: project2.task1Url
-        }
-    ];
+        }];
         
         const expectedReturn = new RichEmbed()
             .setTitle(`Tasks for ${discordUser.username}`)
@@ -498,10 +485,10 @@ describe('listTasksForUser', () => {
             .addField(project2.name, 
                 `• [${project2.task1}](${project2.task1Url})\n`);
 
-        const activeCollabApiMock = createActiveCollabApiMock(
-            jest.fn(() => Promise.resolve(tasksToReturn)),
-            jest.fn(() => Promise.resolve(projectsToReturn))
-        );
+        const activeCollabApiMock = new ActiveCollabApiMockBuilder()
+            .WithGetAssignmentTasksByUserId(jest.fn(() => Promise.resolve(tasksToReturn)))
+            .WithGetAllProjects(jest.fn(() => Promise.resolve(projectsToReturn)))
+            .Build();
 
         const commandController = new CommandControllerBuilder()
             .withActiveCollabApi(activeCollabApiMock as IActiveCollabAPI)
@@ -518,9 +505,9 @@ describe('listTasksForUser', () => {
             .setTitle(`No tasks for <@${discordUser.id}>`)
             .setColor(eventColor);
 
-        const activeCollabApiMock = createActiveCollabApiMock(
-            jest.fn(() => Promise.resolve([]))
-        );
+        const activeCollabApiMock = new ActiveCollabApiMockBuilder()
+            .WithGetAssignmentTasksByUserId(jest.fn(() => Promise.resolve([])))
+            .Build();
 
         const commandController = new CommandControllerBuilder()
             .withActiveCollabApi(activeCollabApiMock as IActiveCollabAPI)
@@ -537,10 +524,9 @@ describe('listTasksForUser', () => {
             .setTitle(`A project needs to exist to get tasks`)
             .setColor(eventColor);
 
-        const activeCollabApiMock = createActiveCollabApiMock(
-            undefined,
-            jest.fn(() => Promise.resolve([]))
-        );
+        const activeCollabApiMock = new ActiveCollabApiMockBuilder()
+            .WithGetAllProjects(jest.fn(() => Promise.resolve([])))
+            .Build();
 
         const commandController = new CommandControllerBuilder()
             .withActiveCollabApi(activeCollabApiMock as IActiveCollabAPI)
@@ -557,9 +543,9 @@ describe('listTasksForUser', () => {
             .setTitle(`There was an error getting tasks for <@${discordUser.id}>`)
             .setColor(eventColor);
 
-        const activeCollabApiMock = createActiveCollabApiMock(
-            jest.fn(() => Promise.reject('error'))
-        );
+        const activeCollabApiMock = new ActiveCollabApiMockBuilder()
+            .WithGetAssignmentTasksByUserId(jest.fn(() => Promise.reject('error')))
+            .Build();
 
         const logger = createMockLogger();
 
@@ -579,10 +565,9 @@ describe('listTasksForUser', () => {
             .setTitle(`There was an error getting tasks for <@${discordUser.id}>`)
             .setColor(eventColor);
 
-        const activeCollabApiMock = createActiveCollabApiMock(
-            undefined,
-            jest.fn(() => Promise.reject('error'))
-        );
+        const activeCollabApiMock = new ActiveCollabApiMockBuilder()
+            .WithGetAllProjects(jest.fn(() => Promise.reject('error')))
+            .Build();
 
         const logger = createMockLogger();
 
@@ -623,13 +608,8 @@ function createMockLogger(): Partial<Logger> {
     };
 }
 
-function createActiveCollabApiMock(
-    getTasksByUserId?,
-    getAllProjects?,
-    getTaskListNameById?,
-    getAllAssignmentTasks?
-) {
-    const tasksToReturn: Array<Partial<Assignment>> = [{
+class ActiveCollabApiMockBuilder {
+    private tasksToReturn: Array<Partial<Assignment>> = [{
         type: 'Task',
         project_id: 0,
         name: 'Task 1',
@@ -642,9 +622,9 @@ function createActiveCollabApiMock(
         name: 'Task 2',
         assignee_id: 0,
         permalink: 'url'
-    }];
+    }]; 
 
-    const projectsToReturn: Array<Partial<Project>> = [{
+    private projectsToReturn: Array<Partial<Project>> = [{
         id: 0,
         name: 'Project 0'
     },
@@ -653,32 +633,43 @@ function createActiveCollabApiMock(
         name: 'Project 1'
     }];
 
-    if (getTasksByUserId === undefined) {
-        getTasksByUserId = jest.fn(() => Promise.resolve(tasksToReturn));
+    private getAssignmentTasksByUserId = jest.fn(() => Promise.resolve(this.tasksToReturn));
+    private getAllProjects = jest.fn(() => Promise.resolve(this.projectsToReturn));
+    private getTaskListNameById = jest.fn().mockReturnValue('Completed');
+    private getAllAssignmentTasks = jest.fn(() => Promise.resolve(this.tasksToReturn));
+
+    public WithGetAssignmentTasksByUserId(func: any) {
+        this.getAssignmentTasksByUserId = func;
+        return this;
     }
 
-    if (getAllProjects === undefined) {
-        getAllProjects = jest.fn(() => Promise.resolve(projectsToReturn));
+    public WithGetAllProjects(func: any) {
+        this.getAllProjects = func;
+        return this;
     }
 
-    if (getTaskListNameById === undefined) {
-        getTaskListNameById = jest.fn().mockReturnValue('Completed');
+    public WithGetTaskListNameById(func: any) {
+        this.getTaskListNameById = func;
+        return this;
     }
 
-    if (getAllAssignmentTasks === undefined) {
-        getAllAssignmentTasks = jest.fn().mockReturnValue(tasksToReturn);
+    public WithGetAllAssignmentTasks(func: any) {
+        this.getAllAssignmentTasks = func;
+        return this;
     }
 
-    return  {
-        getAssignmentTasksByUserId: getTasksByUserId,
-        getAllProjects: getAllProjects,
-        getTaskListNameById: getTaskListNameById,
-        getAllAssignmentTasks: getAllAssignmentTasks
-    } as Partial<IActiveCollabAPI>;
+    public Build() {
+        return  {
+            getAssignmentTasksByUserId: this.getAssignmentTasksByUserId,
+            getAllProjects: this.getAllProjects,
+            getTaskListNameById: this.getTaskListNameById,
+            getAllAssignmentTasks: this.getAllAssignmentTasks
+        } as Partial<IActiveCollabAPI>;
+    }
 }
 
 class CommandControllerBuilder {
-    private activeCollabApi: Partial<IActiveCollabAPI> = createActiveCollabApiMock();
+    private activeCollabApi: Partial<IActiveCollabAPI> = new ActiveCollabApiMockBuilder().Build();
 
     private mappingController: Partial<IMappingController> = {
         getActiveCollabUser: jest.fn().mockReturnValue('user')
