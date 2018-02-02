@@ -165,9 +165,7 @@ describe('tasksDueThisWeekForProject', () => {
     it('should return none found message when no tasks exist', async () => {
         expect.assertions(1);
         
-        const expectedReturn = new RichEmbed()
-            .setTitle(`No tasks found that are due this week.`)
-            .setColor(eventColor);
+        const expectedReturn = `No tasks found that are due this week.`;
 
         const activeCollabApiMock = createActiveCollabApiMock(
             undefined,
@@ -180,8 +178,89 @@ describe('tasksDueThisWeekForProject', () => {
             .withActiveCollabApi(activeCollabApiMock as IActiveCollabAPI)
             .Build();
             
-        expect((await commandController.tasksDueThisWeekForProject(0)))
+        expect((await commandController.tasksDueThisWeekForProject(0)).title)
+            .toEqual(`No tasks found that are due this week.`);
+    });
+
+    it('should return error message and log error when error getting task list name', async () => {
+        expect.assertions(2);
+
+        mockDate.set('2017-05-02');
+
+        const error = 'error';
+        
+        const projectId = 0;
+        const taskListId = 1;
+        
+        const tasksToReturn: Array<Partial<Assignment>> = [{
+            name: 'Task 1',
+            project_id: projectId, 
+            permalink: '\/projects\/2\/tasks\/35',
+            due_on: moment().add(2, 'days').valueOf(),
+            task_list_id: taskListId
+        }];
+
+        const expectedReturn = new RichEmbed()
+            .addField('Warning', `There was a problem getting `
+                + ` the task list name for tasks in the same list as ` 
+                + `${tasksToReturn[0].name}`);
+
+        const logger = createMockLogger();
+
+        const activeCollabApiMock = createActiveCollabApiMock(
+            undefined,
+            undefined,
+            jest.fn(() => Promise.reject(error)),
+            jest.fn(() => Promise.resolve(tasksToReturn))
+        );
+
+        const commandController = new CommandControllerBuilder()
+            .withLogger(logger)
+            .withActiveCollabApi(activeCollabApiMock as IActiveCollabAPI)
+            .Build();
+            
+        expect((await commandController.tasksDueThisWeekForProject(0)).fields)
+            .toContainEqual(expectedReturn.fields[0]);
+        expect(logger.warn).toBeCalledWith(`Error getting task list name for id ${taskListId}: ${error}`);
+    });
+
+    it('should return error message and log error when error getting tasks', async () => {
+        expect.assertions(2);
+
+        mockDate.set('2017-05-02');
+
+        const error = 'error';
+        
+        const projectId = 0;
+        const taskListId = 1;
+        
+        const tasksToReturn: Array<Partial<Assignment>> = [{
+            name: 'Task 1',
+            project_id: projectId, 
+            permalink: '\/projects\/2\/tasks\/35',
+            due_on: moment().add(2, 'days').valueOf(),
+            task_list_id: taskListId
+        }];
+
+        const expectedReturn = `There was an error getting tasks.`;
+
+        const logger = createMockLogger();
+
+        const activeCollabApiMock = createActiveCollabApiMock(
+            undefined,
+            undefined,
+            undefined,
+            jest.fn(() => Promise.reject(error))
+        );
+
+        const commandController = new CommandControllerBuilder()
+            .withLogger(logger)
+            .withActiveCollabApi(activeCollabApiMock as IActiveCollabAPI)
+            .Build();
+            
+        expect((await commandController.tasksDueThisWeekForProject(0)).title)
             .toEqual(expectedReturn);
+        expect(logger.warn).toBeCalledWith(`Error getting tasks: ${error}`);
     });
 });
 

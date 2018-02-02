@@ -114,7 +114,7 @@ async function tasksDueThisWeekForProject(
                 && moment(t.due_on) >= moment().startOf('week') 
             );
     } catch (e) {
-        logger.warn(`Error getting tasks and projects: ${e}`);
+        logger.warn(`Error getting tasks: ${e}`);
         return new RichEmbed()
             .setTitle(`There was an error getting tasks.`)
             .setColor(eventColor);
@@ -126,25 +126,26 @@ async function tasksDueThisWeekForProject(
             .setColor(eventColor);
     }
 
-    let formattedTasks = new RichEmbed()
+    const formattedTasks = new RichEmbed()
         .setTitle(`Tasks due this week`)
         .setColor(eventColor);
 
-    tasks
+    await tasks
         .groupBy(t => t.task_list_id)
         .forEach(async taskGroup => {
             const taskListId = taskGroup[0].task_list_id;
             let taskList = '';
+
             try {
                 taskList = await activeCollabApi.getTaskListNameById(projectId, taskListId);
             } catch (e) {
                 logger.warn(`Error getting task list name for id ${taskListId}: ${e}`);
-                formattedTasks =  new RichEmbed()
-                    .setTitle(`There was an error getting tasks.`)
-                    .setColor(eventColor);
-                return;
+                formattedTasks.addField('Warning', `There was a problem getting `
+                    + ` the task list name for tasks in the same list as ` 
+                    + `${taskGroup[0].name}`);
+                    return;
             }
-
+            
             let currentChars = 0;
 
             taskGroup.forEach(t => { 
