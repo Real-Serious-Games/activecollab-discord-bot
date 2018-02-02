@@ -22,37 +22,44 @@ const discordUser: Partial<User> = {
 
 describe('tasksDueThisWeekForProject', () => {
     it('should return tasks for project due this week grouped by column', async () => {
-        mockDate.set('2017-02-05');
+        const projectId = 0;
 
+        mockDate.set('2017-05-02');
+        
         const tasksToReturn: Array<Partial<Assignment>> = [{
             name: 'Task 1',
+            project_id: projectId, 
             permalink: '\/projects\/2\/tasks\/35',
-            due_on: moment().add(2, 'days').unix(),
+            due_on: moment().add(2, 'days').valueOf(),
             task_list_id: 1
         },
         {
             name: 'Task 2',
+            project_id: projectId,
             permalink: '\/projects\/2\/tasks\/76',
-            due_on: moment().add(4, 'days').unix(),
+            due_on: moment().add(4, 'days').valueOf(),
             task_list_id: 1
         },
         {
             name: 'Task 3',
+            project_id: projectId,
             permalink: '\/projects\/2\/tasks\/347',
-            due_on: moment().add(20, 'days').unix(),
+            due_on: moment().add(20, 'days').valueOf(),
             task_list_id: 1
         },
         {
             name: 'Task 4',
+            project_id: projectId,
             permalink: '\/projects\/2\/tasks\/288',
-            due_on: moment().add(1, 'days').unix(),
+            due_on: moment().add(1, 'days').valueOf(),
             task_list_id: 2
         },
         {
             name: 'Task 5',
+            project_id: projectId,
             assignee_id: 0,
             permalink: '\/projects\/2\/tasks\/288',
-            due_on: moment().subtract(10, 'days').unix(),
+            due_on: moment().subtract(10, 'days').valueOf(),
             task_list_id: 2
         }];
 
@@ -81,14 +88,15 @@ describe('tasksDueThisWeekForProject', () => {
         const activeCollabApiMock = createActiveCollabApiMock(
             jest.fn(() => Promise.resolve(tasksToReturn)),
             undefined,
-            getTaskListNameById
+            getTaskListNameById,
+            jest.fn(() => Promise.resolve(tasksToReturn))
         );
 
         const commandController = new CommandControllerBuilder()
             .withActiveCollabApi(activeCollabApiMock as IActiveCollabAPI)
             .Build();
 
-        expect((await commandController.tasksDueThisWeekForProject(0)))
+        expect((await commandController.tasksDueThisWeekForProject(projectId)))
             .toEqual(expectedReturn);    
             
         mockDate.reset();
@@ -100,19 +108,19 @@ describe('tasksDueThisWeekForProject', () => {
         const tasksToReturn: Array<Partial<Assignment>> = [{
             name: 'Task 1',
             permalink: 'Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis, sem. Nulla consequat massa quis enim. Donec pede justo, fringilla vel, aliquet nec, vulputate eget, arcu. In enim justo, rhoncus ut, imperdiet a',
-            due_on: moment().add(2, 'days').unix(),
+            due_on: moment().add(2, 'days').valueOf(),
             task_list_id: 1
         },
         {
             name: 'Task 2',
             permalink: 'Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis, sem. Nulla consequat massa quis enim. Donec pede justo, fringilla vel, aliquet nec, vulputate eget, arcu. In enim justo, rhoncus ut, imperdiet a',
-            due_on: moment().add(3, 'days').unix(),
+            due_on: moment().add(3, 'days').valueOf(),
             task_list_id: 1
         },
         {
             name: 'Task 3',
             permalink: 'Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis, sem. Nulla consequat massa quis enim. Donec pede justo, fringilla vel, aliquet nec, vulputate eget, arcu. In enim justo, rhoncus ut, imperdiet a',
-            due_on: moment().add(4, 'days').unix(),
+            due_on: moment().add(4, 'days').valueOf(),
             task_list_id: 1
         }];
 
@@ -532,7 +540,8 @@ function createMockLogger(): Partial<Logger> {
 function createActiveCollabApiMock(
     getTasksByUserId?,
     getAllProjects?,
-    getTaskListNameById?
+    getTaskListNameById?,
+    getAllAssignmentTasks?
 ) {
     const tasksToReturn: Array<Partial<Assignment>> = [{
         type: 'Task',
@@ -567,20 +576,14 @@ function createActiveCollabApiMock(
     }
 
     if (getTaskListNameById === undefined) {
-        getTaskListNameById = jest.fn().mockImplementation(
-            (projectId: number, taskId: number) => {
-                if (taskId === 0) {
-                    return 'completed';
-                } else {
-                    return 'blocked';
-                }
-            });
+        getTaskListNameById = jest.fn().mockReturnValue('Completed');
     }
 
     return  {
         getAssignmentTasksByUserId: getTasksByUserId,
         getAllProjects: getAllProjects,
-        getTaskListNameById: getTaskListNameById
+        getTaskListNameById: getTaskListNameById,
+        getAllAssignmentTasks: getTaskListNameById
     } as Partial<IActiveCollabAPI>;
 }
 

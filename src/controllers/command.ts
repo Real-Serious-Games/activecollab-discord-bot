@@ -107,7 +107,7 @@ async function tasksDueThisWeekForProject(
     let tasks: _.LoDashImplicitArrayWrapper<Assignment>;
 
     try {
-        tasks = _(await activeCollabApi.getAllAssignmentTasks())
+        tasks = _(await activeCollabApi.getAssignmentTasksByUserId(1))
             .filter(t => 
                 t.project_id === projectId 
                 && moment(t.due_on) <= moment().endOf('week') 

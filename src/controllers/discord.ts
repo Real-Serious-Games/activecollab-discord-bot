@@ -42,8 +42,6 @@ export class DiscordController implements IDiscordController {
                 return;
             }
 
-            console.log('Command received: ' + message.content);
-
             const args = message.content.slice(commandPrefix.length).trim().split(/ +/g);
             let command = args.shift();
 
