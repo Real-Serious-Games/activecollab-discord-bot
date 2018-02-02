@@ -107,7 +107,7 @@ async function tasksDueThisWeekForProject(
     let tasks: _.LoDashImplicitArrayWrapper<Assignment>;
 
     try {
-        tasks = _(await activeCollabApi.getAssignmentTasksByUserId(1))
+        tasks = _(await activeCollabApi.getAllAssignmentTasks())
             .filter(t => 
                 t.project_id === projectId 
                 && moment(t.due_on) <= moment().endOf('week') 
@@ -122,11 +122,11 @@ async function tasksDueThisWeekForProject(
 
     if (tasks.size() < 1) {
         return new RichEmbed()
-            .setTitle(`No tasks found.`)
+            .setTitle(`No tasks found that are due this week.`)
             .setColor(eventColor);
     }
 
-    const formattedTasks = new RichEmbed()
+    let formattedTasks = new RichEmbed()
         .setTitle(`Tasks due this week`)
         .setColor(eventColor);
 
@@ -139,9 +139,10 @@ async function tasksDueThisWeekForProject(
                 taskList = await activeCollabApi.getTaskListNameById(projectId, taskListId);
             } catch (e) {
                 logger.warn(`Error getting task list name for id ${taskListId}: ${e}`);
-                return new RichEmbed()
+                formattedTasks =  new RichEmbed()
                     .setTitle(`There was an error getting tasks.`)
                     .setColor(eventColor);
+                return;
             }
 
             let currentChars = 0;

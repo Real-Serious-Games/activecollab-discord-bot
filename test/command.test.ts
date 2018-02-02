@@ -86,7 +86,7 @@ describe('tasksDueThisWeekForProject', () => {
             });
 
         const activeCollabApiMock = createActiveCollabApiMock(
-            jest.fn(() => Promise.resolve(tasksToReturn)),
+            undefined,
             undefined,
             getTaskListNameById,
             jest.fn(() => Promise.resolve(tasksToReturn))
@@ -103,22 +103,27 @@ describe('tasksDueThisWeekForProject', () => {
     });
 
     it('should split tasks into fields when too long', async () => {
+        const projectId = 0;
+        
         mockDate.set('2017-02-05');
 
         const tasksToReturn: Array<Partial<Assignment>> = [{
             name: 'Task 1',
+            project_id: projectId,
             permalink: 'Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis, sem. Nulla consequat massa quis enim. Donec pede justo, fringilla vel, aliquet nec, vulputate eget, arcu. In enim justo, rhoncus ut, imperdiet a',
             due_on: moment().add(2, 'days').valueOf(),
             task_list_id: 1
         },
         {
             name: 'Task 2',
+            project_id: projectId,
             permalink: 'Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis, sem. Nulla consequat massa quis enim. Donec pede justo, fringilla vel, aliquet nec, vulputate eget, arcu. In enim justo, rhoncus ut, imperdiet a',
             due_on: moment().add(3, 'days').valueOf(),
             task_list_id: 1
         },
         {
             name: 'Task 3',
+            project_id: projectId,
             permalink: 'Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis, sem. Nulla consequat massa quis enim. Donec pede justo, fringilla vel, aliquet nec, vulputate eget, arcu. In enim justo, rhoncus ut, imperdiet a',
             due_on: moment().add(4, 'days').valueOf(),
             task_list_id: 1
@@ -141,9 +146,10 @@ describe('tasksDueThisWeekForProject', () => {
         const getTaskListNameById = jest.fn().mockReturnValue(taskList);
 
         const activeCollabApiMock = createActiveCollabApiMock(
-            jest.fn(() => Promise.resolve(tasksToReturn)),
             undefined,
-            getTaskListNameById
+            undefined,
+            getTaskListNameById,
+            jest.fn(() => Promise.resolve(tasksToReturn))
         );
 
         const commandController = new CommandControllerBuilder()
@@ -160,10 +166,11 @@ describe('tasksDueThisWeekForProject', () => {
         expect.assertions(1);
         
         const expectedReturn = new RichEmbed()
-            .setTitle(`No tasks found that are due this week`)
+            .setTitle(`No tasks found that are due this week.`)
             .setColor(eventColor);
 
         const activeCollabApiMock = createActiveCollabApiMock(
+            undefined,
             undefined,
             undefined,
             jest.fn(() => Promise.resolve([]))
@@ -579,11 +586,15 @@ function createActiveCollabApiMock(
         getTaskListNameById = jest.fn().mockReturnValue('Completed');
     }
 
+    if (getAllAssignmentTasks === undefined) {
+        getAllAssignmentTasks = jest.fn().mockReturnValue(tasksToReturn);
+    }
+
     return  {
         getAssignmentTasksByUserId: getTasksByUserId,
         getAllProjects: getAllProjects,
         getTaskListNameById: getTaskListNameById,
-        getAllAssignmentTasks: getTaskListNameById
+        getAllAssignmentTasks: getAllAssignmentTasks
     } as Partial<IActiveCollabAPI>;
 }
 
