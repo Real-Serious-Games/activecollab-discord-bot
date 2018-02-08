@@ -45,7 +45,7 @@
     "@types/supertest": "^2.0.4",
     "concurrently": "^3.5.1",
     "jest": "^22.2.1",
-    "nodemon": "^1.14.8",
+    "nodemon": "^1.14.12",
     "supertest": "^3.0.0",
     "ts-jest": "^22.0.3",
     "ts-node": "^4.1.0",
