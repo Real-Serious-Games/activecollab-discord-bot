@@ -65,3 +65,6 @@ typings/
 
 # exclude tsc generated files
 dist
+
+# Visual Studio generated
+.vs/*
