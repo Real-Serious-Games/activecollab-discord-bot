@@ -56,7 +56,7 @@
     "body-parser": "^1.18.2",
     "bufferutil": "^3.0.3",
     "confucious": "0.0.12",
-    "discord.js": "^11.2.1",
+    "discord.js": "^11.3.0",
     "erlpack": "github:hammerandchisel/erlpack",
     "express": "^4.16.2",
     "fp-ts": "^0.6.7",
