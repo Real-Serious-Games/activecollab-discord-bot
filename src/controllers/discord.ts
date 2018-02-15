@@ -55,38 +55,40 @@ export class DiscordController implements IDiscordController {
 
             // TODO: break out into functions
             if (command === 'tasks') {
+                // LIST
                 if (args[0].toLowerCase() === 'list') {
                     message.channel.send('Getting tasks...');
 
+                    // FOR USER
                     if (args.length === 3 && args[1].toLowerCase() === 'for') {
 
                         message.channel.send(await commandController
                             .listTasksForUser(message.mentions.users.first()));
-
-                    } else if (args.length === 1 && args[0].toLowerCase() === 'due') {
-
-                        if (message.channel.type !== 'text') {
-                            return;
-                        }
-
-                        const channelName = (<discord.TextChannel>message.channel).name;
-
-                        try {
-                            const projectId = mappingController
-                                .getProjectId(channelName);
-
-                            message.channel.send(await commandController
-                                .tasksDueThisWeekForProject(projectId));
-                        } catch (e) {
-                            message.channel.send('Unable to find ActiveCollab' 
-                                + ' project for channel ' + channelName);
-                            logger.warn('Error getting tasks due for week: ' + e);
-                        }
+                    // FOR SELF
                     } else {
                         message.channel.send(await commandController
                             .listTasksForUser(message.author));
                     }
+                // DUE
+                } else if (args.length === 1 && args[0].toLowerCase() === 'due') {
+                    if (message.channel.type !== 'text') {
+                        return;
+                    }
 
+                    const channelName = (<discord.TextChannel>message.channel).name;
+
+                    try {
+                        const projectId = mappingController
+                            .getProjectId(channelName);
+
+                        message.channel.send(await commandController
+                            .tasksDueThisWeekForProject(projectId));
+                    } catch (e) {
+                        message.channel.send('Unable to find ActiveCollab' 
+                            + ' project for channel ' + channelName);
+                        logger.warn('Error getting tasks due for week: ' + e);
+                    }
+                // UNKNOWN
                 } else {
                     message.channel.send(`Unknown command, *${message.content}*, ` 
                         + `use *!tasks help* or *!tasks commands* for list of commands.`);

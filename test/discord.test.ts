@@ -192,7 +192,6 @@ describe('when client receives messages', () => {
 
         expect(commandControllerMock.listTasksForUser).toHaveBeenCalledWith(message.author);
     });
-
     it('should call commandController.tasksDueThisWeekForProject when command is ' 
         + ' "!tasks due" and command sent from project channel', () => {
         const client = new Client();
@@ -202,7 +201,7 @@ describe('when client receives messages', () => {
         const projectId = 0;
 
         const commandControllerMock: Partial<ICommandController> = {
-            listTasksForUser: jest.fn(() => Promise.resolve(new RichEmbed()))
+            tasksDueThisWeekForProject: jest.fn(() => Promise.resolve(new RichEmbed()))
         };
 
         const mappingControllerMock = {
@@ -221,7 +220,8 @@ describe('when client receives messages', () => {
             author: 'author',
             channel: {
                 send: jest.fn(() => Promise.resolve()),
-                name: 'channel'
+                name: 'channel',
+                type: 'text'
             }
         };
 
@@ -229,6 +229,89 @@ describe('when client receives messages', () => {
 
         expect(commandControllerMock.tasksDueThisWeekForProject)
             .toHaveBeenCalledWith(projectId);
+    });
+
+    it('should not call commandController.tasksDueThisWeekForProject when command is ' 
+        + ' "!tasks due" and channel type is not text', () => {
+        const client = new Client();
+
+        client.login = jest.fn(() => Promise.resolve());
+
+        const commandControllerMock: Partial<ICommandController> = {
+            tasksDueThisWeekForProject: jest.fn(() => Promise.resolve(new RichEmbed()))
+        };
+
+        const discordController = setupDiscordController(
+            undefined,
+            client,
+            undefined,
+            commandControllerMock
+        );
+
+        const message = {
+            content: '!tasks due',
+            author: 'author',
+            channel: {
+                name: 'channel',
+                type: 'voice'
+            }
+        };
+
+        client.emit('message', message);
+
+        expect(commandControllerMock.tasksDueThisWeekForProject)
+            .toHaveBeenCalledTimes(0);
+    });
+
+    it('should send error message and log when command is "!tasks due" and error ' 
+        + 'getting project ID', () => {
+        const client = new Client();
+
+        client.login = jest.fn(() => Promise.resolve());
+
+        const projectId = 0;
+        const error = 'error';
+        const channelName = 'channel';
+
+        const commandControllerMock: Partial<ICommandController> = {
+            tasksDueThisWeekForProject: jest.fn(() => Promise.resolve(new RichEmbed()))
+        };
+
+        const loggerMock: Partial<Logger> = {
+            warn: jest.fn()
+        };
+
+        const mappingControllerMock = {
+            getProjectId: jest.fn(() => { throw Error(error); })
+        };
+
+        const discordController = setupDiscordController(
+            undefined,
+            client,
+            mappingControllerMock,
+            commandControllerMock,
+            loggerMock
+        );
+
+        const message = {
+            content: '!tasks due',
+            author: 'author',
+            channel: {
+                type: 'text',
+                send: jest.fn(() => Promise.resolve()),
+                name: channelName
+            }
+        };
+
+        client.emit('message', message);
+
+        expect(message.channel.send)
+            .toHaveBeenCalledWith(`Unable to find ActiveCollab project for channel ` 
+                + channelName
+            );
+
+        expect(loggerMock.warn)
+            .toHaveBeenCalledWith(`Error getting tasks due for week: Error: ${error}`);
     });
 
     it('should send message when command is unknown', () => {
