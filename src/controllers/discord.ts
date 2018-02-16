@@ -131,14 +131,19 @@ export class DiscordController implements IDiscordController {
     }
 
     private async ListCommand(message: discord.Message, args: Array<string>): Promise<void> {
-        message.channel.send('Getting tasks...');
+        const sentMessage = await message
+            .channel
+            .send('Getting tasks...') as discord.Message;
+
+        message
+            .channel
+            .startTyping();
 
         if (args.length === 3 && args[1] === 'for') {
-
-            message.channel.send(await this.commandController
+            sentMessage.edit(await this.commandController
                 .listTasksForUser(message.mentions.users.first()));
         } else {
-            message.channel.send(await this.commandController
+            sentMessage.edit(await this.commandController
                 .listTasksForUser(message.author));
         }
     }

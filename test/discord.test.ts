@@ -162,13 +162,17 @@ describe('calling getUserId', () => {
 });
 
 describe('when client receives messages', () => {
-    it('should call commandController.listTasksForUser when command is "!TASKS LIST"', () => {
+    it('should call commandController.listTasksForUser when command is "!TASKS LIST"', done => {
+        expect.assertions(3);
+
         const client = new Client();
 
         client.login = jest.fn(() => Promise.resolve());
 
+        const returnedTasks = new RichEmbed();
+
         const commandControllerMock: Partial<ICommandController> = {
-            listTasksForUser: jest.fn(() => Promise.resolve(new RichEmbed()))
+            listTasksForUser: jest.fn(() => Promise.resolve(returnedTasks))
         };
 
         const discordController = setupDiscordController(
@@ -178,17 +182,27 @@ describe('when client receives messages', () => {
             commandControllerMock
         );
 
+        const sentMessage = {
+            edit: jest.fn(value => {
+                expect(commandControllerMock.listTasksForUser).toBeCalledWith(message.author);
+                expect(value).toBe(returnedTasks);
+                expect(message.channel.startTyping).toBeCalled();
+                done();
+                return Promise.resolve();
+            })
+        };
+
         const message = {
             content: '!TASKS LIST',
             author: 'author',
             channel: {
-                send: jest.fn(() => Promise.resolve())
+                send: jest.fn(() => Promise.resolve(sentMessage)),
+                startTyping: jest.fn(() => Promise.resolve()),
+                stopTyping: jest.fn(() => Promise.resolve()),
             }
         };
 
         client.emit('message', message);
-
-        expect(commandControllerMock.listTasksForUser).toHaveBeenCalledWith(message.author);
     });
     it('should call commandController.tasksDueThisWeekForProject when command is ' 
         + ' "!tasks due" and command sent from project channel', (done) => {
@@ -401,15 +415,20 @@ describe('when client receives messages', () => {
             + `for list of commands.`);
     });
 
-    it('should call commandController.listTasksForUser when command is "!tasks list for @user"', () => {
+    it('should call commandController.listTasksForUser and send message when command is '
+         + '"!tasks list for @user"', done => {
+        expect.assertions(3);
+
         const mentionedUser = 'user';
         
         const client = new Client();
 
         client.login = jest.fn(() => Promise.resolve());
 
+        const returnedTasks = new RichEmbed();
+
         const commandControllerMock: Partial<ICommandController> = {
-            listTasksForUser: jest.fn(() => Promise.resolve(new RichEmbed()))
+            listTasksForUser: jest.fn(() => Promise.resolve(returnedTasks))
         };
 
         const discordController = setupDiscordController(
@@ -418,6 +437,16 @@ describe('when client receives messages', () => {
             undefined,
             commandControllerMock
         );
+
+        const sentMessage = {
+            edit: jest.fn(value => {
+                expect(commandControllerMock.listTasksForUser).toBeCalled();
+                expect(value).toBe(returnedTasks);
+                expect(message.channel.startTyping).toBeCalled();
+                done();
+                return Promise.resolve();
+            })
+        };
 
         const message = {
             content: '!tasks list for @user',
@@ -430,13 +459,13 @@ describe('when client receives messages', () => {
                 }
             },
             channel: {
-                send: jest.fn(() => Promise.resolve())
+                send: jest.fn(() => Promise.resolve(sentMessage)),
+                startTyping: jest.fn(() => Promise.resolve()),
+                stopTyping: jest.fn(() => Promise.resolve()),
             }
         };
 
         client.emit('message', message);
-
-        expect(commandControllerMock.listTasksForUser).toHaveBeenCalledWith(mentionedUser);
     });
 
     it('should send list of commands when command is !help', () => {
