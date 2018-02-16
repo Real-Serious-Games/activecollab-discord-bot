@@ -72,8 +72,14 @@ export class DiscordController implements IDiscordController {
                 // DUE
                 } else if (args.length === 1 && args[0].toLowerCase() === 'due') {
                     if (message.channel.type !== 'text') {
+                        message.channel.send('!tasks due command must be called' 
+                            + ' from a text channel');
                         return;
                     }
+
+                    const sentMessage = await message
+                        .channel
+                        .send('Getting tasks due this week...') as discord.Message;
 
                     const channelName = (<discord.TextChannel>message.channel).name;
 
@@ -81,10 +87,14 @@ export class DiscordController implements IDiscordController {
                         const projectId = mappingController
                             .getProjectId(channelName);
 
-                        message.channel.send(await commandController
+                        message
+                            .channel
+                            .startTyping();
+                            
+                        sentMessage.edit(await commandController
                             .tasksDueThisWeekForProject(projectId));
                     } catch (e) {
-                        message.channel.send('Unable to find ActiveCollab' 
+                        sentMessage.edit('Unable to find ActiveCollab' 
                             + ' project for channel ' + channelName);
                         logger.warn('Error getting tasks due for week: ' + e);
                     }
@@ -106,6 +116,10 @@ export class DiscordController implements IDiscordController {
                 message.channel.send(`Unknown command, *${message.content}*, `
                     + `use *!help* or *!commands*`);
             }
+
+            message
+                .channel
+                .stopTyping(true);
         });
     }
 
