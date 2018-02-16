@@ -49,13 +49,11 @@ export class DiscordController implements IDiscordController {
             }
 
             const args = message.content.toLowerCase().slice(commandPrefix.length).trim().split(/ +/g);
-            let command = args.shift();
+            const command = args.shift();
 
             if (command === undefined || command === '') {
                 return;
             }
-
-            command = command.toLowerCase();
 
             if (command === 'tasks') {
                 if (args[0] === 'list') {
@@ -72,7 +70,8 @@ export class DiscordController implements IDiscordController {
                     .setTitle('Commands')
                     .addField('!tasks', 
                         '*!tasks list* - lists your tasks.\n' +
-                        '*!tasks list for @user* - lists tasks for mentioned user.\n'
+                        '*!tasks list for @user* - lists tasks for mentioned user.\n' +
+                        '*!tasks due* - lists tasks due this week for current channel\'s project\n'
                     )
                 );
             } else {
