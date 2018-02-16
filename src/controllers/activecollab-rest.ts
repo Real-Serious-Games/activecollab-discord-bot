@@ -14,7 +14,7 @@ function get(
     token: string,
     route: string,
     queryParams: QueryParams
-): Promise<Object> {
+): RequestPromise {
     return request.get({
         url: connectionStr + requestPrefix + route,
         headers: {
@@ -31,7 +31,7 @@ function post(
     token: string,
     route: string,
     body: Object
-): Promise<Object> {
+): RequestPromise {
     return request.post({
         url: connectionStr + requestPrefix + route,
         headers: {
