@@ -19,5 +19,5 @@ export interface Assignment {
     assignee_id: number;
     permalink: string;
     due_on: number;
-    task_list_id: number;
+    task_list: string;
 }

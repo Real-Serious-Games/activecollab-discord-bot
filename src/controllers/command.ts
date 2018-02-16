@@ -106,13 +106,21 @@ async function tasksDueThisWeekForProject(
 
     let tasks: _.LoDashImplicitArrayWrapper<Assignment>;
 
+    const endWeek = moment().endOf('week').utc;
+    const startWeek = moment().startOf('week');
+
     try {
         tasks = _(await activeCollabApi.getAllAssignmentTasks())
+            .filter(t => t.due_on !== null)
+            .filter(t => t.project_id === projectId)
             .filter(t => 
-                t.project_id === projectId 
-                && moment(t.due_on) <= moment().endOf('week') 
-                && moment(t.due_on) >= moment().startOf('week') 
-            );
+                moment.unix(t.due_on)
+                    .isBetween(
+                        moment().startOf('week'),
+                        moment().endOf('week'),
+                        'day',
+                        '[]'
+                ));
     } catch (e) {
         logger.warn(`Error getting tasks: ${e}`);
         return new RichEmbed()
@@ -131,26 +139,13 @@ async function tasksDueThisWeekForProject(
         .setColor(eventColor);
 
     await tasks
-        .groupBy(t => t.task_list_id)
+        .groupBy(t => t.task_list)
         .forEach(async taskGroup => {
-            const taskListId = taskGroup[0].task_list_id;
-            let taskList = '';
-
-            try {
-                taskList = await activeCollabApi.getTaskListNameById(projectId, taskListId);
-            } catch (e) {
-                logger.warn(`Error getting task list name for id ${taskListId}: ${e}`);
-                formattedTasks.addField('Warning', `There was a problem getting `
-                    + ` the task list name for tasks in the same list as ` 
-                    + `${taskGroup[0].name}`);
-                    return;
-            }
-            
             let currentChars = 0;
 
             taskGroup.forEach(t => { 
-                const task = `• [${t.name}](${t.permalink}` 
-                    + ` - ${moment(t.due_on).format('ddd Do')}\n`;
+                const task = `• [${t.name}](${t.permalink})` 
+                    + ` - ${moment.unix(t.due_on).format('ddd Do')}\n`;
                 const newLength = currentChars + task.length;
 
                 if (formattedTasks.fields !== undefined 
@@ -162,8 +157,8 @@ async function tasksDueThisWeekForProject(
 
                     formattedTasks.fields[formattedTasks.fields.length - 1].value += task;
                 } else {
-                    currentChars = (task + taskList).length;
-                    formattedTasks.addField(taskList, task);
+                    currentChars = (task + taskGroup[0].task_list).length;
+                    formattedTasks.addField(taskGroup[0].task_list, task);
                 }
             });
         });
