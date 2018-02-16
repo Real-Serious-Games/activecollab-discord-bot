@@ -18,6 +18,8 @@ export class DiscordController implements IDiscordController {
     private readonly client: discord.Client;
     private readonly mappingController: IMappingController;
     private readonly guildName: string;
+    private readonly commandController: ICommandController;
+    private readonly logger: Logger;
 
     public constructor(
         token: string,
@@ -31,6 +33,8 @@ export class DiscordController implements IDiscordController {
         this.client = discordClient;
         this.mappingController = mappingController;
         this.guildName = guildName;
+        this.logger = logger;
+        this.commandController = commandController;
 
         // The ready event is vital, it means that your bot will only start 
         // reacting to information from Discord _after_ ready is emitted
@@ -44,7 +48,7 @@ export class DiscordController implements IDiscordController {
                 return;
             }
 
-            const args = message.content.slice(commandPrefix.length).trim().split(/ +/g);
+            const args = message.content.toLowerCase().slice(commandPrefix.length).trim().split(/ +/g);
             let command = args.shift();
 
             if (command === undefined || command === '') {
@@ -53,52 +57,11 @@ export class DiscordController implements IDiscordController {
 
             command = command.toLowerCase();
 
-            // TODO: break out into functions
             if (command === 'tasks') {
-                // LIST
-                if (args[0].toLowerCase() === 'list') {
-                    message.channel.send('Getting tasks...');
-
-                    // FOR USER
-                    if (args.length === 3 && args[1].toLowerCase() === 'for') {
-
-                        message.channel.send(await commandController
-                            .listTasksForUser(message.mentions.users.first()));
-                    // FOR SELF
-                    } else {
-                        message.channel.send(await commandController
-                            .listTasksForUser(message.author));
-                    }
-                // DUE
-                } else if (args.length === 1 && args[0].toLowerCase() === 'due') {
-                    if (message.channel.type !== 'text') {
-                        message.channel.send('!tasks due command must be called' 
-                            + ' from a text channel');
-                        return;
-                    }
-
-                    const sentMessage = await message
-                        .channel
-                        .send('Getting tasks due this week...') as discord.Message;
-
-                    const channelName = (<discord.TextChannel>message.channel).name;
-
-                    try {
-                        const projectId = mappingController
-                            .getProjectId(channelName);
-
-                        message
-                            .channel
-                            .startTyping();
-                            
-                        sentMessage.edit(await commandController
-                            .tasksDueThisWeekForProject(projectId));
-                    } catch (e) {
-                        sentMessage.edit('Unable to find ActiveCollab' 
-                            + ' project for channel ' + channelName);
-                        logger.warn('Error getting tasks due for week: ' + e);
-                    }
-                // UNKNOWN
+                if (args[0] === 'list') {
+                    this.ListCommand(message, args);
+                } else if (args.length === 1 && args[0] === 'due') {
+                    this.DueCommand(message);
                 } else {
                     message.channel.send(`Unknown command, *${message.content}*, ` 
                         + `use *!tasks help* or *!tasks commands* for list of commands.`);
@@ -166,5 +129,48 @@ export class DiscordController implements IDiscordController {
         channel
             .send(message)
             .catch(console.error);
+    }
+
+    private async ListCommand(message: discord.Message, args: Array<string>): Promise<void> {
+        message.channel.send('Getting tasks...');
+
+        if (args.length === 3 && args[1] === 'for') {
+
+            message.channel.send(await this.commandController
+                .listTasksForUser(message.mentions.users.first()));
+        } else {
+            message.channel.send(await this.commandController
+                .listTasksForUser(message.author));
+        }
+    }
+
+    private async DueCommand(message: discord.Message): Promise<void> {
+        if (message.channel.type !== 'text') {
+            message.channel.send('!tasks due command must be called' 
+                + ' from a text channel');
+            return;
+        }
+
+        const sentMessage = await message
+            .channel
+            .send('Getting tasks due this week...') as discord.Message;
+
+        const channelName = (<discord.TextChannel>message.channel).name;
+
+        try {
+            const projectId = this.mappingController
+                .getProjectId(channelName);
+
+            message
+                .channel
+                .startTyping();
+
+            sentMessage.edit(await this.commandController
+                .tasksDueThisWeekForProject(projectId));
+        } catch (e) {
+            sentMessage.edit('Unable to find ActiveCollab' 
+                + ' project for channel ' + channelName);
+            this.logger.warn('Error getting tasks due for week: ' + e);
+        }
     }
 }
