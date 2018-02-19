@@ -161,7 +161,7 @@ describe('calling getUserId', () => {
     });
 });
 
-describe('when client receives messages', () => {
+describe('client receiving message', () => {
     it('should call commandController.listTasksForUser when command is "!TASKS LIST"', done => {
         expect.assertions(3);
 
@@ -183,12 +183,11 @@ describe('when client receives messages', () => {
         );
 
         const sentMessage = {
-            edit: jest.fn(value => {
+            edit: jest.fn(async value => {
                 expect(commandControllerMock.listTasksForUser).toBeCalledWith(message.author);
                 expect(value).toBe(returnedTasks);
                 expect(message.channel.startTyping).toBeCalled();
                 done();
-                return Promise.resolve();
             })
         };
 
@@ -196,7 +195,7 @@ describe('when client receives messages', () => {
             content: '!TASKS LIST',
             author: 'author',
             channel: {
-                send: jest.fn(() => Promise.resolve(sentMessage)),
+                send: jest.fn(async () => sentMessage),
                 startTyping: jest.fn(() => Promise.resolve()),
                 stopTyping: jest.fn(() => Promise.resolve()),
             }
@@ -204,6 +203,7 @@ describe('when client receives messages', () => {
 
         client.emit('message', message);
     });
+
     it('should call commandController.tasksDueThisWeekForProject when command is ' 
         + ' "!tasks due" and command sent from project channel', (done) => {
         expect.assertions(1);
@@ -215,10 +215,7 @@ describe('when client receives messages', () => {
         const projectId = 0;
 
         const commandControllerMock: Partial<ICommandController> = {
-            tasksDueThisWeekForProject: jest.fn(() => {
-                done();
-                return Promise.resolve();
-            })
+            tasksDueThisWeekForProject: jest.fn(async () => done())
         };
 
         const mappingControllerMock = {
@@ -240,7 +237,7 @@ describe('when client receives messages', () => {
             content: '!tasks due',
             author: 'author',
             channel: {
-                send: jest.fn(() => Promise.resolve(sentMessage)),
+                send: jest.fn(async () => sentMessage),
                 startTyping: jest.fn(() => Promise.resolve()),
                 stopTyping: jest.fn(() => Promise.resolve()),
                 name: 'channel',
@@ -254,8 +251,8 @@ describe('when client receives messages', () => {
             .toHaveBeenCalledWith('Getting tasks due this week...');
     });
 
-    it('should not call commandController.tasksDueThisWeekForProject and send warning message'
-        + ' when command is  "!tasks due" and channel type is not text', () => {
+    it('should send warning message when command is  "!tasks due" ' 
+        + 'and channel type is not text', () => {
         const client = new Client();
 
         client.login = jest.fn(() => Promise.resolve());
@@ -283,10 +280,9 @@ describe('when client receives messages', () => {
 
         client.emit('message', message);
 
-        expect(commandControllerMock.tasksDueThisWeekForProject)
-            .toHaveBeenCalledTimes(0);
         expect(message.channel.send)
-            .toBeCalledWith('!tasks due command must be called from a text channel');
+            .toBeCalledWith('!tasks due command must be called from a text channel' 
+                + ' associated with a project');
     });
 
     it('should send error message and log when command is "!tasks due" and error ' 
@@ -329,9 +325,8 @@ describe('when client receives messages', () => {
         );
 
         const sentMessage = {
-            edit: jest.fn(value => {
+            edit: jest.fn(async value => {
                 sentMessageValue = value;
-                return Promise.resolve();
             })
         };
 
@@ -339,7 +334,7 @@ describe('when client receives messages', () => {
             content: '!tasks due',
             author: 'author',
             channel: {
-                send: jest.fn(() => Promise.resolve(sentMessage)),
+                send: jest.fn(async () => sentMessage),
                 startTyping: jest.fn(() => Promise.resolve()),
                 stopTyping: jest.fn(() => Promise.resolve()),
                 type: 'text',
@@ -439,12 +434,11 @@ describe('when client receives messages', () => {
         );
 
         const sentMessage = {
-            edit: jest.fn(value => {
+            edit: jest.fn(async value => {
                 expect(commandControllerMock.listTasksForUser).toBeCalled();
                 expect(value).toBe(returnedTasks);
                 expect(message.channel.startTyping).toBeCalled();
                 done();
-                return Promise.resolve();
             })
         };
 
@@ -459,7 +453,7 @@ describe('when client receives messages', () => {
                 }
             },
             channel: {
-                send: jest.fn(() => Promise.resolve(sentMessage)),
+                send: jest.fn(async () => sentMessage),
                 startTyping: jest.fn(() => Promise.resolve()),
                 stopTyping: jest.fn(() => Promise.resolve()),
             }
@@ -532,7 +526,7 @@ describe('when client receives messages', () => {
         expect(message.channel.send).toHaveBeenCalledWith(expectedHelp);
     });
 
-    it('should do nothing when message doesnt start with prefix or message sent with bot', () => {
+    it(`should do nothing when message doesn't start with prefix or message sent with bot`, () => {
         const client = new Client();
 
         client.login = jest.fn(() => Promise.resolve());
