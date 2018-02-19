@@ -135,9 +135,9 @@ async function tasksDueThisWeekForProject(
         .setTitle(`Tasks due this week`)
         .setColor(eventColor);
 
-    await tasks
+    tasks
         .groupBy(t => t.task_list)
-        .forEach(async taskGroup => {
+        .forEach(taskGroup => {
             let currentChars = 0;
 
             taskGroup.forEach(t => { 

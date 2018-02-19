@@ -151,7 +151,7 @@ export class DiscordController implements IDiscordController {
     private async DueCommand(message: discord.Message): Promise<void> {
         if (message.channel.type !== 'text') {
             message.channel.send('!tasks due command must be called' 
-                + ' from a text channel');
+                + ' from a text channel associated with a project');
             return;
         }
 
