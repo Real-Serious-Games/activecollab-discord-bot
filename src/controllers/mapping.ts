@@ -5,7 +5,7 @@ export interface IMappingController {
     /**
      * Take an ActiveCollab project ID and return the Discord channel name for it
      */
-    getChannel: (projectId: number) => string;
+    getChannels: (projectId: number) => Array<ChannelMap>;
 
     /**
      * Map Discord channel name to ActiveCollab project ID
@@ -26,6 +26,7 @@ export interface IMappingController {
 export interface ChannelMap {
     projectId: number;
     channelName: string;
+    guildIndex: number;
 }
 
 export interface UserMap {
@@ -33,21 +34,21 @@ export interface UserMap {
     activeCollabUser: number;
 }
 
-function getChannel(
+function getChannels(
     channelsMap: () => Array<ChannelMap>,
     projectId: number
-): string {
+): Array<ChannelMap> {
     if (!projectId) {
         throw Error(`Invalid project ID: ${projectId}`);
     }
     const channelMap = channelsMap()
-        .find(channelMap => channelMap.projectId === projectId);
+        .filter(channelMap => channelMap.projectId === projectId);
 
-    if (!channelMap) {
+    if (!channelMap || channelMap.length < 1) {
         throw Error(`Channel not found with project ID: ${projectId}`);
     }
 
-    return channelMap.channelName;
+    return channelMap;
 }
 
 function getProjectId(
@@ -109,7 +110,7 @@ export function createMappingController(
     usersMap: () => Array<UserMap>
 ): IMappingController {
     return {
-        getChannel: getChannel.bind(undefined, channelsMap),
+        getChannels: getChannels.bind(undefined, channelsMap),
         getProjectId: getProjectId.bind(undefined, channelsMap),
         getDiscordUser: getDiscordUser.bind(undefined, usersMap),
         getActiveCollabUser: getActiveCollabUser.bind(undefined, usersMap) 
