@@ -12,6 +12,8 @@ import { IMappingController } from '../src/controllers/mapping';
 import { Assignment } from '../src/models/report';
 import { Project } from '../src/models/project';
 import { IApiController } from '../src/controllers/api';
+import { CommandControllerBuilder } from './builders/commandControllerBuilder';
+import { ActiveCollabApiMockBuilder } from './builders/activeCollabApiMockBuilder';
 
 const eventColor = '#449DF5';
 const discordUser: Partial<User> = {
@@ -564,97 +566,4 @@ function createMockLogger(): Partial<Logger> {
     return {
         warn: jest.fn()
     };
-}
-
-class ActiveCollabApiMockBuilder {
-    private tasksToReturn: Array<Partial<Assignment>> = [{
-        type: 'Task',
-        project_id: 0,
-        name: 'Task 1',
-        assignee_id: 0,
-        permalink: 'url'
-    },
-    {
-        type: 'Task',
-        project_id: 1,
-        name: 'Task 2',
-        assignee_id: 0,
-        permalink: 'url'
-    }]; 
-
-    private projectsToReturn: Array<Partial<Project>> = [{
-        id: 0,
-        name: 'Project 0'
-    },
-    {
-        id: 1,
-        name: 'Project 1'
-    }];
-
-    private getAssignmentTasksByUserId = jest.fn(() => Promise.resolve(this.tasksToReturn));
-    private getAllProjects = jest.fn(() => Promise.resolve(this.projectsToReturn));
-    private getTaskListNameById = jest.fn().mockReturnValue('Completed');
-    private getAllAssignmentTasks = jest.fn(() => Promise.resolve(this.tasksToReturn));
-
-    public withGetAssignmentTasksByUserId(func: any) {
-        this.getAssignmentTasksByUserId = func;
-        return this;
-    }
-
-    public withGetAllProjects(func: any) {
-        this.getAllProjects = func;
-        return this;
-    }
-
-    public withGetTaskListNameById(func: any) {
-        this.getTaskListNameById = func;
-        return this;
-    }
-
-    public withGetAllAssignmentTasks(func: any) {
-        this.getAllAssignmentTasks = func;
-        return this;
-    }
-
-    public build() {
-        return  {
-            getAssignmentTasksByUserId: this.getAssignmentTasksByUserId,
-            getAllProjects: this.getAllProjects,
-            getTaskListNameById: this.getTaskListNameById,
-            getAllAssignmentTasks: this.getAllAssignmentTasks
-        } as Partial<IActiveCollabAPI>;
-    }
-}
-
-class CommandControllerBuilder {
-    private activeCollabApi: Partial<IActiveCollabAPI> = new ActiveCollabApiMockBuilder().build();
-
-    private mappingController: Partial<IMappingController> = {
-        getActiveCollabUser: jest.fn().mockReturnValue('user')
-    };
-
-    private logger: Partial<Logger> = createMockLogger();
-
-    public withLogger(logger: Logger): CommandControllerBuilder {
-        this.logger = logger;
-        return this;
-    }
-
-    public withActiveCollabApi(activeCollabApi: IActiveCollabAPI): CommandControllerBuilder {
-        this.activeCollabApi = activeCollabApi;
-        return this;
-    }
-
-    withMappingController(mappingController: IMappingController): CommandControllerBuilder {
-        this.mappingController = mappingController;
-        return this;
-    }
-
-    public build() {
-        return createCommandController(
-            this.activeCollabApi as IActiveCollabAPI,
-            this.mappingController as IMappingController,
-            this.logger
-        );
-    }
 }

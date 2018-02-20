@@ -11,6 +11,8 @@ import { IEventController, createEventController } from '../src/controllers/even
 import { IActiveCollabAPI } from '../src/controllers/activecollab-api';
 import { IMappingController } from '../src/controllers/mapping';
 import { disconnect } from 'cluster';
+import { ApiControllerBuilder } from './builders/apiControllerBuilder';
+import { RequestBuilder } from './builders/requestBuilder';
 
 describe('postActiveCollabWebhook', () => {
     it('should call send with status 200 when header valid', async () => {
@@ -172,67 +174,4 @@ function createMockLogger(): Partial<Logger> {
     return {
         warn: jest.fn()
     };
-}
-
-class ApiControllerBuilder {
-    private discordController: Partial<IDiscordController> 
-        = createMockDiscordController();
-    
-    private eventController: Partial<IEventController> = {
-        processEvent: jest.fn().mockReturnValue(right({ projectId: 1, body: { }}))
-    };
-
-    private logger: Partial<Logger> = createMockLogger();
-
-    private webhookSecret = defaultWebhookSecret;
-
-    public withDiscordController(
-        discordController: IDiscordController
-    ): ApiControllerBuilder {
-        this.discordController = discordController;
-        return this;
-    }
-
-    public withEventController(
-        eventController: IEventController
-    ): ApiControllerBuilder {
-        this.eventController = eventController;
-        return this;
-    }
-
-    public withLogger(logger: Logger): ApiControllerBuilder {
-        this.logger = logger;
-        return this;
-    }
-
-    public withWebhookSecret(webhookSecret: string): ApiControllerBuilder {
-        this.webhookSecret = webhookSecret;
-        return this;
-    }
-
-    public build(): IApiController {
-        return createApiController(
-            this.discordController as IDiscordController,
-            this.webhookSecret,
-            this.logger,
-            this.eventController as IEventController
-        );
-    }
-}
-
-class RequestBuilder {
-    private body = 'body';
-    private header = jest.fn().mockReturnValue(defaultWebhookSecret);
-
-    public withWebhookSecret(webhookSecret: string): RequestBuilder {
-        this.header = jest.fn().mockReturnValue(webhookSecret);
-        return this;
-    }
-
-    public build(): Partial<Request> {
-        return {
-            body: this.body,
-            header: this.header
-        };
-    }
 }
