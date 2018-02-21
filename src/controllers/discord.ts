@@ -124,26 +124,34 @@ export class DiscordController implements IDiscordController {
     public getUserId(username: string): string {
         assert(username, `Username not valid: ${username}`);
 
-        let guild = undefined;
+        // for (let i = 0; i < this.guildNames.length; i++) {
+        //     guild = this.client.guilds.find(g => g.name === this.guildNames[i]);
 
-        for (let i = 0; i < this.guildNames.length; i++) {
-            guild = this.client.guilds.find(g => g.name === this.guildNames[i]);
+        //     if (guild !== undefined) {
 
-            if (guild !== undefined) {
+        //         const user = guild.members.find(m => m.user.tag === username);
 
-                const user = guild.members.find(m => m.user.tag === username);
+        //         if (user) {
+        //             return user.id;
+        //         }
+        //     }
+        // }
 
-                if (user) {
-                    return user.id;
-                }
-            }
-        }
+        const guilds = this.guildNames
+            .map(guildName => this.client.guilds.find(guild => guild.name === guildName));
 
-        if (guild === undefined) {
+        if (guilds.every(guild => guild === undefined)) {
             throw Error(`Guilds not found: ${this.guildNames}`);
         }
 
-        throw Error(`User not found: ${username}`);
+        const members = guilds
+            .map(guild => guild.members.find(member => member.user.tag === username));
+
+        if (members.every(member => member === undefined)) {
+            throw Error(`User not found: ${username}`);
+        }
+
+        return members[0].id;
     }
 
     public sendMessageToChannel(
