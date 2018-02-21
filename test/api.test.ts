@@ -1,16 +1,10 @@
 import { Response, Request } from 'express';
-import { Client } from 'discord.js';
 import { Logger } from 'structured-log/src';
-import { right, left } from 'fp-ts/lib/Either';
+import { left } from 'fp-ts/lib/Either';
 
 import { Task } from '../src/models/taskEvent';
 import { IDiscordController } from '../src/controllers/discord';
-import { createApiController, IApiController } from '../src/controllers/api';
-import * as testData from './testData';
-import { IEventController, createEventController } from '../src/controllers/event';
-import { IActiveCollabAPI } from '../src/controllers/activecollab-api';
-import { IMappingController } from '../src/controllers/mapping';
-import { disconnect } from 'cluster';
+import { IEventController } from '../src/controllers/event';
 import { ApiControllerBuilder } from './builders/apiControllerBuilder';
 import { RequestBuilder } from './builders/requestBuilder';
 import { DiscordControllerMockBuilder } from './builders/discordControllerMockBuilder';
