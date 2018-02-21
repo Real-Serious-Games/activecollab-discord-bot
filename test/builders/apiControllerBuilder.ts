@@ -1,26 +1,20 @@
-import { right, left } from 'fp-ts/lib/Either';
 import { Logger } from 'structured-log/src';
 
 import { IDiscordController } from '../../src/controllers/discord';
-import { IEventController, createEventController } from '../../src/controllers/event';
+import { IEventController } from '../../src/controllers/event';
 import { createApiController, IApiController } from '../../src/controllers/api';
+import { DiscordControllerMockBuilder } from './discordControllerMockBuilder';
+import { EventControllerMockBuilder } from './eventControllerMockBuilder';
+import { LoggerMockBuilder } from './loggerMockBuilder';
 
 export const defaultWebhookSecret = 'secret';
 
 export class ApiControllerBuilder {
-    private discordController: Partial<IDiscordController> = {
-            sendMessageToChannel: jest.fn(),
-            determineChannels: jest.fn(),
-        };
-    
-    private eventController: Partial<IEventController> = {
-        processEvent: jest.fn().mockReturnValue(right({ projectId: 1, body: { }}))
-    };
-
-    private logger: Partial<Logger> = {
-        warn: jest.fn()
-    };
-
+    private discordController: Partial<IDiscordController> = 
+        new DiscordControllerMockBuilder().build();
+    private eventController: Partial<IEventController> = 
+        new EventControllerMockBuilder().build();
+    private logger: Partial<Logger> = new LoggerMockBuilder().build();
     private webhookSecret = defaultWebhookSecret;
 
     public withDiscordController(

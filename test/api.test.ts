@@ -13,6 +13,9 @@ import { IMappingController } from '../src/controllers/mapping';
 import { disconnect } from 'cluster';
 import { ApiControllerBuilder } from './builders/apiControllerBuilder';
 import { RequestBuilder } from './builders/requestBuilder';
+import { DiscordControllerMockBuilder } from './builders/discordControllerMockBuilder';
+import { LoggerMockBuilder } from './builders/loggerMockBuilder';
+import { EventControllerMockBuilder } from './builders/eventControllerMockBuilder';
 
 describe('postActiveCollabWebhook', () => {
     it('should call send with status 200 when header valid', async () => {
@@ -86,17 +89,18 @@ describe('postActiveCollabWebhook', () => {
         expect.assertions(2);
 
         const webhookSecret = 'secret';
-        const mockEventController: Partial<IEventController> = {
-            processEvent: jest.fn().mockReturnValue(left('Error'))
-        };
-        const mockDiscordController = createMockDiscordController();
-        const mockLogger = createMockLogger();
+        const discordControllerMock = new DiscordControllerMockBuilder().build();
+        const loggerMock = new LoggerMockBuilder().build();
+
+        const eventControlerMock = new EventControllerMockBuilder()
+            .withProcessEvent(jest.fn().mockReturnValue(left('Error')))
+            .build();
 
         const apiController = new ApiControllerBuilder()
             .withWebhookSecret(webhookSecret)
-            .withDiscordController(mockDiscordController as IDiscordController)
-            .withEventController(mockEventController as IEventController)
-            .withLogger(mockLogger as Logger)
+            .withDiscordController(discordControllerMock as IDiscordController)
+            .withEventController(eventControlerMock as IEventController)
+            .withLogger(loggerMock as Logger)
             .build();
 
         await apiController
@@ -105,22 +109,22 @@ describe('postActiveCollabWebhook', () => {
                 createResponse() as Response
             );
 
-        expect(mockDiscordController.sendMessageToChannel).toHaveBeenCalledTimes(0);
-        expect(mockLogger.warn).toHaveBeenCalled();
+        expect(discordControllerMock.sendMessageToChannel).toHaveBeenCalledTimes(0);
+        expect(loggerMock.warn).toHaveBeenCalled();
     });
 
     it('should call logger and not sendMessageToChannel determine channel throws error', async () => {
         expect.assertions(2);
         
-        const mockDiscordController: Partial<IDiscordController> = {
-            determineChannels: jest.fn(() => Promise.reject('Channel error')),
-            sendMessageToChannel: jest.fn()
-        };
-        const mockLogger = createMockLogger();
+        const loggerMock = new LoggerMockBuilder().build();
+
+        const discordControllerMock = new DiscordControllerMockBuilder()
+            .withDetermineChannels(jest.fn(() => Promise.reject('Channel error')))
+            .build();
 
         const apiController = new ApiControllerBuilder()
-            .withDiscordController(mockDiscordController as IDiscordController)
-            .withLogger(mockLogger as Logger)
+            .withDiscordController(discordControllerMock as IDiscordController)
+            .withLogger(loggerMock as Logger)
             .build();
 
         await apiController
@@ -129,8 +133,8 @@ describe('postActiveCollabWebhook', () => {
                 createResponse() as Response
             );
 
-        expect(mockDiscordController.sendMessageToChannel).toHaveBeenCalledTimes(0);
-        expect(mockLogger.warn).toHaveBeenCalled();
+        expect(discordControllerMock.sendMessageToChannel).toHaveBeenCalledTimes(0);
+        expect(loggerMock.warn).toHaveBeenCalled();
     });
 
     it('should call sendMessageToChannel when known request body', async () => {       
@@ -158,18 +162,5 @@ describe('postActiveCollabWebhook', () => {
 function createResponse(): Partial<Response> {
     return {
         sendStatus: jest.fn()
-    };
-}
-
-function createMockDiscordController(): Partial<IDiscordController> {
-    return {
-        sendMessageToChannel: jest.fn(),
-        determineChannels: jest.fn(),
-    };   
-}
-
-function createMockLogger(): Partial<Logger> {
-    return {
-        warn: jest.fn()
     };
 }
