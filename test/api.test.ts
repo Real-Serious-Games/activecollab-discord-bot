@@ -137,15 +137,26 @@ describe('postActiveCollabWebhook', () => {
         expect(loggerMock.warn).toHaveBeenCalled();
     });
 
-    it('should call sendMessageToChannel when known request body', async () => {       
+    it('should call sendMessageToChannel to determined channels'
+        + ' when known request body', async () => {       
         expect.assertions(2);
 
-        const mockDiscordController = createMockDiscordController();
-        const mockLogger = createMockLogger();
+        const loggerMock = new LoggerMockBuilder().build();
+
+        const discordControllerMock = new DiscordControllerMockBuilder()
+            .withDetermineChannels(jest.fn().mockReturnValue([
+                {
+                    name: 'channel'
+                },
+                {
+                    name: 'channel 2'
+                }
+            ]))
+            .build();
 
         const apiController = new ApiControllerBuilder()
-            .withDiscordController(mockDiscordController as IDiscordController)
-            .withLogger(mockLogger as Logger)
+            .withDiscordController(discordControllerMock as IDiscordController)
+            .withLogger(loggerMock as Logger)
             .build();
 
         await apiController
@@ -154,8 +165,8 @@ describe('postActiveCollabWebhook', () => {
                 createResponse() as Response
             );
 
-        expect(mockDiscordController.sendMessageToChannel).toHaveBeenCalled();
-        expect(mockLogger.warn).toHaveBeenCalledTimes(0);
+        expect(discordControllerMock.sendMessageToChannel).toHaveBeenCalledTimes(2);
+        expect(loggerMock.warn).toHaveBeenCalledTimes(0);
     });
 });
 
