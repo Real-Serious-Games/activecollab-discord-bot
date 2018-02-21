@@ -32,7 +32,7 @@ async function postActiveCollabWebhook (
 
     await processed.map(async p => {
         try {
-            const projectId = await discordController.determineChannel(p.projectId);
+            const projectId = await discordController.determineChannels(p.projectId);
 
             discordController.sendMessageToChannel(
                 p.body,

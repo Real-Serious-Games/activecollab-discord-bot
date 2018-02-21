@@ -113,7 +113,7 @@ describe('postActiveCollabWebhook', () => {
         expect.assertions(2);
         
         const mockDiscordController: Partial<IDiscordController> = {
-            determineChannel: jest.fn(() => Promise.reject('Channel error')),
+            determineChannels: jest.fn(() => Promise.reject('Channel error')),
             sendMessageToChannel: jest.fn()
         };
         const mockLogger = createMockLogger();
@@ -155,8 +155,6 @@ describe('postActiveCollabWebhook', () => {
     });
 });
 
-const defaultWebhookSecret = 'secret';
-
 function createResponse(): Partial<Response> {
     return {
         sendStatus: jest.fn()
@@ -166,7 +164,7 @@ function createResponse(): Partial<Response> {
 function createMockDiscordController(): Partial<IDiscordController> {
     return {
         sendMessageToChannel: jest.fn(),
-        determineChannel: jest.fn(),
+        determineChannels: jest.fn(),
     };   
 }
 

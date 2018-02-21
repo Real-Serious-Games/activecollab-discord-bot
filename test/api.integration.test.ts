@@ -21,7 +21,7 @@ describe('POST /api/webhook', () => {
 
         const discordControllerStub: Partial<IDiscordController> = {
             sendMessageToChannel: jest.fn(),
-            determineChannel: jest.fn(),
+            determineChannels: jest.fn(),
             getUserId: jest.fn()
         };
 
@@ -61,7 +61,7 @@ describe('POST /api/webhook', () => {
 
         const discordControllerStub: Partial<IDiscordController> = {
             sendMessageToChannel: jest.fn(),
-            determineChannel: jest.fn()
+            determineChannels: jest.fn()
         };
 
         const eventControllerStub: IEventController = {

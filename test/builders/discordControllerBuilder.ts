@@ -28,7 +28,37 @@ export class DiscordControllerBuilder {
     private commandPrefix: string = '!';
 
     private guildNames: Array<string> = ['Guild 1', 'Guild 2'];
+
+    public withToken(token: string) {
+        this.token = token;
+        return this;
+    }
+
+    public withClient(client: Partial<Client>) {
+        this.client = client;
+        return this;
+    }
+
+    public withMappingController(mappingController: IMappingController) {
+        this.mappingController = mappingController;
+        return this;
+    }
+
+    public withGuildNames(guildNames: Array<string>) {
+        this.guildNames = guildNames;
+        return this;
+    }
     
+    public withLogger(logger: Partial<Logger>) {
+        this.logger = logger;
+        return this;
+    }
+
+    public withCommandController(commandController: Partial<ICommandController>) {
+        this.commandController = commandController as ICommandController;
+        return this;
+    }
+
     public build() {
         return new DiscordController(
             this.token,
