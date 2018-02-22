@@ -123,20 +123,7 @@ export class DiscordController implements IDiscordController {
 
     public getUserId(username: string): string {
         assert(username, `Username not valid: ${username}`);
-
-        // for (let i = 0; i < this.guildNames.length; i++) {
-        //     guild = this.client.guilds.find(g => g.name === this.guildNames[i]);
-
-        //     if (guild !== undefined) {
-
-        //         const user = guild.members.find(m => m.user.tag === username);
-
-        //         if (user) {
-        //             return user.id;
-        //         }
-        //     }
-        // }
-
+        
         const guilds = this.guildNames
             .map(guildName => this.client.guilds.find(guild => guild.name === guildName));
 
