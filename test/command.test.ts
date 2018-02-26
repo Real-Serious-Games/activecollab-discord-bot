@@ -22,6 +22,141 @@ const discordUser: Partial<User> = {
     id: '22020202'
 };
 
+describe ('tasksInListForProject', () => {
+    it('should return tasks for project in list', async () => {
+        const projectId = 0;
+        const taskList1 = 'List1';
+        const taskList2 = 'List2';
+
+        const tasksToReturn: Array<Partial<Assignment>> = [{
+            name: 'Task 1',
+            project_id: projectId, 
+            permalink: '\/projects\/2\/tasks\/35',
+            task_list: taskList1
+        },
+        {
+            name: 'Task 2',
+            project_id: projectId,
+            permalink: '\/projects\/2\/tasks\/76',
+            task_list: taskList1
+        },
+        {
+            name: 'Task 3',
+            project_id: projectId,
+            permalink: '\/projects\/2\/tasks\/347',
+            task_list: taskList1
+        },
+        {
+            name: 'Task 4',
+            project_id: projectId,
+            permalink: '\/projects\/2\/tasks\/288',
+            task_list: taskList2
+        }];
+
+        const expectedReturn = new RichEmbed()
+            .setTitle(`${taskList1} Tasks`)
+            .setColor(eventColor)
+            .addField(taskList1,
+                `• [${tasksToReturn[0].name}](${tasksToReturn[0].permalink})` +
+                `• [${tasksToReturn[1].name}](${tasksToReturn[1].permalink})` + 
+                `• [${tasksToReturn[2].name}](${tasksToReturn[2].permalink})`);
+
+        const activeCollabApiMock = new ActiveCollabApiMockBuilder()
+            .withGetAllAssignmentTasks(jest.fn(() => Promise.resolve(tasksToReturn)))
+            .build();
+
+        const commandController = new CommandControllerBuilder()
+            .withActiveCollabApi(activeCollabApiMock as IActiveCollabAPI)
+            .build();
+
+        expect((await commandController.tasksInListForProject(taskList1, projectId)))
+            .toEqual(expectedReturn);    
+    });
+
+    it('should split into multiple fields based on field length', async () => {
+        const projectId = 0;
+        const taskList = 'Completed';
+        
+        const tasksToReturn: Array<Partial<Assignment>> = [{
+            name: 'Task 1',
+            project_id: projectId,
+            permalink: 'Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis, sem. Nulla consequat massa quis enim. Donec pede justo, fringilla vel, aliquet nec, vulputate eget, arcu. In enim justo, rhoncus ut, imperdiet a',
+            task_list: taskList
+        },
+        {
+            name: 'Task 2',
+            project_id: projectId,
+            permalink: 'Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis, sem. Nulla consequat massa quis enim. Donec pede justo, fringilla vel, aliquet nec, vulputate eget, arcu. In enim justo, rhoncus ut, imperdiet a',
+            task_list: taskList
+        },
+        {
+            name: 'Task 3',
+            project_id: projectId,
+            permalink: 'Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis, sem. Nulla consequat massa quis enim. Donec pede justo, fringilla vel, aliquet nec, vulputate eget, arcu. In enim justo, rhoncus ut, imperdiet a',
+            task_list: taskList
+        }];
+    
+        const expectedReturn = new RichEmbed()
+            .setTitle(`${taskList} Tasks`)
+            .setColor(eventColor)
+            .addField(taskList,
+                `• [${tasksToReturn[0].name}](${tasksToReturn[0].permalink})` +
+                `• [${tasksToReturn[1].name}](${tasksToReturn[1].permalink})`)
+            .addField(taskList, 
+                `• [${tasksToReturn[2].name}](${tasksToReturn[2].permalink})`);
+
+        const activeCollabApiMock = new ActiveCollabApiMockBuilder()
+            .withGetAllAssignmentTasks(jest.fn(() => Promise.resolve(tasksToReturn)))
+            .build();
+
+        const commandController = new CommandControllerBuilder()
+            .withActiveCollabApi(activeCollabApiMock as IActiveCollabAPI)
+            .build();
+
+        expect((await commandController.tasksInListForProject(taskList, 0)))
+            .toEqual(expectedReturn);     
+    });
+
+    it('should return none found message when no tasks exist', async () => {
+        expect.assertions(1);
+
+        const taskList = 'List';
+        
+        const activeCollabApiMock = new ActiveCollabApiMockBuilder()
+            .withGetAllAssignmentTasks(jest.fn(() => Promise.resolve([])))
+            .build();
+
+        const commandController = new CommandControllerBuilder()
+            .withActiveCollabApi(activeCollabApiMock as IActiveCollabAPI)
+            .build();
+            
+        expect((await commandController.tasksInListForProject(taskList, 0)).title)
+            .toEqual(`No tasks found for task list: ${taskList}.`);
+    });
+
+    it('should return and log error message when unable to get tasks', async () => {
+        expect.assertions(2);
+
+            const error = 'error';
+            const expectedReturn = `There was an error getting tasks.`;
+    
+            const logger = createMockLogger();
+    
+            const activeCollabApiMock = new ActiveCollabApiMockBuilder()
+                .withGetAllAssignmentTasks(jest.fn(() => Promise.reject(error)))
+                .build();
+    
+            const commandController = new CommandControllerBuilder()
+                .withLogger(logger)
+                .withActiveCollabApi(activeCollabApiMock as IActiveCollabAPI)
+                .build();
+                
+            expect((await commandController.tasksInListForProject('columnm', 0)).title)
+                .toEqual(expectedReturn);
+            expect(logger.warn).toBeCalledWith(`Error getting tasks: ${error}`);
+    });
+});
+
 describe('tasksDueThisWeekForProject', () => {
     it('should return tasks for project due this week grouped by column', async () => {
         const projectId = 0;
@@ -157,8 +292,6 @@ describe('tasksDueThisWeekForProject', () => {
     it('should return none found message when no tasks exist', async () => {
         expect.assertions(1);
         
-        const expectedReturn = `No tasks found that are due this week.`;
-
         const activeCollabApiMock = new ActiveCollabApiMockBuilder()
             .withGetAllAssignmentTasks(jest.fn(() => Promise.resolve([])))
             .build();
@@ -178,17 +311,6 @@ describe('tasksDueThisWeekForProject', () => {
 
         try {
             const error = 'error';
-        
-            const projectId = 0;
-            
-            const tasksToReturn: Array<Partial<Assignment>> = [{
-                name: 'Task 1',
-                project_id: projectId, 
-                permalink: '\/projects\/2\/tasks\/35',
-                due_on: moment().add(2, 'days').valueOf(),
-                task_list: 'completed'
-            }];
-    
             const expectedReturn = `There was an error getting tasks.`;
     
             const logger = createMockLogger();
@@ -295,7 +417,7 @@ describe('listTasksForUser', () => {
             .withActiveCollabApi(activeCollabApiMock as IActiveCollabAPI)
             .build();
 
-        expect((await commandController.listTasksForUser(<User>discordUser)))
+        expect((await commandController.tasksForUser(<User>discordUser)))
             .toEqual(expectedReturn);
     });
 
@@ -366,7 +488,7 @@ describe('listTasksForUser', () => {
             .withActiveCollabApi(activeCollabApiMock as IActiveCollabAPI)
             .build();
 
-        expect((await commandController.listTasksForUser(<User>discordUser)))
+        expect((await commandController.tasksForUser(<User>discordUser)))
             .toEqual(expectedReturn);
     });
 
@@ -454,7 +576,7 @@ describe('listTasksForUser', () => {
             .withActiveCollabApi(activeCollabApiMock as IActiveCollabAPI)
             .build();
 
-        expect((await commandController.listTasksForUser(<User>discordUser)))
+        expect((await commandController.tasksForUser(<User>discordUser)))
             .toEqual(expectedReturn);
     });
 
@@ -473,7 +595,7 @@ describe('listTasksForUser', () => {
             .withActiveCollabApi(activeCollabApiMock as IActiveCollabAPI)
             .build();
             
-        expect((await commandController.listTasksForUser(<User>discordUser)))
+        expect((await commandController.tasksForUser(<User>discordUser)))
             .toEqual(expectedReturn);
     });
 
@@ -492,7 +614,7 @@ describe('listTasksForUser', () => {
             .withActiveCollabApi(activeCollabApiMock as IActiveCollabAPI)
             .build();
             
-        expect((await commandController.listTasksForUser(<User>discordUser)))
+        expect((await commandController.tasksForUser(<User>discordUser)))
             .toEqual(expectedReturn);
     });
 
@@ -513,7 +635,7 @@ describe('listTasksForUser', () => {
             .withActiveCollabApi(activeCollabApiMock as IActiveCollabAPI)
             .withLogger(logger)
             .build();
-        expect((await commandController.listTasksForUser(<User>discordUser)))
+        expect((await commandController.tasksForUser(<User>discordUser)))
             .toEqual(expectedReturn);
         expect(logger.warn).toBeCalled();
     });
@@ -535,7 +657,7 @@ describe('listTasksForUser', () => {
             .withActiveCollabApi(activeCollabApiMock as IActiveCollabAPI)
             .withLogger(logger)
             .build();
-        expect((await commandController.listTasksForUser(<User>discordUser)))
+        expect((await commandController.tasksForUser(<User>discordUser)))
             .toEqual(expectedReturn);
         expect(logger.warn).toBeCalled();
     });
@@ -557,7 +679,7 @@ describe('listTasksForUser', () => {
             .withMappingController(mappingControllerMock as IMappingController)
             .build();
 
-        expect((await commandController.listTasksForUser(<User>discordUser)))
+        expect((await commandController.tasksForUser(<User>discordUser)))
             .toEqual(expectedReturn);
     });
 });

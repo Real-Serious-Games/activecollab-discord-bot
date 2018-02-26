@@ -3,11 +3,12 @@ import { RichEmbed } from 'discord.js';
 
 export class CommandControllerMockBuilder {
 
-    private listTasksForUser = jest.fn(() => Promise.resolve(new RichEmbed()));
+    private tasksForUser = jest.fn(() => Promise.resolve(new RichEmbed()));
     private tasksDueThisWeekForProject = jest.fn(() => Promise.resolve(new RichEmbed()));
-
+    private tasksInListForProject = jest.fn(() => Promise.resolve(new RichEmbed()));
+    
     public withListTasksForUser(func: any) {
-        this.listTasksForUser = func;
+        this.tasksForUser = func;
         return this;
     }
 
@@ -16,10 +17,16 @@ export class CommandControllerMockBuilder {
         return this;
     }
 
+    public withTasksInListForProject(func: any) {
+        this.tasksInListForProject = func;
+        return this;
+    }
+
     public build(): ICommandController {
         return {
-            listTasksForUser: this.listTasksForUser,
-            tasksDueThisWeekForProject: this.tasksDueThisWeekForProject
+            tasksForuser: this.tasksForUser,
+            tasksDueThisWeekForProject: this.tasksDueThisWeekForProject,
+            tasksInListForProject: this.tasksInListForProject
         };
     }
 }

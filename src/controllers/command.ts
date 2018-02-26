@@ -10,7 +10,8 @@ import { IMappingController } from '../controllers/mapping';
 import { parse } from 'url';
 
 export interface ICommandController {
-    listTasksForUser: (user: User) => Promise<RichEmbed>;
+    tasksForuser: (user: User) => Promise<RichEmbed>;
+    tasksInListForProject: (column: string, projectId: number) => Promise<RichEmbed>;
     tasksDueThisWeekForProject: (projectId: number) => Promise<RichEmbed>;
 }
 
@@ -163,6 +164,65 @@ async function tasksDueThisWeekForProject(
     return formattedTasks;
 }
 
+async function tasksInListForProject(
+    activeCollabApi: IActiveCollabAPI,
+    logger: Logger,
+    list: string,
+    projectId: number
+): Promise<RichEmbed> {
+
+    let tasks: _.LoDashImplicitArrayWrapper<Assignment>;
+
+    try {
+        tasks = _(await activeCollabApi.getAllAssignmentTasks())
+            .filter(t => t.due_on !== null)
+            .filter(t => t.project_id === projectId)
+            .filter(t => t.task_list === list);
+
+    } catch (e) {
+        logger.warn(`Error getting tasks: ${e}`);
+        return new RichEmbed()
+            .setTitle(`There was an error getting tasks.`)
+            .setColor(eventColor);
+    }
+
+    if (tasks.size() < 1) {
+        return new RichEmbed()
+            .setTitle(`No tasks found for task list: ${list}.`)
+            .setColor(eventColor);
+    }
+
+    const formattedTasks = new RichEmbed()
+        .setTitle(`${list} Tasks`)
+        .setColor(eventColor);
+
+    tasks
+        .groupBy(t => t.task_list)
+        .forEach(taskGroup => {
+            let currentChars = 0;
+
+            taskGroup.forEach(t => { 
+                const task = `• [${t.name}](${t.permalink})`;
+                const newLength = currentChars + task.length;
+
+                if (formattedTasks.fields !== undefined 
+                    && formattedTasks.fields.length > 0 
+                    && currentChars !== 0 // If characters is 0 we're doing a new task list
+                    && newLength <= maxFieldLength
+                ) {
+                    currentChars = newLength;
+
+                    formattedTasks.fields[formattedTasks.fields.length - 1].value += task;
+                } else {
+                    currentChars = (task + taskGroup[0].task_list).length;
+                    formattedTasks.addField(taskGroup[0].task_list, task);
+                }
+            });
+        });
+
+    return formattedTasks;
+}
+
 export function createCommandController(
     activeCollabApi: IActiveCollabAPI,
     mappingController: IMappingController,
@@ -172,6 +232,8 @@ export function createCommandController(
         tasksForUser: (u: User) => 
             tasksForUser(activeCollabApi, mappingController, logger, u),
         tasksDueThisWeekForProject: (projectId: number) => 
-            tasksDueThisWeekForProject(activeCollabApi, logger, projectId)
+            tasksDueThisWeekForProject(activeCollabApi, logger, projectId),
+        tasksInListForProject: (list: string, projectId: number) => 
+            tasksInListForProject(activeCollabApi, logger, list, projectId)
     };
 }
