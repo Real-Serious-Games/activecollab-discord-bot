@@ -1,6 +1,25 @@
 # Active Collab Discord Bot
+[![Build Status](https://travis-ci.org/Real-Serious-Games/activecollab-discord-bot.svg)](https://travis-ci.org/Real-Serious-Games/activecollab-discord-bot) [![NSP Status](https://nodesecurity.io/orgs/rsg/projects/63275344-d29a-4122-92b2-3d92506f6578/badge)](https://nodesecurity.io/orgs/rsg/projects/63275344-d29a-4122-92b2-3d92506f6578)
 
-This is a Discord bot for Active Collab, it can send notifications to specified channels for task and comment events in Active Collab as well as respond to commands. It is written in TypeScript and runs on Node.js and Express.
+This is a Discord bot for Active Collab. It can send notifications to specified channels for task and comment events in Active Collab as well as respond to commands. It is written in TypeScript and runs on Node.js and Express.
+
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+
+
+- [Getting Started](#getting-started)
+  - [Prerequisites](#prerequisites)
+  - [Installing](#installing)
+    - [Setup Discord App](#setup-discord-app)
+    - [Create Active Collab User](#create-active-collab-user)
+    - [Setup Config](#setup-config)
+    - [Running the Server](#running-the-server)
+  - [Running with Docker](#running-with-docker)
+  - [Deployment](#deployment)
+- [Getting involved](#getting-involved)
+  - [Running tests](#running-tests)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 ## Getting Started
 
@@ -8,10 +27,10 @@ These instructions will get you a copy of the project up and running on your loc
 
 ### Prerequisites
 
-* [NPM](https://www.npmjs.com)
-* [Node](https://nodejs.org/en/)
+* [Node](https://nodejs.org/en/) version 8.
 * A [Discord](https://discordapp.com) account to create the Discord App with
-* A Discord account with *Manage Server* permissions for your guild, this can be the same account as above
+* A Discord account with *Manage Server* permissions for your guild. This can be the same account as above
+* An ActiveCollab instance with an account the bot can log in as.
 * (optional) [Docker](https://www.docker.com)
 
 ### Installing
@@ -53,8 +72,8 @@ config.json is a JSON object with the following fields:
   - *connectionStr:* The base URL for making requests to ActiveCollab, *(https://app.activecollab.com/<account ID>)*
   - *email:* Active Collab user email address
   - *password:* Active Collab user password
-- *guildName:* Discord guild name
-- *channels:* An array that maps Active Collab project IDs to Discord channels
+- *guildNames:* Names of Discord guild names the bot is invited to
+- *channels:* An array that maps Active Collab project IDs to Discord channels and Guilds
 - *users:* An array that maps Active Collab user IDs to Discord users *(<Username>#<tag>)*
 
 Example config:
@@ -67,9 +86,11 @@ Example config:
          "email": "account@email.com",
          "password": "verySecurePassword"
     },
-    "guildName": "Great Guild Good Job",
+    "guildNames": ["Great Guild Good Job", "The Real Guild"],
     "channels": [
-        {"projectId": 49, "channelName": "Project-X"},
+        {"projectId": 49, "channelName": "Project-X", "guildIndex": 0},
+        {"projectId": 49, "channelName": "Project-X", "guildIndex": 1},
+        {"projectId": 78, "channelName": "Project-Y", "guildIndex": 1},
     ],
     "users": [
         {"discordUser": "TokyoToon#4984", "activeCollabUser": 48},
@@ -85,20 +106,6 @@ Create *config.json* in the root directory of the project.
 npm start
 ```
 
-Or to rebuild and run the server when the source changes:
-
-```
-npm run watch
-```
-
-### Running tests
-
-The bot uses Jest as a test framework, to run tests automatically on source change:
-
-```
-npm run test
-```
-
 ### Running with Docker
 
 Running the bot using the Docker container automatically exposes port 80 and uses the production configuration.
@@ -110,18 +117,88 @@ docker run -p 8080:80 activecollab-discord-bot
 
 ### Deployment
 
-You can deploy with or without the Docker container, however if you deploy without it you will need to configure the project to use production mode.
+You can deploy with or without the Docker container.
 
 Once you have deployed the bot Active Collab needs to be configured to POST to it, to do so go to https://app.activecollab.com, sign in and browse to Add-Ons. From there configure the Webhooks add-on specifying the target URL (<server address>/api/webhook) and the secret which you have specified in *config.json*.
 
-### Built with
+## Getting involved
 
-- Node.js
-- TypeScript
-- Express
-- Discord.js
-- Jest
+If you find a bug or want to add a feature, feel free to [raise an issue](https://github.com/Real-Serious-Games/activecollab-discord-bot/issues) or create a pull request. If you are creating a new pull request, please make sure that your new code has good test coverage and passes the build (including TSLint). You should also make sure that your editor supports [EditorConfig](http://editorconfig.org/) so that it can be set up to match the style of our existing code.
 
-### License
+To rebuild and run the server when the source changes:
 
-This project is licensed under the MIT License.
+```
+npm run watch
+```
+
+### Running tests
+
+The bot uses Jest as a test framework, which can be run from the command line:
+```
+npm run test
+```
+
+The test runner can also run in the background and automatically re-run tests when it detects code changes:
+```
+npm run watch-test
+```
+
+## API
+
+Active Collab will send the correct POST requests, however manually testing events can be useful and can be done by sending POST requests to the server. Payloads used for testing purposes can be found in *test/testData.ts*.
+
+```
+POST /api/webhook
+
+headers:
+X-Angie-WebhookSecret: AOHdas0dh0qhed2d
+Content-Type: application/json
+```
+```json
+body:
+{
+  "payload": {
+    "id": 288,
+    "class": "Task",
+    "url_path": "\/projects\/2\/tasks\/288",
+    "name": "Example Task",
+    "assignee_id": 18,
+    "delegated_by_id": 18,
+    "completed_on": null,
+    "completed_by_id": null,
+    "is_completed": false,
+    "comments_count": 0,
+    "attachments": [
+
+    ],
+    "labels": [
+
+    ],
+    "is_trashed": false,
+    "trashed_on": null,
+    "trashed_by_id": 0,
+    "project_id": 2,
+    "is_hidden_from_clients": false,
+    "body": "",
+    "body_formatted": "",
+    "created_on": 1515388565,
+    "created_by_id": 18,
+    "updated_on": 1515388565,
+    "updated_by_id": 18,
+    "task_number": 33,
+    "task_list_id": 3,
+    "position": 18,
+    "is_important": false,
+    "start_on": null,
+    "due_on": null,
+    "estimate": 0,
+    "job_type_id": 0,
+    "total_subtasks": 0,
+    "completed_subtasks": 0,
+    "open_subtasks": 0,
+    "created_from_recurring_task_id": 0
+  },
+  "timestamp": 1515388565,
+  "type": "TaskCreated"
+}
+```

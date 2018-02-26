@@ -18,4 +18,6 @@ export interface Assignment {
     name: string;
     assignee_id: number;
     permalink: string;
+    due_on: number;
+    task_list: string;
 }

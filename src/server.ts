@@ -45,11 +45,13 @@ async function createServer() {
         );
     
         const discordController = new DiscordController(
-            config.get('discordBotToken'),
+            getConfigValue('discordBotToken'),
             new discord.Client(),
             mappingController,
             commandController,
-            config.get('guildName')
+            logger,
+            getConfigValue('commandPrefix'),
+            getConfigValue('guildNames')
         );
 
         const eventController = createEventController(

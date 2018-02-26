@@ -20,7 +20,8 @@ module.exports = {
     ],
     coveragePathIgnorePatterns: [
         '/node_modules/',
-        'testData.ts'
+        'testData.ts',
+        'test/builders/'
     ],
     testEnvironment: 'node',
     mapCoverage: true,
