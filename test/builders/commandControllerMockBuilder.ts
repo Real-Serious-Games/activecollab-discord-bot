@@ -7,7 +7,7 @@ export class CommandControllerMockBuilder {
     private tasksDueThisWeekForProject = jest.fn(() => Promise.resolve(new RichEmbed()));
     private tasksInListForProject = jest.fn(() => Promise.resolve(new RichEmbed()));
     
-    public withListTasksForUser(func: any) {
+    public withTasksForUser(func: any) {
         this.tasksForUser = func;
         return this;
     }

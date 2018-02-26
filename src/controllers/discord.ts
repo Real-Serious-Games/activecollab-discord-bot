@@ -47,18 +47,28 @@ export class DiscordController implements IDiscordController {
                 return;
             }
 
-            const args = message.content.toLowerCase().slice(commandPrefix.length).trim().split(/ +/g);
-            const command = args.shift();
+            const args = message.content.slice(commandPrefix.length).trim().split(/ +/g);
+            let command = args.shift();
 
             if (command === undefined || command === '') {
                 return;
             }
 
+            command = command.toLowerCase();
+            
+            if (args.length > 0) {
+                args[0] = args[0].toLowerCase();
+            }
+
             if (command === 'tasks') {
                 if (args[0] === 'list') {
                     this.ListCommand(message, args);
-                } else if (args.length === 1 && args[0] === 'due') {
+                } else if (args[0] === 'due' && args.length === 1) {
                     this.DueCommand(message);
+                } else if (args[0] === 'in' && args.length > 1) {
+                    args.shift();
+                    const list = args.join(' ');
+                    this.InListCommand(message, list);
                 } else {
                     message.channel.send(`Unknown command, *${message.content}*, ` 
                         + `use *!tasks help* or *!tasks commands* for list of commands.`);
@@ -159,6 +169,8 @@ export class DiscordController implements IDiscordController {
             .channel
             .send('Getting tasks...') as discord.Message;
 
+        args = args.map(a => a.toLowerCase());
+
         message
             .channel
             .startTyping();
@@ -169,6 +181,44 @@ export class DiscordController implements IDiscordController {
         } else {
             sentMessage.edit(await this.commandController
                 .tasksForuser(message.author));
+        }
+    }
+
+    private async InListCommand(message: discord.Message, list: string): Promise<void> {
+        if (message.channel.type !== 'text') {
+            message.channel.send(`!tasks in ${list} command must be called`
+                + ' from a text channel associated with a project');
+            return;
+        }
+
+        message
+            .channel
+            .send(`Getting tasks in ${list}.`);
+
+        const channelName = (<discord.TextChannel>message.channel).name;
+
+        try {
+            const projectId = this.mappingController
+                .getProjectId(channelName);
+
+            message
+                .channel
+                .startTyping();
+
+            message
+                .channel
+                .send(await this.commandController.tasksInListForProject(
+                    list,
+                    projectId
+                )
+            );
+        } catch (e) {
+            message
+                .channel
+                .send('Unable to find ActiveCollab' 
+                    + ' project for channel ' + channelName
+                );
+            this.logger.warn(`Error getting tasks in ${list}: ` + e);
         }
     }
 

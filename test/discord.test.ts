@@ -349,7 +349,8 @@ describe('client receiving message', () => {
                 channel: {
                     send: jest.fn(() => Promise.resolve()),
                     name: 'channel',
-                    type: 'voice'
+                    type: 'voice',
+                    stopType: jest.fn()
                 }
             };
 
@@ -421,7 +422,7 @@ describe('client receiving message', () => {
             const returnedTasks = new RichEmbed();
     
             const commandControllerMock = new CommandControllerMockBuilder()
-                .withListTasksForUser(jest.fn(() => Promise.resolve(returnedTasks)))
+                .withTasksForUser(jest.fn(() => Promise.resolve(returnedTasks)))
                 .build();
     
             const discordController = new DiscordControllerBuilder()
@@ -460,7 +461,7 @@ describe('client receiving message', () => {
             const returnedTasks = new RichEmbed();
 
             const commandControllerMock = new CommandControllerMockBuilder()
-                .withListTasksForUser(jest.fn(() => Promise.resolve(returnedTasks)))
+                .withTasksForUser(jest.fn(() => Promise.resolve(returnedTasks)))
                 .build();
 
             const discordController = new DiscordControllerBuilder()
@@ -491,6 +492,128 @@ describe('client receiving message', () => {
                     send: jest.fn(async () => sentMessage),
                     startTyping: jest.fn(() => Promise.resolve()),
                     stopTyping: jest.fn(() => Promise.resolve()),
+                }
+            };
+
+            client.emit('message', message);
+        });
+    });
+
+    describe('when message is "!tasks in <list>"', () => {
+        it('should call commandController.taskInListForProject with list from '
+        +   'command and project ID from channel', done => {
+            const client = setupClient();
+
+            const taskList = 'Selected for Development';
+            const projectId = 0;
+            const returnedTasks = new RichEmbed();
+
+            const commandControllerMock = new CommandControllerMockBuilder()
+                .withTasksInListForProject(jest.fn(() => Promise.resolve(returnedTasks)))
+                .build();
+
+            const mappingControllerMock = new MappingControllerMockBuilder()
+                .withGetProjectId(jest.fn().mockReturnValue(projectId))
+                .build();
+
+            const discordController = new DiscordControllerBuilder()
+                .withClient(client)
+                .withMappingController(mappingControllerMock)
+                .withCommandController(commandControllerMock)
+                .build();
+
+            const message = {
+                content: `!tasks in ${taskList}`,
+                author: {
+                    bot: false
+                },
+                channel: {
+                    send: jest.fn().mockImplementation(async value => {
+                        if (value !== returnedTasks) {
+                            return;
+                        }
+
+                        expect(commandControllerMock.tasksInListForProject)
+                            .toBeCalledWith(taskList, projectId);
+                        done();
+                    }),
+                    startTyping: jest.fn(() => Promise.resolve()),
+                    stopTyping: jest.fn(() => Promise.resolve()),
+                    type: 'text'
+                }
+            };
+
+            client.emit('message', message);
+        });
+
+        it('should send warning when channel type is not text', () => {
+            const client = setupClient();
+
+            const commandControllerMock = new CommandControllerMockBuilder()
+                .withTasksInListForProject(jest.fn(() => Promise.resolve(new RichEmbed())))
+                .build();
+
+            const discordController = new DiscordControllerBuilder()
+                .withCommandController(commandControllerMock)
+                .withClient(client)
+                .build();
+
+            const message = {
+                content: '!tasks in list',
+                author: 'author',
+                channel: {
+                    send: jest.fn(() => Promise.resolve()),
+                    stopType: jest.fn(),
+                    name: 'channel',
+                    type: 'voice'
+                }
+            };
+
+            client.emit('message', message);
+
+            expect(message.channel.send)
+                .toBeCalledWith('!tasks in list command must be called from' 
+                    + ' a text channel associated with a project');
+        });
+
+        it('should send warning and log error when error getting project ID', done => {
+            const client = setupClient();
+
+            const projectId = 0;
+            const error = 'error';
+            const list = 'List';
+            const channelName = 'channel';
+
+            let sentMessageValue = '';
+
+            const loggerMock = new LoggerMockBuilder()
+                .withWarn(jest.fn().mockImplementation(value => {
+                    expect(value).toBe(`Error getting tasks in ${list}: Error: ${error}`);
+                    expect(sentMessageValue).toBe(`Unable to find ActiveCollab project for channel ` 
+                        + channelName);
+                    done();
+                }))
+                .build();
+
+            const mappingControllerMock = new MappingControllerMockBuilder()
+                .withGetProjectId(jest.fn(() => { throw Error(error); }))
+                .build();
+
+            const discordController = new DiscordControllerBuilder()
+                .withMappingController(mappingControllerMock)
+                .withClient(client)
+                .withLogger(loggerMock)
+                .build();
+
+            const message = {
+                content: `!tasks in ${list}`,
+                author: 'author',
+                channel: {
+                    send: jest.fn(async value => sentMessageValue = value),
+                    startTyping: jest.fn(() => Promise.resolve()),
+                    stopTyping: jest.fn(() => Promise.resolve()),
+                    type: 'text',
+                    name: channelName
                 }
             };
 
