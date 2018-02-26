@@ -271,7 +271,7 @@ describe('calling getUserId', () => {
     it('should throw error when username not found in guild', () => {
         const username = 'username';
 
-        const guilds: Partial<Collection<string, Guild>> = {
+        const guildsMock: Partial<Collection<string, Guild>> = {
             find: jest.fn().mockReturnValue({
                 members: {
                     find: jest.fn().mockReturnValue(undefined)
@@ -280,7 +280,7 @@ describe('calling getUserId', () => {
         };
 
         const clientMock = new DiscordClientMockBuilder()
-            .withGuilds(guilds)
+            .withGuilds(guildsMock)
             .build();
 
         const discordController = new DiscordControllerBuilder()

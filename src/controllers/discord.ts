@@ -93,14 +93,16 @@ export class DiscordController implements IDiscordController {
 
         // Get all channels that match the channel maps
         const textChannels = this
-                .client
-                .channels
-                .findAll('type', 'text')
-                .map(channel => channel as discord.TextChannel)
-                .filter(textChannel => channelMaps
-                    .some(channelMap => 
-                        channelMap.channelName === textChannel.name && 
-                        this.guildNames[channelMap.guildIndex] === textChannel.guild.name));
+            .client
+            .channels
+            .findAll('type', 'text')
+            .map(channel => channel as discord.TextChannel)
+            .filter(textChannel => channelMaps
+                .some(channelMap => 
+                    channelMap.channelName === textChannel.name && 
+                    this.guildNames[channelMap.guildIndex] === textChannel.guild.name
+                )
+            );
 
         let unfoundChannels = '';
 
