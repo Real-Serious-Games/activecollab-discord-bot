@@ -54,12 +54,11 @@ describe ('tasksInListForProject', () => {
         }];
 
         const expectedReturn = new RichEmbed()
-            .setTitle(`${taskList1} Tasks`)
             .setColor(eventColor)
-            .addField(taskList1,
-                `• [${tasksToReturn[0].name}](${tasksToReturn[0].permalink})` +
-                `• [${tasksToReturn[1].name}](${tasksToReturn[1].permalink})` + 
-                `• [${tasksToReturn[2].name}](${tasksToReturn[2].permalink})`);
+            .addField(`${taskList1} Tasks`,
+                `• [${tasksToReturn[0].name}](${tasksToReturn[0].permalink})\n` +
+                `• [${tasksToReturn[1].name}](${tasksToReturn[1].permalink})\n` + 
+                `• [${tasksToReturn[2].name}](${tasksToReturn[2].permalink})\n`);
 
         const activeCollabApiMock = new ActiveCollabApiMockBuilder()
             .withGetAllAssignmentTasks(jest.fn(() => Promise.resolve(tasksToReturn)))
@@ -69,7 +68,10 @@ describe ('tasksInListForProject', () => {
             .withActiveCollabApi(activeCollabApiMock as IActiveCollabAPI)
             .build();
 
-        expect((await commandController.tasksInListForProject(taskList1, projectId)))
+        expect(await commandController.tasksInListForProject(
+                taskList1.toLowerCase(),
+                projectId
+            ))
             .toEqual(expectedReturn);    
     });
 
@@ -97,13 +99,12 @@ describe ('tasksInListForProject', () => {
         }];
     
         const expectedReturn = new RichEmbed()
-            .setTitle(`${taskList} Tasks`)
             .setColor(eventColor)
-            .addField(taskList,
-                `• [${tasksToReturn[0].name}](${tasksToReturn[0].permalink})` +
-                `• [${tasksToReturn[1].name}](${tasksToReturn[1].permalink})`)
-            .addField(taskList, 
-                `• [${tasksToReturn[2].name}](${tasksToReturn[2].permalink})`);
+            .addField(`${taskList} Tasks`,
+                `• [${tasksToReturn[0].name}](${tasksToReturn[0].permalink})\n` +
+                `• [${tasksToReturn[1].name}](${tasksToReturn[1].permalink})\n`)
+            .addField(`${taskList} Tasks`, 
+                `• [${tasksToReturn[2].name}](${tasksToReturn[2].permalink})\n`);
 
         const activeCollabApiMock = new ActiveCollabApiMockBuilder()
             .withGetAllAssignmentTasks(jest.fn(() => Promise.resolve(tasksToReturn)))
@@ -334,7 +335,7 @@ describe('tasksDueThisWeekForProject', () => {
     });
 });
 
-describe('listTasksForUser', () => {
+describe('tasksForUser', () => {
     it('should return task list when user valid and when tasks exist', async () => {
         expect.assertions(1);
         

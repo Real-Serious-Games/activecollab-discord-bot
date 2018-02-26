@@ -24,7 +24,7 @@ export class CommandControllerMockBuilder {
 
     public build(): ICommandController {
         return {
-            tasksForuser: this.tasksForUser,
+            tasksForUser: this.tasksForUser,
             tasksDueThisWeekForProject: this.tasksDueThisWeekForProject,
             tasksInListForProject: this.tasksInListForProject
         };

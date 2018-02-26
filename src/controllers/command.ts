@@ -10,7 +10,7 @@ import { IMappingController } from '../controllers/mapping';
 import { parse } from 'url';
 
 export interface ICommandController {
-    tasksForuser: (user: User) => Promise<RichEmbed>;
+    tasksForUser: (user: User) => Promise<RichEmbed>;
     tasksInListForProject: (column: string, projectId: number) => Promise<RichEmbed>;
     tasksDueThisWeekForProject: (projectId: number) => Promise<RichEmbed>;
 }
@@ -175,9 +175,8 @@ async function tasksInListForProject(
 
     try {
         tasks = _(await activeCollabApi.getAllAssignmentTasks())
-            .filter(t => t.due_on !== null)
             .filter(t => t.project_id === projectId)
-            .filter(t => t.task_list === list);
+            .filter(t => t.task_list.toLowerCase() === list.toLowerCase());
 
     } catch (e) {
         logger.warn(`Error getting tasks: ${e}`);
@@ -192,8 +191,9 @@ async function tasksInListForProject(
             .setColor(eventColor);
     }
 
+    const headTask = tasks.head() as Assignment;
+
     const formattedTasks = new RichEmbed()
-        .setTitle(`${list} Tasks`)
         .setColor(eventColor);
 
     tasks
@@ -202,7 +202,7 @@ async function tasksInListForProject(
             let currentChars = 0;
 
             taskGroup.forEach(t => { 
-                const task = `• [${t.name}](${t.permalink})`;
+                const task = `• [${t.name}](${t.permalink})\n`;
                 const newLength = currentChars + task.length;
 
                 if (formattedTasks.fields !== undefined 
@@ -215,7 +215,7 @@ async function tasksInListForProject(
                     formattedTasks.fields[formattedTasks.fields.length - 1].value += task;
                 } else {
                     currentChars = (task + taskGroup[0].task_list).length;
-                    formattedTasks.addField(taskGroup[0].task_list, task);
+                    formattedTasks.addField(`${taskGroup[0].task_list} Tasks`, task);
                 }
             });
         });

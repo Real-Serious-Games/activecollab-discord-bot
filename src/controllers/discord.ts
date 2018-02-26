@@ -55,7 +55,7 @@ export class DiscordController implements IDiscordController {
             }
 
             command = command.toLowerCase();
-            
+
             if (args.length > 0) {
                 args[0] = args[0].toLowerCase();
             }
@@ -177,10 +177,10 @@ export class DiscordController implements IDiscordController {
 
         if (args.length === 3 && args[1] === 'for') {
             sentMessage.edit(await this.commandController
-                .tasksForuser(message.mentions.users.first()));
+                .tasksForUser(message.mentions.users.first()));
         } else {
             sentMessage.edit(await this.commandController
-                .tasksForuser(message.author));
+                .tasksForUser(message.author));
         }
     }
 
@@ -193,7 +193,7 @@ export class DiscordController implements IDiscordController {
 
         message
             .channel
-            .send(`Getting tasks in ${list}.`);
+            .send(`Getting tasks in ${list}...`);
 
         const channelName = (<discord.TextChannel>message.channel).name;
 
