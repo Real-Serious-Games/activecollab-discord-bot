@@ -311,7 +311,7 @@ describe('client receiving message', () => {
 
         const sentMessage = {
             edit: jest.fn(async value => {
-                expect(commandControllerMock.listTasksForUser).toBeCalledWith(message.author);
+                expect(commandControllerMock.tasksForuser).toBeCalledWith(message.author);
                 expect(value).toBe(returnedTasks);
                 expect(message.channel.startTyping).toBeCalled();
                 done();
@@ -516,7 +516,7 @@ describe('client receiving message', () => {
 
         const sentMessage = {
             edit: jest.fn(async value => {
-                expect(commandControllerMock.listTasksForUser).toBeCalled();
+                expect(commandControllerMock.tasksForuser).toBeCalled();
                 expect(value).toBe(returnedTasks);
                 expect(message.channel.startTyping).toBeCalled();
                 done();
@@ -632,7 +632,7 @@ describe('client receiving message', () => {
 
         client.emit('message', message);
 
-        expect(commandControllerMock.listTasksForUser).toHaveBeenCalledTimes(0);
+        expect(commandControllerMock.tasksForuser).toHaveBeenCalledTimes(0);
     });
 
     it('should do nothing when message is empty and starts with prefix', () => {
@@ -655,7 +655,7 @@ describe('client receiving message', () => {
 
         client.emit('message', message);
 
-        expect(commandControllerMock.listTasksForUser).toHaveBeenCalledTimes(0);
+        expect(commandControllerMock.tasksForuser).toHaveBeenCalledTimes(0);
     });
 });
 

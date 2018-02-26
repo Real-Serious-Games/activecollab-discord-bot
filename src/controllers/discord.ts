@@ -165,10 +165,10 @@ export class DiscordController implements IDiscordController {
 
         if (args.length === 3 && args[1] === 'for') {
             sentMessage.edit(await this.commandController
-                .listTasksForUser(message.mentions.users.first()));
+                .tasksForuser(message.mentions.users.first()));
         } else {
             sentMessage.edit(await this.commandController
-                .listTasksForUser(message.author));
+                .tasksForuser(message.author));
         }
     }
 

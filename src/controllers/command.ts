@@ -17,7 +17,7 @@ export interface ICommandController {
 const eventColor = '#449DF5';
 const maxFieldLength = 1024;
 
-async function listTasksForUser(
+async function tasksForUser(
     activecollabApi: IActiveCollabAPI,
     mappingController: IMappingController,
     logger: Logger,
@@ -169,8 +169,8 @@ export function createCommandController(
     logger: Logger
 ) {
     return {
-        listTasksForUser: (u: User) => 
-            listTasksForUser(activeCollabApi, mappingController, logger, u),
+        tasksForUser: (u: User) => 
+            tasksForUser(activeCollabApi, mappingController, logger, u),
         tasksDueThisWeekForProject: (projectId: number) => 
             tasksDueThisWeekForProject(activeCollabApi, logger, projectId)
     };
