@@ -51,7 +51,7 @@ async function createServer() {
             commandController,
             logger,
             getConfigValue('commandPrefix'),
-            getConfigValue('guildName')
+            getConfigValue('guildNames')
         );
 
         const eventController = createEventController(

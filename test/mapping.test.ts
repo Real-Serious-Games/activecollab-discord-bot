@@ -1,17 +1,44 @@
 import * as mapping from '../src/controllers/mapping';
 
-describe('calling getChannel', () => {
+describe('calling getChannels', () => {
     it('returns channel when project ID is valid', () => {
         const projectId = 1;
         const channelName = 'channel';
+        const guildIndex = 0;
 
         const channelsMap = new Array<mapping.ChannelMap>(
-            { projectId: projectId, channelName: channelName },
+            { 
+                projectId: projectId,
+                channelName: channelName, 
+                guildIndex: guildIndex 
+            }
         );
 
         const mappingController = createMappingController(channelsMap);
 
-        expect(mappingController.getChannel(projectId)).toEqual(channelName);
+        expect(mappingController.getChannels(projectId)).toEqual(channelsMap);
+    });
+
+    it('returns multiple channels when project ID is valid and matches multiple channels', () => {
+        const projectId = 1;
+        const channelName = 'channel';
+
+        const channelsMap = new Array<mapping.ChannelMap>(
+            { 
+                projectId: projectId,
+                channelName: channelName, 
+                guildIndex: 0 
+            },
+            { 
+                projectId: projectId,
+                channelName: channelName, 
+                guildIndex: 1 
+            }
+        );
+
+        const mappingController = createMappingController(channelsMap);
+
+        expect(mappingController.getChannels(projectId)).toEqual(channelsMap);
     });
 
     it('throws error when project ID is invalid', () => {
@@ -19,7 +46,7 @@ describe('calling getChannel', () => {
         
         const mappingController = createMappingController();
 
-        expect(() => mappingController.getChannel(invalidProjectId))
+        expect(() => mappingController.getChannels(invalidProjectId))
             .toThrow('Invalid project ID: undefined');
     });
 
@@ -27,12 +54,12 @@ describe('calling getChannel', () => {
         const unknownProjectID = 2;
         
         const channelsMap = new Array<mapping.ChannelMap>(
-            { projectId: 1, channelName: 'channelName' },
+            { projectId: 1, channelName: 'channelName', guildIndex: 0 },
         );
 
         const mappingController = createMappingController(channelsMap);
 
-        expect(() => mappingController.getChannel(unknownProjectID))
+        expect(() => mappingController.getChannels(unknownProjectID))
             .toThrow(`Channel not found with project ID: ${unknownProjectID}`);
     });
 });
@@ -41,9 +68,14 @@ describe('calling getProjectId', () => {
     it('returns project ID when channel is valid', () => {
         const projectId = 1;
         const channelName = 'channel';
+        const guildIndex = 0;
 
         const channelsMap = new Array<mapping.ChannelMap>(
-            { projectId: projectId, channelName: channelName },
+            { 
+                projectId: projectId,
+                channelName: channelName, 
+                guildIndex: guildIndex 
+            }
         );
 
         const mappingController = createMappingController(channelsMap);
@@ -64,7 +96,7 @@ describe('calling getProjectId', () => {
         const unknownChannel = 'unknownName';
         
         const channelsMap = new Array<mapping.ChannelMap>(
-            { projectId: 1, channelName: 'channelName' },
+            { projectId: 1, channelName: 'channelName', guildIndex: 0 },
         );
 
         const mappingController = createMappingController(channelsMap);
@@ -151,8 +183,9 @@ describe('calling getActiveCollabUser', () => {
 
 function createChannelsMap(): Array<mapping.ChannelMap> {
     return new Array<mapping.ChannelMap>(
-        { projectId: 1, channelName: 'channel' },
-        { projectId: 2, channelName: 'channel 2' }
+        { projectId: 1, channelName: 'channel', guildIndex: 0 },
+        { projectId: 1, channelName: 'channel', guildIndex: 1 },
+        { projectId: 2, channelName: 'channel 2', guildIndex: 0 }
     );
 }
 

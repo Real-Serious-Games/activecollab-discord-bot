@@ -72,8 +72,8 @@ config.json is a JSON object with the following fields:
   - *connectionStr:* The base URL for making requests to ActiveCollab, *(https://app.activecollab.com/<account ID>)*
   - *email:* Active Collab user email address
   - *password:* Active Collab user password
-- *guildName:* Discord guild name
-- *channels:* An array that maps Active Collab project IDs to Discord channels
+- *guildNames:* Names of Discord guild names the bot is invited to
+- *channels:* An array that maps Active Collab project IDs to Discord channels and Guilds
 - *users:* An array that maps Active Collab user IDs to Discord users *(<Username>#<tag>)*
 
 Example config:
@@ -86,9 +86,11 @@ Example config:
          "email": "account@email.com",
          "password": "verySecurePassword"
     },
-    "guildName": "Great Guild Good Job",
+    "guildNames": ["Great Guild Good Job", "The Real Guild"],
     "channels": [
-        {"projectId": 49, "channelName": "Project-X"},
+        {"projectId": 49, "channelName": "Project-X", "guildIndex": 0},
+        {"projectId": 49, "channelName": "Project-X", "guildIndex": 1},
+        {"projectId": 78, "channelName": "Project-Y", "guildIndex": 1},
     ],
     "users": [
         {"discordUser": "TokyoToon#4984", "activeCollabUser": 48},

@@ -1,5 +1,4 @@
 import * as discord from 'discord.js';
-import * as config from 'confucious';
 import { assert } from 'console';
 import { Logger } from 'structured-log';
 
@@ -10,14 +9,14 @@ export interface IDiscordController {
     sendMessageToChannel: (
         message: discord.RichEmbed, channel: discord.TextChannel
     ) => any;
-    determineChannel: (projectId: number) => discord.TextChannel;
+    determineChannels: (projectId: number) => Array<discord.TextChannel>;
     getUserId: (username: string) => string;
 }
 
 export class DiscordController implements IDiscordController {
     private readonly client: discord.Client;
     private readonly mappingController: IMappingController;
-    private readonly guildName: string;
+    private readonly guildNames: Array<string>;
     private readonly commandController: ICommandController;
     private readonly logger: Logger;
 
@@ -28,11 +27,11 @@ export class DiscordController implements IDiscordController {
         commandController: ICommandController,
         logger: Logger,
         commandPrefix: string,
-        guildName: string
+        guildNames: Array<string>
     ) {
         this.client = discordClient;
         this.mappingController = mappingController;
-        this.guildName = guildName;
+        this.guildNames = guildNames;
         this.logger = logger;
         this.commandController = commandController;
 
@@ -85,38 +84,63 @@ export class DiscordController implements IDiscordController {
         });
     }
 
-    public determineChannel(projectId: number): discord.TextChannel {
+    public determineChannels(projectId: number): Array<discord.TextChannel> {
         assert(projectId, `Project ID not valid: ${projectId}`);
         
-        const channelToFind = this.mappingController.getChannel(projectId);
+        const channelMaps = this.mappingController.getChannels(projectId);
         
-        assert(channelToFind, `Project ID not found: ${projectId}`);
+        assert(channelMaps, `Channels not found for project ID: ${projectId}`);
 
-        const channel = this
+        // Get all channels that match the channel maps
+        const textChannels = this
             .client
             .channels
             .findAll('type', 'text')
             .map(channel => channel as discord.TextChannel)
-            .find(channel => channel.name === channelToFind);
-    
-        if (channel) {
-            return channel;
-        } 
+            .filter(textChannel => channelMaps
+                .some(channelMap => 
+                    channelMap.channelName === textChannel.name && 
+                    this.guildNames[channelMap.guildIndex] === textChannel.guild.name
+                )
+            );
 
-        throw new Error(`Channel does not exist on Discord: ${channelToFind}`);
+        let unfoundChannels = '';
+
+        if (textChannels.length !== channelMaps.length) {
+            unfoundChannels = channelMaps
+                .filter(channelMap => !textChannels.some(textChannel =>
+                    textChannel.guild.name === this.guildNames[channelMap.guildIndex]))
+                .map(c => `${c.channelName} (${this.guildNames[c.guildIndex]})`)
+                .join(', ');
+
+            this.logger.warn(`Unable to find channels: ${unfoundChannels}`);
+        }
+
+        if (textChannels.length > 0) {
+            return textChannels;
+        }
+
+        throw new Error(`Channels do not exist on Discord: ${unfoundChannels}`);
     }
 
     public getUserId(username: string): string {
         assert(username, `Username not valid: ${username}`);
         
-        const guild = this.client.guilds.find(g => g.name === this.guildName);
-        const user = guild.members.find(m => m.user.tag === username);
+        const guilds = this.guildNames
+            .map(guildName => this.client.guilds.find(guild => guild.name === guildName));
 
-        if (user) {
-            return user.id;
+        if (guilds.every(guild => guild === undefined)) {
+            throw Error(`Guilds not found: ${this.guildNames}`);
         }
 
-        throw Error(`User not found in guild: ${username}`);
+        const members = guilds
+            .map(guild => guild.members.find(member => member.user.tag === username));
+
+        if (members.every(member => member === undefined)) {
+            throw Error(`User not found: ${username}`);
+        }
+
+        return members[0].id;
     }
 
     public sendMessageToChannel(
