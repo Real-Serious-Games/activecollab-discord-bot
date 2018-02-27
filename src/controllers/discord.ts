@@ -62,13 +62,13 @@ export class DiscordController implements IDiscordController {
 
             if (command === 'tasks') {
                 if (args[0] === 'list') {
-                    this.ListCommand(message, args);
+                    this.listCommand(message, args);
                 } else if (args[0] === 'due' && args.length === 1) {
-                    this.DueCommand(message);
+                    this.dueCommand(message);
                 } else if (args[0] === 'in' && args.length > 1) {
                     args.shift();
                     const list = args.join(' ');
-                    this.InListCommand(message, list);
+                    this.inListCommand(message, list);
                 } else {
                     message.channel.send(`Unknown command, *${message.content}*, ` 
                         + `use *!tasks help* or *!tasks commands* for list of commands.`);
@@ -164,7 +164,7 @@ export class DiscordController implements IDiscordController {
             .catch(console.error);
     }
 
-    private async ListCommand(message: discord.Message, args: Array<string>): Promise<void> {
+    private async listCommand(message: discord.Message, args: Array<string>): Promise<void> {
         const sentMessage = await message
             .channel
             .send('Getting tasks...') as discord.Message;
@@ -184,7 +184,7 @@ export class DiscordController implements IDiscordController {
         }
     }
 
-    private async InListCommand(message: discord.Message, list: string): Promise<void> {
+    private async inListCommand(message: discord.Message, list: string): Promise<void> {
         if (message.channel.type !== 'text') {
             message.channel.send(`!tasks in ${list} command must be called`
                 + ' from a text channel associated with a project');
@@ -222,7 +222,7 @@ export class DiscordController implements IDiscordController {
         }
     }
 
-    private async DueCommand(message: discord.Message): Promise<void> {
+    private async dueCommand(message: discord.Message): Promise<void> {
         if (message.channel.type !== 'text') {
             message.channel.send('!tasks due command must be called' 
                 + ' from a text channel associated with a project');
