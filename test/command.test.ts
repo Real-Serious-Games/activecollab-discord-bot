@@ -14,6 +14,8 @@ import { Project } from '../src/models/project';
 import { IApiController } from '../src/controllers/api';
 import { CommandControllerBuilder } from './builders/commandControllerBuilder';
 import { ActiveCollabApiMockBuilder } from './builders/activeCollabApiMockBuilder';
+import { LoggerMockBuilder } from './builders/loggerMockBuilder';
+import { MappingControllerMockBuilder } from './builders/mappingControllerMockBuilder';
 
 const eventColor = '#449DF5';
 const discordUser: Partial<User> = {
@@ -23,16 +25,82 @@ const discordUser: Partial<User> = {
 };
 
 describe('addTask', () => {
-    it('should call activeCollabApi and return confirmation message', () => {
-        return false;
+    it('should call activeCollabApi and return confirmation message', async () => {
+        expect.assertions(2);
+
+        const projectId = 1;
+        const taskName = 'name';
+
+        const activeCollabApiMock = new ActiveCollabApiMockBuilder()
+            .build();
+
+        const commandController = new CommandControllerBuilder()
+            .withActiveCollabApi(activeCollabApiMock)
+            .build();
+
+        await expect(commandController.addTask(projectId, taskName))
+            .resolves
+            .toBeTruthy();
+
+        expect(activeCollabApiMock.addTask)
+            .toBeCalledWith(projectId, taskName);
     });
 
-    it('should return and log error message when error adding task', () => {
-        return false;
+    it('should return and log error message when error adding task', async () => {
+        expect.assertions(1);
+
+        const projectId = 1;
+        const taskName = 'name';
+
+        const error = new Error('Error');
+
+        const activeCollabApiMock = new ActiveCollabApiMockBuilder()
+            .withAddTask(jest.fn(() => Promise.reject(error)))
+            .build();
+
+        const loggerMock = new LoggerMockBuilder()
+            .build();
+
+        const commandController = new CommandControllerBuilder()
+            .withActiveCollabApi(activeCollabApiMock)
+            .withLogger(loggerMock)
+            .build();
+
+        await expect(commandController.addTask(projectId, taskName))
+            .rejects
+            .toMatchObject(error);
     });
 
-    it('should return error message when unable to find project', () => {
-        return false;
+    it('should return error message when unable to find project', async () => {
+        expect.assertions(2);
+
+        const projectId = 1;
+        const taskName = 'name';
+
+        const error = new Error('Error');
+
+        const mappingControllerMock = new MappingControllerMockBuilder()
+            .withGetProjectId(jest.fn(() => { throw 'Error'; }))
+            .build();
+
+        const loggerMock = new LoggerMockBuilder()
+            .build();
+
+        const commandController = new CommandControllerBuilder()
+            .withMappingController(mappingControllerMock)
+            .withLogger(loggerMock)
+            .build();
+
+        const expectedReturn = new RichEmbed()
+            .setTitle(`Unable to find project with ID: <@${projectId}>`)
+            .setColor(eventColor);
+
+        await expect(commandController.addTask(projectId, taskName))
+            .resolves
+            .toMatchObject(expectedReturn);
+
+        expect(loggerMock.warn)
+            .toBeCalledWith(`Error finding project with ID ${projectId}: ${error}`);
     });
 });
 
@@ -155,7 +223,7 @@ describe ('tasksInListForProject', () => {
             const error = 'error';
             const expectedReturn = `There was an error getting tasks.`;
     
-            const logger = createMockLogger();
+            const logger = new LoggerMockBuilder().build();
     
             const activeCollabApiMock = new ActiveCollabApiMockBuilder()
                 .withGetAllAssignmentTasks(jest.fn(() => Promise.reject(error)))
@@ -328,7 +396,7 @@ describe('tasksDueThisWeekForProject', () => {
             const error = 'error';
             const expectedReturn = `There was an error getting tasks.`;
     
-            const logger = createMockLogger();
+            const logger = new LoggerMockBuilder().build();
     
             const activeCollabApiMock = new ActiveCollabApiMockBuilder()
                 .withGetAllAssignmentTasks(jest.fn(() => Promise.reject(error)))
@@ -644,7 +712,7 @@ describe('tasksForUser', () => {
             .withGetAssignmentTasksByUserId(jest.fn(() => Promise.reject('error')))
             .build();
 
-        const logger = createMockLogger();
+        const logger = new LoggerMockBuilder().build();
 
         const commandController = new CommandControllerBuilder()
             .withActiveCollabApi(activeCollabApiMock as IActiveCollabAPI)
@@ -666,7 +734,7 @@ describe('tasksForUser', () => {
             .withGetAllProjects(jest.fn(() => Promise.reject('error')))
             .build();
 
-        const logger = createMockLogger();
+        const logger = new LoggerMockBuilder().build();
 
         const commandController = new CommandControllerBuilder()
             .withActiveCollabApi(activeCollabApiMock as IActiveCollabAPI)
@@ -688,7 +756,7 @@ describe('tasksForUser', () => {
             getActiveCollabUser: jest.fn(() => { throw 'Error'; })
         };
 
-        const logger = createMockLogger();
+        const logger = new LoggerMockBuilder().build();
 
         const commandController = new CommandControllerBuilder()
             .withMappingController(mappingControllerMock as IMappingController)
@@ -698,9 +766,3 @@ describe('tasksForUser', () => {
             .toEqual(expectedReturn);
     });
 });
-
-function createMockLogger(): Partial<Logger> {
-    return {
-        warn: jest.fn()
-    };
-}

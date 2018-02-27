@@ -25,7 +25,7 @@ async function addTask(
     logger: Logger,
     projectId: number,
     taskName: string
-) {
+): Promise<RichEmbed> {
     throw 'not implemented';
 }
 
