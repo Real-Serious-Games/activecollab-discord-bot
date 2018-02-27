@@ -11,6 +11,10 @@ interface TaskResponse {
     tasks: Array<Task>;
 }
 
+interface AddTaskResponse {
+    name: string;
+}
+
 export interface IActiveCollabAPI {
     /**
      * Get the name of a specified task from its ID and project ID.
@@ -60,8 +64,18 @@ async function addTask(
     restClient: IActiveCollabRestClient,
     projectId: number,
     name: string
-) {
-    throw 'Not implemented';
+): Promise<void> {
+    const url = `/projects/${projectId}/tasks`;
+
+    const response = await restClient
+        .post(url, { 'name': name }) as AddTaskResponse;
+
+    if (!response.name) {
+        throw new Error(`Invalid response received trying to POST ${url}: `
+            + JSON.stringify(response, undefined, 4));
+    }
+
+    return;
 }
 
 /**
