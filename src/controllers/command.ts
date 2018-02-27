@@ -13,10 +13,21 @@ export interface ICommandController {
     tasksForUser: (user: User) => Promise<RichEmbed>;
     tasksInListForProject: (column: string, projectId: number) => Promise<RichEmbed>;
     tasksDueThisWeekForProject: (projectId: number) => Promise<RichEmbed>;
+    addTask: (projectId: number, taskName: string) => Promise<RichEmbed>;
 }
 
 const eventColor = '#449DF5';
 const maxFieldLength = 1024;
+
+async function addTask(
+    activeCollabApi: IActiveCollabAPI,
+    mappingController: IMappingController,
+    logger: Logger,
+    projectId: number,
+    taskName: string
+) {
+    throw 'not implemented';
+}
 
 async function tasksForUser(
     activecollabApi: IActiveCollabAPI,
@@ -234,6 +245,8 @@ export function createCommandController(
         tasksDueThisWeekForProject: (projectId: number) => 
             tasksDueThisWeekForProject(activeCollabApi, logger, projectId),
         tasksInListForProject: (list: string, projectId: number) => 
-            tasksInListForProject(activeCollabApi, logger, list, projectId)
+            tasksInListForProject(activeCollabApi, logger, list, projectId),
+        addTask: (projectId: number, taskName: string) => 
+            addTask(activeCollabApi, mappingController, logger, projectId, taskName)
     };
 }

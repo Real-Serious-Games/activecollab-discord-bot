@@ -22,6 +22,20 @@ const discordUser: Partial<User> = {
     id: '22020202'
 };
 
+describe('addTask', () => {
+    it('should call activeCollabApi and return confirmation message', () => {
+        return false;
+    });
+
+    it('should return and log error message when error adding task', () => {
+        return false;
+    });
+
+    it('should return error message when unable to find project', () => {
+        return false;
+    });
+});
+
 describe ('tasksInListForProject', () => {
     it('should return tasks for project in list', async () => {
         const projectId = 0;

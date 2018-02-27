@@ -6,6 +6,16 @@ import { IActiveCollabRestClient, QueryParams } from '../src/controllers/activec
 import { getEmptyReport } from './testData';
 
 describe('ActiveCollab API', () => {
+    describe('addTask', () => {
+        it('posts task to specified project', () => {
+            return false;
+        });
+
+        it('throws error when invalid response received', () => {
+            return false;
+        });
+    });
+
     describe('taskIdToName', () => {
         it('requests specified project', async () => {
             expect.assertions(1);

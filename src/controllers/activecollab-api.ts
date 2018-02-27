@@ -11,6 +11,59 @@ interface TaskResponse {
     tasks: Array<Task>;
 }
 
+export interface IActiveCollabAPI {
+    /**
+     * Get the name of a specified task from its ID and project ID.
+     */
+    taskIdToName: (projectId: number, taskId: number) => Promise<string>;
+
+    /**
+     * Get the name of a specified task list from it's ID and project ID.
+     */
+    getTaskListNameById: (projectId: number, taskId: number) => Promise<string>;
+
+    /**
+     * Get a specified project from its ID.
+     */
+    getProjectById: (projectId: number) => Promise<Project>;
+
+    /**
+     * Get tasks by user ID.
+     */
+    getAssignmentTasksByUserId: (userId: number) => Promise<Assignment[]>;
+
+    /**
+     * Get all tasks across all projects
+     */
+    getAllAssignmentTasks: () => Promise<Assignment[]>;
+
+    /**
+     * Get all projects
+     */
+    getAllProjects: () => Promise<Project[]>;
+
+    /**
+     * Get the id of the project the specified task belongs to.
+     */
+    findProjectForTask: (taskId: number) => Promise<Option<number>>;
+
+    /**
+     * Add a task to a project.
+     */
+    addTask: (projectId: number, name: string) => Promise<void>;
+}
+
+/**
+ * Add task with name to project with ID
+ */
+async function addTask(
+    restClient: IActiveCollabRestClient,
+    projectId: number,
+    name: string
+) {
+    throw 'Not implemented';
+}
+
 /**
  * Get the name of a specified task from its ID and project ID.
  */
@@ -147,51 +200,23 @@ async function findProjectForTaskId(
     return task ? some(task.project_id) : none;
 }
 
-export interface IActiveCollabAPI {
-    /**
-     * Get the name of a specified task from its ID and project ID.
-     */
-    taskIdToName: (projectId: number, taskId: number) => Promise<string>;
-
-    /**
-     * Get the name of a specified task list from it's ID and project ID.
-     */
-    getTaskListNameById: (projectId: number, taskId: number) => Promise<string>;
-
-    /**
-     * Get a specified project from its ID.
-     */
-    getProjectById: (projectId: number) => Promise<Project>;
-
-    /**
-     * Get tasks by user ID.
-     */
-    getAssignmentTasksByUserId: (userId: number) => Promise<Assignment[]>;
-
-    /**
-     * Get all tasks across all projects
-     */
-    getAllAssignmentTasks: () => Promise<Assignment[]>;
-
-    /**
-     * Get all projects
-     */
-    getAllProjects: () => Promise<Project[]>;
-
-    /**
-     * Get the id of the project the specified task belongs to.
-     */
-    findProjectForTask: (taskId: number) => Promise<Option<number>>;
-}
-
 export function createActiveCollabAPI(restClient: IActiveCollabRestClient): IActiveCollabAPI {
     return {
-        taskIdToName: (p, t) => taskIdToName(restClient, p, t),
-        getTaskListNameById: (p, t) => getTaskListNameById(restClient, p, t),
-        getProjectById: p => getProjectById(restClient, p),
-        getAssignmentTasksByUserId: p => getAssignmentTasksByUserId(restClient, p),
-        getAllAssignmentTasks: () => getAllAssignmentTasksLazy(restClient).then(a => a.value()),
-        getAllProjects: () => getAllProjectsLazy(restClient).then(a => a.value()),
-        findProjectForTask: t => findProjectForTaskId(restClient, t)
+        taskIdToName: (projectId, taskId) => 
+            taskIdToName(restClient, projectId, taskId),
+        getTaskListNameById: (projectId, taskId) => 
+            getTaskListNameById(restClient, projectId, taskId),
+        getProjectById: projectId => 
+            getProjectById(restClient, projectId),
+        getAssignmentTasksByUserId: projectId => 
+            getAssignmentTasksByUserId(restClient, projectId),
+        getAllAssignmentTasks: () => 
+            getAllAssignmentTasksLazy(restClient).then(a => a.value()),
+        getAllProjects: () => 
+            getAllProjectsLazy(restClient).then(a => a.value()),
+        findProjectForTask: task => 
+            findProjectForTaskId(restClient, task),
+        addTask: (projectId, taskName) => 
+            addTask(restClient, projectId, taskName)
     };
 }
