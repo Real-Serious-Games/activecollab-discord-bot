@@ -1,5 +1,5 @@
 # Active Collab Discord Bot
-[![Build Status](https://travis-ci.org/Real-Serious-Games/activecollab-discord-bot.svg)](https://travis-ci.org/Real-Serious-Games/activecollab-discord-bot) [![NSP Status](https://nodesecurity.io/orgs/rsg/projects/63275344-d29a-4122-92b2-3d92506f6578/badge)](https://nodesecurity.io/orgs/rsg/projects/63275344-d29a-4122-92b2-3d92506f6578)
+[![Build Status](https://travis-ci.org/Real-Serious-Games/activecollab-discord-bot.svg?branch=master)](https://travis-ci.org/Real-Serious-Games/activecollab-discord-bot) [![NSP Status](https://nodesecurity.io/orgs/rsg/projects/63275344-d29a-4122-92b2-3d92506f6578/badge)](https://nodesecurity.io/orgs/rsg/projects/63275344-d29a-4122-92b2-3d92506f6578)
 
 This is a Discord bot for Active Collab. It can send notifications to specified channels for task and comment events in Active Collab as well as respond to commands. It is written in TypeScript and runs on Node.js and Express.
 
