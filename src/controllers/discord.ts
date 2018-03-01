@@ -69,6 +69,10 @@ export class DiscordController implements IDiscordController {
                     args.shift();
                     const list = args.join(' ');
                     this.inListCommand(message, list);
+                } else if (args[0] === 'add' && args.length > 1) {
+                    args.shift();
+                    const taskName = args.join(' ');
+                    this.addTaskCommand(message, taskName);
                 } else {
                     message.channel.send(`Unknown command, *${message.content}*, ` 
                         + `use *!tasks help* or *!tasks commands* for list of commands.`);
@@ -164,7 +168,49 @@ export class DiscordController implements IDiscordController {
             .catch(console.error);
     }
 
-    private async listCommand(message: discord.Message, args: Array<string>): Promise<void> {
+    private async addTaskCommand(
+        message: discord.Message,
+        taskName: string
+    ): Promise<void> {
+        if (message.channel.type !== 'text') {
+            message.channel.send(`!tasks add command must be called`
+                + ' from a text channel associated with a project');
+            return;
+        }
+
+        message.channel.send('Adding task...');
+
+        const channelName = (<discord.TextChannel>message.channel).name;
+
+        try {
+            const projectId = this.mappingController
+                .getProjectId(channelName);
+
+            message
+                .channel
+                .startTyping();
+
+            message
+                .channel
+                .send(await this.commandController.addTask(
+                    projectId,
+                    taskName
+                )
+            );
+        } catch (e) {
+            message
+                .channel
+                .send('Unable to find ActiveCollab' 
+                    + ' project for channel ' + channelName
+                );
+            this.logger.warn(`Error adding task: ` + e.message);
+        }
+    }
+
+    private async listCommand(
+        message: discord.Message,
+        args: Array<string>
+    ): Promise<void> {
         const sentMessage = await message
             .channel
             .send('Getting tasks...') as discord.Message;
@@ -184,7 +230,10 @@ export class DiscordController implements IDiscordController {
         }
     }
 
-    private async inListCommand(message: discord.Message, list: string): Promise<void> {
+    private async inListCommand(
+        message: discord.Message, 
+        list: string
+    ): Promise<void> {
         if (message.channel.type !== 'text') {
             message.channel.send(`!tasks in ${list} command must be called`
                 + ' from a text channel associated with a project');

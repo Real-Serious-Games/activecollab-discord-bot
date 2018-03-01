@@ -293,6 +293,130 @@ describe('calling getUserId', () => {
 });
 
 describe('client receiving message', () => {
+    describe('when message is "!tasks add"', () => {
+        it('should call commandController.addTask when command and send message'
+            + ' is sent from project channel', done => {
+            expect.assertions(2);
+
+            const firstMessage = 'Adding task...';
+            const secondMessage = 'Task added';
+            let messagesSent = 0;
+
+            const client = setupClient();
+
+            const commandControllerMock = new CommandControllerMockBuilder()
+                .withAddTask(jest.fn(async () => new RichEmbed().setTitle(secondMessage)))
+                .build();
+
+            const discordController = new DiscordControllerBuilder()
+                .withCommandController(commandControllerMock)
+                .withClient(client)
+                .build();
+
+            const message = {
+                content: '!tasks add new task',
+                author: 'author',
+                channel: {
+                    send: jest.fn(async value => {
+                        messagesSent++;
+
+                        if (messagesSent === 1) {
+                            expect(value).toEqual(firstMessage);
+                        }
+                        if (messagesSent === 2) {
+                            expect(value.title).toEqual(secondMessage);
+                            done();
+                        }
+                    }),
+                    startTyping: jest.fn(() => Promise.resolve()),
+                    stopTyping: jest.fn(() => Promise.resolve()),
+                    name: 'channel',
+                    type: 'text'
+                }
+            };
+
+            client.emit('message', message);
+        });
+
+        it('should send warning message when channel type is not text' , () => {
+            const client = setupClient();
+
+            const commandControllerMock = new CommandControllerMockBuilder()
+                .withAddTask(jest.fn(() => Promise.resolve(new RichEmbed())))
+                .build();
+
+            const discordController = new DiscordControllerBuilder()
+                .withCommandController(commandControllerMock)
+                .withClient(client)
+                .build();
+
+            const message = {
+                content: '!tasks add new task',
+                author: 'author',
+                channel: {
+                    send: jest.fn(() => Promise.resolve()),
+                    stopTyping: jest.fn(() => Promise.resolve()),
+                    name: 'channel',
+                    type: 'voice',
+                    stopType: jest.fn()
+                }
+            };
+
+            client.emit('message', message);
+
+            expect(message.channel.send)
+                .toBeCalledWith('!tasks add command must be called from a text channel' 
+                    + ' associated with a project');
+        });
+
+        it('should send error message and log when error getting project ID', done => {
+            expect.assertions(2);
+                
+            const client = setupClient();
+
+            const projectId = 0;
+            const error = 'error';
+            const channelName = 'channel';
+
+            let sentMessageValue = '';
+
+            const loggerMock = new LoggerMockBuilder()
+                .withWarn(jest.fn().mockImplementation(value => {
+                    expect(value).toBe(`Error adding task: ${error}`);
+                    expect(sentMessageValue).toBe(`Unable to find ActiveCollab project for channel ` 
+                        + channelName);
+                    done();
+                }))
+                .build();
+
+            const mappingControllerMock = new MappingControllerMockBuilder()
+                .withGetProjectId(jest.fn(() => { throw Error(error); }))
+                .build();
+
+            const discordController = new DiscordControllerBuilder()
+                .withMappingController(mappingControllerMock)
+                .withClient(client)
+                .withLogger(loggerMock)
+                .build();
+
+            const message = {
+                content: '!tasks add task',
+                author: 'author',
+                channel: {
+                    send: jest.fn(async value => {
+                        sentMessageValue = value;
+                    }),
+                    startTyping: jest.fn(() => Promise.resolve()),
+                    stopTyping: jest.fn(() => Promise.resolve()),
+                    type: 'text',
+                    name: channelName
+                }
+            };
+
+            client.emit('message', message);
+        });
+    });
+    
     describe('when message is "!tasks due"', () => {   
         it('should call commandController.tasksDueThisWeekForProject when command is' 
             + ' sent from project channel', done => {
@@ -302,12 +426,7 @@ describe('client receiving message', () => {
                 .withTasksDueThisWeekForProject(jest.fn(async () => done()))
                 .build();
 
-            const mappingControllerMock = new MappingControllerMockBuilder()
-                .withGetProjectId(jest.fn().mockReturnValue(0))
-                .build();
-
             const discordController = new DiscordControllerBuilder()
-                .withMappingController(mappingControllerMock)
                 .withCommandController(commandControllerMock)
                 .withClient(client)
                 .build();
@@ -789,4 +908,6 @@ function setupClient() {
     client.login = jest.fn(() => Promise.resolve());
 
     return client;
+}
+
 }
