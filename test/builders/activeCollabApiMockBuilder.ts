@@ -31,7 +31,7 @@ export class ActiveCollabApiMockBuilder {
     private getAllProjects = jest.fn(() => Promise.resolve(this.projectsToReturn));
     private getTaskListNameById = jest.fn().mockReturnValue('Completed');
     private getAllAssignmentTasks = jest.fn(() => Promise.resolve(this.tasksToReturn));
-    private addTask = jest.fn(() => Promise.resolve());
+    private createTask = jest.fn(() => Promise.resolve());
 
     public withGetAssignmentTasksByUserId(mock: jest.Mock<Promise<Partial<Assignment>[]>>) {
         this.getAssignmentTasksByUserId = mock;
@@ -53,8 +53,8 @@ export class ActiveCollabApiMockBuilder {
         return this;
     }
 
-    public withAddTask(mock: jest.Mock<Promise<void>>) {
-        this.addTask = mock;
+    public withCreateTask(mock: jest.Mock<Promise<void>>) {
+        this.createTask = mock;
         return this;
     }
 
@@ -64,7 +64,7 @@ export class ActiveCollabApiMockBuilder {
             getAllProjects: this.getAllProjects,
             getTaskListNameById: this.getTaskListNameById,
             getAllAssignmentTasks: this.getAllAssignmentTasks,
-            addTask: this.addTask
+            createTask: this.createTask
         } as Partial<IActiveCollabAPI>;
     }
 }

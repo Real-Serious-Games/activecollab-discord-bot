@@ -6,7 +6,7 @@ export class CommandControllerMockBuilder {
     private tasksForUser = jest.fn(() => Promise.resolve(new RichEmbed()));
     private tasksDueThisWeekForProject = jest.fn(() => Promise.resolve(new RichEmbed()));
     private tasksInListForProject = jest.fn(() => Promise.resolve(new RichEmbed()));
-    private addTask = jest.fn(() => Promise.resolve(new RichEmbed()));
+    private createTask = jest.fn(() => Promise.resolve(new RichEmbed()));
     
     public withTasksForUser(mock: jest.Mock<Promise<RichEmbed>>) {
         this.tasksForUser = mock;
@@ -23,8 +23,8 @@ export class CommandControllerMockBuilder {
         return this;
     }
 
-    public withAddTask(mock: jest.Mock<Promise<RichEmbed>>) {
-        this.addTask = mock;
+    public withCreateTask(mock: jest.Mock<Promise<RichEmbed>>) {
+        this.createTask = mock;
         return this;
     }
 
@@ -33,7 +33,7 @@ export class CommandControllerMockBuilder {
             tasksForUser: this.tasksForUser,
             tasksDueThisWeekForProject: this.tasksDueThisWeekForProject,
             tasksInListForProject: this.tasksInListForProject,
-            addTask: this.addTask
+            createTask: this.createTask
         };
     }
 }

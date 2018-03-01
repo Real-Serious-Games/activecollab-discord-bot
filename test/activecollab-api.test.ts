@@ -6,19 +6,19 @@ import { IActiveCollabRestClient, QueryParams } from '../src/controllers/activec
 import { getEmptyReport } from './testData';
 
 describe('ActiveCollab API', () => {
-    describe('addTask', () => {
+    describe('createTask', () => {
         it('posts task to specified project', async () => {
-            expect.assertions(2);
+            expect.assertions(1);
             
             const projectId = 123;
             const taskName = 'name';
     
             const restClientMock = new RestClientMockBuilder()
-                .withPost(jest.fn(async () => { return {'name': taskName}; }))
+                .withPost(jest.fn(async () => { return { 'single': { 'name': taskName }}; }))
                 .build(); 
             const activeCollabApi = createActiveCollabAPI(restClientMock);
 
-            await expect(activeCollabApi.addTask(projectId, taskName)).resolves.toBe();
+            await activeCollabApi.createTask(projectId, taskName);
 
             expect(restClientMock.post)
                 .toBeCalledWith(
@@ -40,7 +40,7 @@ describe('ActiveCollab API', () => {
                 .build();
             const activeCollabApi = createActiveCollabAPI(restClientMock);
 
-            expect(activeCollabApi.addTask(projectId, taskName))
+            expect(activeCollabApi.createTask(projectId, taskName))
                 .rejects
                 .toMatchObject(
                     new Error(

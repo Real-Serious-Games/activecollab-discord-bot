@@ -293,19 +293,19 @@ describe('calling getUserId', () => {
 });
 
 describe('client receiving message', () => {
-    describe('when message is "!tasks add"', () => {
-        it('should call commandController.addTask when command and send message'
+    describe('when message is "!tasks create"', () => {
+        it('should call commandController.createTask when command and send message'
             + ' is sent from project channel', done => {
             expect.assertions(2);
 
-            const firstMessage = 'Adding task...';
-            const secondMessage = 'Task added';
+            const firstMessage = 'Creating task...';
+            const secondMessage = 'Task created';
             let messagesSent = 0;
 
             const client = setupClient();
 
             const commandControllerMock = new CommandControllerMockBuilder()
-                .withAddTask(jest.fn(async () => new RichEmbed().setTitle(secondMessage)))
+                .withCreateTask(jest.fn(async () => new RichEmbed().setTitle(secondMessage)))
                 .build();
 
             const discordController = new DiscordControllerBuilder()
@@ -314,7 +314,7 @@ describe('client receiving message', () => {
                 .build();
 
             const message = new MessageBuilder()
-                .withContent('!tasks add new task')
+                .withContent('!tasks create new task')
                 .withSend(jest.fn(async value => {
                     messagesSent++;
 
@@ -335,7 +335,7 @@ describe('client receiving message', () => {
             const client = setupClient();
 
             const commandControllerMock = new CommandControllerMockBuilder()
-                .withAddTask(jest.fn(() => Promise.resolve(new RichEmbed())))
+                .withCreateTask(jest.fn(() => Promise.resolve(new RichEmbed())))
                 .build();
 
             const discordController = new DiscordControllerBuilder()
@@ -344,14 +344,14 @@ describe('client receiving message', () => {
                 .build();
 
             const message = new MessageBuilder()
-                .withContent('!tasks add new task')
+                .withContent('!tasks create new task')
                 .withChannelType('voice')
                 .build();
 
             client.emit('message', message);
 
             expect(message.channel.send)
-                .toBeCalledWith('!tasks add command must be called from a text channel' 
+                .toBeCalledWith('!tasks create command must be called from a text channel' 
                     + ' associated with a project');
         });
 
@@ -368,7 +368,7 @@ describe('client receiving message', () => {
 
             const loggerMock = new LoggerMockBuilder()
                 .withWarn(jest.fn().mockImplementation(value => {
-                    expect(value).toBe(`Error adding task: ${error}`);
+                    expect(value).toBe(`Error creating task: ${error}`);
                     expect(sentMessageValue).toBe(`Unable to find ActiveCollab project for channel ` 
                         + channelName);
                     done();
@@ -386,7 +386,7 @@ describe('client receiving message', () => {
                 .build();
 
             const message = new MessageBuilder()
-                .withContent('!tasks add task')
+                .withContent('!tasks create task')
                 .withSend(jest.fn(async value => {
                     sentMessageValue = value;
                 }))

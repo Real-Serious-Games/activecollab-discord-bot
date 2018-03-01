@@ -11,8 +11,10 @@ interface TaskResponse {
     tasks: Array<Task>;
 }
 
-interface AddTaskResponse {
-    name: string;
+interface CreateTaskResponse {
+    single: {
+        name: string;
+    };
 }
 
 export interface IActiveCollabAPI {
@@ -54,13 +56,13 @@ export interface IActiveCollabAPI {
     /**
      * Add a task to a project.
      */
-    addTask: (projectId: number, name: string) => Promise<void>;
+    createTask: (projectId: number, name: string) => Promise<void>;
 }
 
 /**
  * Add task with name to project with ID
  */
-async function addTask(
+async function createTask(
     restClient: IActiveCollabRestClient,
     projectId: number,
     name: string
@@ -68,9 +70,9 @@ async function addTask(
     const url = `/projects/${projectId}/tasks`;
 
     const response = await restClient
-        .post(url, { 'name': name }) as AddTaskResponse;
+        .post(url, { 'name': name }) as CreateTaskResponse;
 
-    if (!response.name) {
+    if (!response.single.name) {
         throw new Error(`Invalid response received trying to POST ${url}: `
             + JSON.stringify(response, undefined, 4));
     }
@@ -230,7 +232,7 @@ export function createActiveCollabAPI(restClient: IActiveCollabRestClient): IAct
             getAllProjectsLazy(restClient).then(a => a.value()),
         findProjectForTask: task => 
             findProjectForTaskId(restClient, task),
-        addTask: (projectId, taskName) => 
-            addTask(restClient, projectId, taskName)
+        createTask: (projectId, taskName) => 
+            createTask(restClient, projectId, taskName)
     };
 }

@@ -13,29 +13,29 @@ export interface ICommandController {
     tasksForUser: (user: User) => Promise<RichEmbed>;
     tasksInListForProject: (column: string, projectId: number) => Promise<RichEmbed>;
     tasksDueThisWeekForProject: (projectId: number) => Promise<RichEmbed>;
-    addTask: (projectId: number, taskName: string) => Promise<RichEmbed>;
+    createTask: (projectId: number, taskName: string) => Promise<RichEmbed>;
 }
 
 const eventColor = '#449DF5';
 const maxFieldLength = 1024;
 
-async function addTask(
+async function createTask(
     activeCollabApi: IActiveCollabAPI,
     logger: Logger,
     projectId: number,
     taskName: string
 ): Promise<RichEmbed> {
     try {
-        await activeCollabApi.addTask(projectId, taskName);
+        await activeCollabApi.createTask(projectId, taskName);
 
         return new RichEmbed()
-            .setTitle('Task added: ' + taskName)
+            .setTitle('Task created: ' + taskName)
             .setColor(eventColor);
     } catch (e) {
-        logger.warn(`Error adding task: ${e.message}`);
+        logger.warn(`Error creating task: ${e.message}`);
 
         return new RichEmbed()
-            .setTitle('Unable to add task: ' + taskName)
+            .setTitle('Unable to create task: ' + taskName)
             .setColor(eventColor);
     }
 }
@@ -257,7 +257,7 @@ export function createCommandController(
             tasksDueThisWeekForProject(activeCollabApi, logger, projectId),
         tasksInListForProject: (list: string, projectId: number) => 
             tasksInListForProject(activeCollabApi, logger, list, projectId),
-        addTask: (projectId: number, taskName: string) => 
-            addTask(activeCollabApi, logger, projectId, taskName)
+        createTask: (projectId: number, taskName: string) => 
+            createTask(activeCollabApi, logger, projectId, taskName)
     };
 }

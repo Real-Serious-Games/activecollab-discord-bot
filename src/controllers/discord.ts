@@ -69,10 +69,10 @@ export class DiscordController implements IDiscordController {
                     args.shift();
                     const list = args.join(' ');
                     this.inListCommand(message, list);
-                } else if (args[0] === 'add' && args.length > 1) {
+                } else if (args[0] === 'create' && args.length > 1) {
                     args.shift();
                     const taskName = args.join(' ');
-                    this.addTaskCommand(message, taskName);
+                    this.createTaskCommand(message, taskName);
                 } else {
                     message.channel.send(`Unknown command, *${message.content}*, ` 
                         + `use *!tasks help* or *!tasks commands* for list of commands.`);
@@ -168,17 +168,17 @@ export class DiscordController implements IDiscordController {
             .catch(console.error);
     }
 
-    private async addTaskCommand(
+    private async createTaskCommand(
         message: discord.Message,
         taskName: string
     ): Promise<void> {
         if (message.channel.type !== 'text') {
-            message.channel.send(`!tasks add command must be called`
+            message.channel.send(`!tasks create command must be called`
                 + ' from a text channel associated with a project');
             return;
         }
 
-        message.channel.send('Adding task...');
+        message.channel.send('Creating task...');
 
         const channelName = (<discord.TextChannel>message.channel).name;
 
@@ -192,7 +192,7 @@ export class DiscordController implements IDiscordController {
 
             message
                 .channel
-                .send(await this.commandController.addTask(
+                .send(await this.commandController.createTask(
                     projectId,
                     taskName
                 )
@@ -203,7 +203,7 @@ export class DiscordController implements IDiscordController {
                 .send('Unable to find ActiveCollab' 
                     + ' project for channel ' + channelName
                 );
-            this.logger.warn(`Error adding task: ` + e.message);
+            this.logger.warn(`Error creating task: ` + e.message);
         }
     }
 

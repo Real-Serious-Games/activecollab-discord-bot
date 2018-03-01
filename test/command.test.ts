@@ -24,7 +24,7 @@ const discordUser: Partial<User> = {
     id: '22020202'
 };
 
-describe('addTask', () => {
+describe('createTask', () => {
     it('should call activeCollabApi and return confirmation message', async () => {
         expect.assertions(2);
 
@@ -39,18 +39,18 @@ describe('addTask', () => {
             .build();
 
         const expectedResponse = new RichEmbed()
-            .setTitle('Task added: ' + taskName)
+            .setTitle('Task created: ' + taskName)
             .setColor(eventColor);
 
-        await expect(commandController.addTask(projectId, taskName))
+        await expect(commandController.createTask(projectId, taskName))
             .resolves
             .toMatchObject(expectedResponse);
 
-        expect(activeCollabApiMock.addTask)
+        expect(activeCollabApiMock.createTask)
             .toBeCalledWith(projectId, taskName);
     });
 
-    it('should return and log error message when error adding task', async () => {
+    it('should return and log error message when error creating task', async () => {
         expect.assertions(2);
 
         const projectId = 1;
@@ -59,11 +59,11 @@ describe('addTask', () => {
         const error = new Error('Error');
 
         const expectedResponse = new RichEmbed()
-            .setTitle('Unable to add task: ' + taskName)
+            .setTitle('Unable to create task: ' + taskName)
             .setColor(eventColor);
 
         const activeCollabApiMock = new ActiveCollabApiMockBuilder()
-            .withAddTask(jest.fn(() => Promise.reject(error)))
+            .withCreateTask(jest.fn(() => Promise.reject(error)))
             .build();
 
         const loggerMock = new LoggerMockBuilder()
@@ -74,11 +74,11 @@ describe('addTask', () => {
             .withLogger(loggerMock)
             .build();
 
-        await expect(commandController.addTask(projectId, taskName))
+        await expect(commandController.createTask(projectId, taskName))
             .resolves
             .toMatchObject(expectedResponse);
 
-        expect(loggerMock.warn).toBeCalledWith(`Error adding task: ${error.message}`);
+        expect(loggerMock.warn).toBeCalledWith(`Error creating task: ${error.message}`);
     });
 });
 
