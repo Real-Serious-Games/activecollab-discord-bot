@@ -16,8 +16,10 @@ This is a Discord bot for Active Collab. It can send notifications to specified 
     - [Running the Server](#running-the-server)
   - [Running with Docker](#running-with-docker)
   - [Deployment](#deployment)
+  - [Commands](#commands)
 - [Getting involved](#getting-involved)
   - [Running tests](#running-tests)
+- [API](#api)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -73,6 +75,7 @@ config.json is a JSON object with the following fields:
   - *email:* Active Collab user email address
   - *password:* Active Collab user password
 - *guildNames:* Names of Discord guild names the bot is invited to
+- *commandPrefix:* The prefix used to specify that a message is a command
 - *channels:* An array that maps Active Collab project IDs to Discord channels and Guilds
 - *users:* An array that maps Active Collab user IDs to Discord users *(<Username>#<tag>)*
 
@@ -87,6 +90,7 @@ Example config:
          "password": "verySecurePassword"
     },
     "guildNames": ["Great Guild Good Job", "The Real Guild"],
+    "commandPrefix": "!",
     "channels": [
         {"projectId": 49, "channelName": "Project-X", "guildIndex": 0},
         {"projectId": 49, "channelName": "Project-X", "guildIndex": 1},
@@ -120,6 +124,18 @@ docker run -p 8080:80 activecollab-discord-bot
 You can deploy with or without the Docker container.
 
 Once you have deployed the bot Active Collab needs to be configured to POST to it, to do so go to https://app.activecollab.com, sign in and browse to Add-Ons. From there configure the Webhooks add-on specifying the target URL (<server address>/api/webhook) and the secret which you have specified in *config.json*.
+
+### Commands
+
+The bot currently supports 5 different commands, listed below with a prefix of '!':
+
+* _!tasks list_ - lists your tasks
+* _!tasks list_ for @user - lists tasks for mentioned user
+* _!tasks due_ - lists tasks due this week for current channel's project
+* _!help_ - lists all commands
+* _!commands_ - lists all commands
+
+Commands can be triggered from any channel the bot is present in and has read/write access as well as by messaging the bot directly. Note that some commands will only function if sent from an appropriate channel.
 
 ## Getting involved
 
