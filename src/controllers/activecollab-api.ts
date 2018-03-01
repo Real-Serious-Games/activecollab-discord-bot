@@ -72,7 +72,7 @@ async function createTask(
     const response = await restClient
         .post(url, { 'name': name }) as CreateTaskResponse;
 
-    if (!response.single.name) {
+    if (!response.single || !response.single.name) {
         throw new Error(`Invalid response received trying to POST ${url}: `
             + JSON.stringify(response, undefined, 4));
     }

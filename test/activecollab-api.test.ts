@@ -16,6 +16,7 @@ describe('ActiveCollab API', () => {
             const restClientMock = new RestClientMockBuilder()
                 .withPost(jest.fn(async () => { return { 'single': { 'name': taskName }}; }))
                 .build(); 
+
             const activeCollabApi = createActiveCollabAPI(restClientMock);
 
             await activeCollabApi.createTask(projectId, taskName);
@@ -29,7 +30,7 @@ describe('ActiveCollab API', () => {
                 );
         });
 
-        it('throws error when invalid response received', () => {
+        it('throws error when invalid response received', async () => {
             expect.assertions(1);
             
             const projectId = 123;
@@ -38,15 +39,14 @@ describe('ActiveCollab API', () => {
             const restClientMock = new RestClientMockBuilder()
                 .withPost(jest.fn().mockReturnValue(Promise.resolve({})))
                 .build();
+
             const activeCollabApi = createActiveCollabAPI(restClientMock);
 
-            expect(activeCollabApi.createTask(projectId, taskName))
-                .rejects
-                .toMatchObject(
-                    new Error(
-                        `Invalid response received trying to POST /projects/${projectId}/tasks: {}`
-                    )
-                );
+            try {
+                await activeCollabApi.createTask(projectId, taskName);
+            } catch (e) {
+                expect(e.message).toBe(`Invalid response received trying to POST /projects/${projectId}/tasks: {}`);
+            }
         });
     });
 
