@@ -5,6 +5,7 @@ import * as mockDate from 'mockdate';
 import { map } from 'fp-ts/lib/Option';
 import { disconnect } from 'cluster';
 import { access } from 'fs';
+import { Option, some, none } from 'fp-ts/lib/Option';
 
 import { createCommandController } from '../src/controllers/command';
 import { IActiveCollabAPI } from '../src/controllers/activecollab-api';
@@ -38,13 +39,9 @@ describe('createTask', () => {
             .withActiveCollabApi(activeCollabApiMock)
             .build();
 
-        const expectedResponse = new RichEmbed()
-            .setTitle('Task created: ' + taskName)
-            .setColor(eventColor);
-
         await expect(commandController.createTask(projectId, taskName))
             .resolves
-            .toMatchObject(expectedResponse);
+            .toMatchObject(none);
 
         expect(activeCollabApiMock.createTask)
             .toBeCalledWith(projectId, taskName);
@@ -58,9 +55,9 @@ describe('createTask', () => {
 
         const error = new Error('Error');
 
-        const expectedResponse = new RichEmbed()
+        const expectedResponse = some(new RichEmbed()
             .setTitle('Unable to create task: ' + taskName)
-            .setColor(eventColor);
+            .setColor(eventColor));
 
         const activeCollabApiMock = new ActiveCollabApiMockBuilder()
             .withCreateTask(jest.fn(() => Promise.reject(error)))

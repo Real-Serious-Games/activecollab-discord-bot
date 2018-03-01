@@ -1,6 +1,7 @@
 import { Logger } from 'structured-log';
 import * as _ from 'lodash';
 import * as moment from 'moment';
+import { Option, some, none } from 'fp-ts/lib/Option';
 
 import { Message, RichEmbed, User } from 'discord.js';
 import { Assignment } from '../models/report';
@@ -13,7 +14,7 @@ export interface ICommandController {
     tasksForUser: (user: User) => Promise<RichEmbed>;
     tasksInListForProject: (column: string, projectId: number) => Promise<RichEmbed>;
     tasksDueThisWeekForProject: (projectId: number) => Promise<RichEmbed>;
-    createTask: (projectId: number, taskName: string) => Promise<RichEmbed>;
+    createTask: (projectId: number, taskName: string) => Promise<Option<RichEmbed>>;
 }
 
 const eventColor = '#449DF5';
@@ -24,19 +25,17 @@ async function createTask(
     logger: Logger,
     projectId: number,
     taskName: string
-): Promise<RichEmbed> {
+): Promise<Option<RichEmbed>> {
     try {
         await activeCollabApi.createTask(projectId, taskName);
 
-        return new RichEmbed()
-            .setTitle('Task created: ' + taskName)
-            .setColor(eventColor);
+        return none;
     } catch (e) {
         logger.warn(`Error creating task: ${e.message}`);
 
-        return new RichEmbed()
+        return some(new RichEmbed()
             .setTitle('Unable to create task: ' + taskName)
-            .setColor(eventColor);
+            .setColor(eventColor));
     }
 }
 
