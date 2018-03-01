@@ -38,21 +38,29 @@ describe('addTask', () => {
             .withActiveCollabApi(activeCollabApiMock)
             .build();
 
+        const expectedResponse = new RichEmbed()
+            .setTitle('Task added: ' + taskName)
+            .setColor(eventColor);
+
         await expect(commandController.addTask(projectId, taskName))
             .resolves
-            .toBeTruthy();
+            .toMatchObject(expectedResponse);
 
         expect(activeCollabApiMock.addTask)
             .toBeCalledWith(projectId, taskName);
     });
 
     it('should return and log error message when error adding task', async () => {
-        expect.assertions(1);
+        expect.assertions(2);
 
         const projectId = 1;
         const taskName = 'name';
 
         const error = new Error('Error');
+
+        const expectedResponse = new RichEmbed()
+            .setTitle('Unable to add task: ' + taskName)
+            .setColor(eventColor);
 
         const activeCollabApiMock = new ActiveCollabApiMockBuilder()
             .withAddTask(jest.fn(() => Promise.reject(error)))
@@ -67,40 +75,10 @@ describe('addTask', () => {
             .build();
 
         await expect(commandController.addTask(projectId, taskName))
-            .rejects
-            .toMatchObject(error);
-    });
-
-    it('should return error message when unable to find project', async () => {
-        expect.assertions(2);
-
-        const projectId = 1;
-        const taskName = 'name';
-
-        const error = new Error('Error');
-
-        const mappingControllerMock = new MappingControllerMockBuilder()
-            .withGetProjectId(jest.fn(() => { throw 'Error'; }))
-            .build();
-
-        const loggerMock = new LoggerMockBuilder()
-            .build();
-
-        const commandController = new CommandControllerBuilder()
-            .withMappingController(mappingControllerMock)
-            .withLogger(loggerMock)
-            .build();
-
-        const expectedReturn = new RichEmbed()
-            .setTitle(`Unable to find project with ID: <@${projectId}>`)
-            .setColor(eventColor);
-
-        await expect(commandController.addTask(projectId, taskName))
             .resolves
-            .toMatchObject(expectedReturn);
+            .toMatchObject(expectedResponse);
 
-        expect(loggerMock.warn)
-            .toBeCalledWith(`Error finding project with ID ${projectId}: ${error}`);
+        expect(loggerMock.warn).toBeCalledWith(`Error adding task: ${error.message}`);
     });
 });
 

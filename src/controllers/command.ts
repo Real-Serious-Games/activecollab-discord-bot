@@ -21,12 +21,23 @@ const maxFieldLength = 1024;
 
 async function addTask(
     activeCollabApi: IActiveCollabAPI,
-    mappingController: IMappingController,
     logger: Logger,
     projectId: number,
     taskName: string
 ): Promise<RichEmbed> {
-    throw 'not implemented';
+    try {
+        await activeCollabApi.addTask(projectId, taskName);
+
+        return new RichEmbed()
+            .setTitle('Task added: ' + taskName)
+            .setColor(eventColor);
+    } catch (e) {
+        logger.warn(`Error adding task: ${e.message}`);
+
+        return new RichEmbed()
+            .setTitle('Unable to add task: ' + taskName)
+            .setColor(eventColor);
+    }
 }
 
 async function tasksForUser(
@@ -247,6 +258,6 @@ export function createCommandController(
         tasksInListForProject: (list: string, projectId: number) => 
             tasksInListForProject(activeCollabApi, logger, list, projectId),
         addTask: (projectId: number, taskName: string) => 
-            addTask(activeCollabApi, mappingController, logger, projectId, taskName)
+            addTask(activeCollabApi, logger, projectId, taskName)
     };
 }
