@@ -190,13 +190,11 @@ export class DiscordController implements IDiscordController {
                 .channel
                 .startTyping();
 
-            message
-                .channel
-                .send(await this.commandController.createTask(
-                    projectId,
-                    taskName
-                )
-            );
+            const result = await this
+                .commandController
+                .createTask(projectId, taskName);
+
+            result.map(r => message.channel.send(r));
         } catch (e) {
             message
                 .channel

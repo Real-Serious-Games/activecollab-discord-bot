@@ -1,5 +1,6 @@
 import { TextChannel, Client, RichEmbed, Collection, Channel, Guild } from 'discord.js';
 import { Logger } from 'structured-log';
+import { some } from 'fp-ts/lib/Option';
 
 import { DiscordController } from '../src/controllers/discord';
 import { DiscordControllerBuilder } from './builders/discordControllerBuilder';
@@ -294,18 +295,51 @@ describe('calling getUserId', () => {
 
 describe('client receiving message', () => {
     describe('when message is "!tasks create"', () => {
-        it('should call commandController.createTask when command and send message'
-            + ' is sent from project channel', done => {
-            expect.assertions(2);
+        it('should call commandController.createTask when command'
+            + ' is sent from project channel', () => {
+            expect.assertions(3);
 
             const firstMessage = 'Creating task...';
-            const secondMessage = 'Task created';
             let messagesSent = 0;
 
             const client = setupClient();
 
             const commandControllerMock = new CommandControllerMockBuilder()
-                .withCreateTask(jest.fn(async () => new RichEmbed().setTitle(secondMessage)))
+                .build();
+
+            const discordController = new DiscordControllerBuilder()
+                .withClient(client)
+                .withCommandController(commandControllerMock)
+                .build();
+
+            const message = new MessageBuilder()
+                .withContent('!tasks create new task')
+                .withSend(jest.fn(async value => {
+                    messagesSent++;
+
+                    if (messagesSent === 1) {
+                        expect(value).toEqual(firstMessage);
+                    }
+                }))
+                .build();
+
+            client.emit('message', message);
+
+            expect(commandControllerMock.createTask).toHaveBeenCalled();
+            expect(messagesSent).toEqual(1);
+        });
+
+        it('should call send message when creating task fails', done => {
+            expect.assertions(2);
+
+            const firstMessage = 'Creating task...';
+            const secondMessage = new RichEmbed().setTitle('error');
+            let messagesSent = 0;
+
+            const client = setupClient();
+
+            const commandControllerMock = new CommandControllerMockBuilder()
+                .withCreateTask(jest.fn(() => Promise.resolve(some(secondMessage))))
                 .build();
 
             const discordController = new DiscordControllerBuilder()
@@ -322,7 +356,7 @@ describe('client receiving message', () => {
                         expect(value).toEqual(firstMessage);
                     }
                     if (messagesSent === 2) {
-                        expect(value.title).toEqual(secondMessage);
+                        expect(value).toEqual(secondMessage);
                         done();
                     }
                 }))
@@ -334,12 +368,7 @@ describe('client receiving message', () => {
         it('should send warning message when channel type is not text' , () => {
             const client = setupClient();
 
-            const commandControllerMock = new CommandControllerMockBuilder()
-                .withCreateTask(jest.fn(() => Promise.resolve(new RichEmbed())))
-                .build();
-
             const discordController = new DiscordControllerBuilder()
-                .withCommandController(commandControllerMock)
                 .withClient(client)
                 .build();
 
