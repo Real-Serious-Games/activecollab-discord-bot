@@ -313,27 +313,20 @@ describe('client receiving message', () => {
                 .withClient(client)
                 .build();
 
-            const message = {
-                content: '!tasks add new task',
-                author: 'author',
-                channel: {
-                    send: jest.fn(async value => {
-                        messagesSent++;
+            const message = new MessageBuilder()
+                .withContent('!tasks add new task')
+                .withSend(jest.fn(async value => {
+                    messagesSent++;
 
-                        if (messagesSent === 1) {
-                            expect(value).toEqual(firstMessage);
-                        }
-                        if (messagesSent === 2) {
-                            expect(value.title).toEqual(secondMessage);
-                            done();
-                        }
-                    }),
-                    startTyping: jest.fn(() => Promise.resolve()),
-                    stopTyping: jest.fn(() => Promise.resolve()),
-                    name: 'channel',
-                    type: 'text'
-                }
-            };
+                    if (messagesSent === 1) {
+                        expect(value).toEqual(firstMessage);
+                    }
+                    if (messagesSent === 2) {
+                        expect(value.title).toEqual(secondMessage);
+                        done();
+                    }
+                }))
+                .build();
 
             client.emit('message', message);
         });
@@ -350,17 +343,10 @@ describe('client receiving message', () => {
                 .withClient(client)
                 .build();
 
-            const message = {
-                content: '!tasks add new task',
-                author: 'author',
-                channel: {
-                    send: jest.fn(() => Promise.resolve()),
-                    stopTyping: jest.fn(() => Promise.resolve()),
-                    name: 'channel',
-                    type: 'voice',
-                    stopType: jest.fn()
-                }
-            };
+            const message = new MessageBuilder()
+                .withContent('!tasks add new task')
+                .withChannelType('voice')
+                .build();
 
             client.emit('message', message);
 
@@ -399,19 +385,13 @@ describe('client receiving message', () => {
                 .withLogger(loggerMock)
                 .build();
 
-            const message = {
-                content: '!tasks add task',
-                author: 'author',
-                channel: {
-                    send: jest.fn(async value => {
-                        sentMessageValue = value;
-                    }),
-                    startTyping: jest.fn(() => Promise.resolve()),
-                    stopTyping: jest.fn(() => Promise.resolve()),
-                    type: 'text',
-                    name: channelName
-                }
-            };
+            const message = new MessageBuilder()
+                .withContent('!tasks add task')
+                .withSend(jest.fn(async value => {
+                    sentMessageValue = value;
+                }))
+                .withChannelName(channelName)
+                .build();
 
             client.emit('message', message);
         });
@@ -435,17 +415,10 @@ describe('client receiving message', () => {
                 edit: jest.fn(() => Promise.resolve())
             };
 
-            const message = {
-                content: '!tasks due',
-                author: 'author',
-                channel: {
-                    send: jest.fn(async () => sentMessage),
-                    startTyping: jest.fn(() => Promise.resolve()),
-                    stopTyping: jest.fn(() => Promise.resolve()),
-                    name: 'channel',
-                    type: 'text'
-                }
-            };
+            const message = new MessageBuilder()
+                .withContent('!tasks due')
+                .withSend(jest.fn(async () => sentMessage))
+                .build();
 
             client.emit('message', message);
         });
@@ -462,16 +435,10 @@ describe('client receiving message', () => {
                 .withClient(client)
                 .build();
 
-            const message = {
-                content: '!tasks due',
-                author: 'author',
-                channel: {
-                    send: jest.fn(() => Promise.resolve()),
-                    name: 'channel',
-                    type: 'voice',
-                    stopType: jest.fn()
-                }
-            };
+            const message = new MessageBuilder()
+                .withContent('!tasks due')
+                .withChannelType('voice')
+                .build();
 
             client.emit('message', message);
 
@@ -516,17 +483,11 @@ describe('client receiving message', () => {
                 })
             };
 
-            const message = {
-                content: '!tasks due',
-                author: 'author',
-                channel: {
-                    send: jest.fn(async () => sentMessage),
-                    startTyping: jest.fn(() => Promise.resolve()),
-                    stopTyping: jest.fn(() => Promise.resolve()),
-                    type: 'text',
-                    name: channelName
-                }
-            };
+            const message = new MessageBuilder()
+                .withContent('!tasks due')
+                .withSend(jest.fn(async () => sentMessage))
+                .withChannelName(channelName)
+                .build();
 
             client.emit('message', message);
         });
@@ -557,16 +518,11 @@ describe('client receiving message', () => {
                     done();
                 })
             };
-    
-            const message = {
-                content: '!TASKS LIST',
-                author: 'author',
-                channel: {
-                    send: jest.fn(async () => sentMessage),
-                    startTyping: jest.fn(() => Promise.resolve()),
-                    stopTyping: jest.fn(() => Promise.resolve()),
-                }
-            };
+
+            const message = new MessageBuilder()
+                .withContent('!TASKS LIST')
+                .withSend(jest.fn(async () => sentMessage))
+                .build();
     
             client.emit('message', message);
         });
@@ -597,22 +553,10 @@ describe('client receiving message', () => {
                 })
             };
 
-            const message = {
-                content: '!tasks list for @user',
-                author: {
-                    bot: false
-                },
-                mentions: {
-                    users: {
-                        first: jest.fn().mockReturnValue('mentionedUser')
-                    }
-                },
-                channel: {
-                    send: jest.fn(async () => sentMessage),
-                    startTyping: jest.fn(() => Promise.resolve()),
-                    stopTyping: jest.fn(() => Promise.resolve()),
-                }
-            };
+            const message = new MessageBuilder()
+                .withContent('!tasks list for @user')
+                .withSend(jest.fn(async () => sentMessage))
+                .build();
 
             client.emit('message', message);
         });
@@ -641,26 +585,19 @@ describe('client receiving message', () => {
                 .withCommandController(commandControllerMock)
                 .build();
 
-            const message = {
-                content: `!tasks in ${taskList}`,
-                author: {
-                    bot: false
-                },
-                channel: {
-                    send: jest.fn().mockImplementation(async value => {
-                        if (value !== returnedTasks) {
-                            return;
-                        }
+            const message = new MessageBuilder()
+                .withContent(`!tasks in ${taskList}`)
+                .withSend(jest.fn(async value => {
+                    if (value !== returnedTasks) {
+                        return;
+                    }
 
-                        expect(commandControllerMock.tasksInListForProject)
-                            .toBeCalledWith(taskList, projectId);
-                        done();
-                    }),
-                    startTyping: jest.fn(() => Promise.resolve()),
-                    stopTyping: jest.fn(() => Promise.resolve()),
-                    type: 'text'
-                }
-            };
+                    expect(commandControllerMock.tasksInListForProject)
+                        .toBeCalledWith(taskList, projectId);
+                    done();
+                    return;
+                }))
+                .build();
 
             client.emit('message', message);
         });
@@ -677,16 +614,10 @@ describe('client receiving message', () => {
                 .withClient(client)
                 .build();
 
-            const message = {
-                content: '!tasks in list',
-                author: 'author',
-                channel: {
-                    send: jest.fn(() => Promise.resolve()),
-                    stopType: jest.fn(),
-                    name: 'channel',
-                    type: 'voice'
-                }
-            };
+            const message = new MessageBuilder()
+                .withContent(`!tasks in list`)
+                .withChannelType('voice')
+                .build();
 
             client.emit('message', message);
 
@@ -724,17 +655,11 @@ describe('client receiving message', () => {
                 .withLogger(loggerMock)
                 .build();
 
-            const message = {
-                content: `!tasks in ${list}`,
-                author: 'author',
-                channel: {
-                    send: jest.fn(async value => sentMessageValue = value),
-                    startTyping: jest.fn(() => Promise.resolve()),
-                    stopTyping: jest.fn(() => Promise.resolve()),
-                    type: 'text',
-                    name: channelName
-                }
-            };
+            const message = new MessageBuilder()
+                .withContent(`!tasks in ${list}`)
+                .withSend(jest.fn(async value => sentMessageValue = value))
+                .withChannelName(channelName)
+                .build();
 
             client.emit('message', message);
         });
@@ -749,13 +674,9 @@ describe('client receiving message', () => {
             .withClient(client)
             .build();
 
-        const message = {
-            content: unknownCommand,
-            author: 'author',
-            channel: {
-                send: jest.fn(() => Promise.resolve())
-            }
-        };
+        const message = new MessageBuilder()
+            .withContent(unknownCommand)
+            .build();
 
         client.emit('message', message);
 
@@ -772,13 +693,9 @@ describe('client receiving message', () => {
             .withClient(client)
             .build();
 
-        const message = {
-            content: unknownCommand,
-            author: 'author',
-            channel: {
-                send: jest.fn(() => Promise.resolve())
-            }
-        };
+        const message = new MessageBuilder()
+            .withContent(unknownCommand)
+            .build();
 
         client.emit('message', message);
 
@@ -794,15 +711,9 @@ describe('client receiving message', () => {
             .withClient(client)
             .build();
 
-        const message = {
-            content: '!help',
-            author: {
-                bot: false
-            },
-            channel: {
-                send: jest.fn(() => Promise.resolve())
-            }
-        };
+        const message = new MessageBuilder()
+            .withContent('!help')
+            .build();
 
         const expectedHelp = new RichEmbed()
             .setTitle('Commands')
@@ -824,15 +735,9 @@ describe('client receiving message', () => {
             .withClient(client)
             .build();
 
-        const message = {
-            content: '!commands',
-            author: {
-                bot: false
-            },
-            channel: {
-                send: jest.fn(() => Promise.resolve())
-            }
-        };
+        const message = new MessageBuilder()
+            .withContent('!commands')
+            .build();
 
         const expectedHelp = new RichEmbed()
             .setTitle('Commands')
@@ -858,21 +763,15 @@ describe('client receiving message', () => {
             .withCommandController(commandControllerMock)
             .build();
 
-        let message = {
-            content: 'tasks list for @user',
-            author: {
-                bot: false
-            }
-        };
+        let message = new MessageBuilder()
+            .withContent('tasks list for @user')
+            .build();
 
         client.emit('message', message);
 
-        message = {
-            content: '!tasks list for @user',
-            author: {
-                bot: true
-            }
-        };
+        message = new MessageBuilder()
+            .withContent('!tasks list for @user')
+            .build();
 
         client.emit('message', message);
 
@@ -890,12 +789,9 @@ describe('client receiving message', () => {
             .withCommandController(commandControllerMock)
             .build();
 
-        const message = {
-            content: '!',
-            author: {
-                bot: false
-            }
-        };
+        const message = new MessageBuilder()
+            .withContent('!')
+            .build();
 
         client.emit('message', message);
 
@@ -910,4 +806,45 @@ function setupClient() {
     return client;
 }
 
+class MessageBuilder {
+    private message = {
+        content: '!',
+        author: 'author',
+        mentions: {
+            users: {
+                first: jest.fn().mockReturnValue('mentionedUser')
+            }
+        },
+        channel: {
+            send: jest.fn(() => Promise.resolve()),
+            startTyping: jest.fn(() => Promise.resolve()),
+            stopTyping: jest.fn(() => Promise.resolve()),
+            type: 'text',
+            name: 'channelName'
+        }
+    };
+
+    public withContent(content: string) {
+        this.message.content = content;
+        return this;
+    }
+
+    public withSend(send: jest.Mock<Promise<any>>) {
+        this.message.channel.send = send;
+        return this;
+    }
+
+    public withChannelType(type: string) {
+        this.message.channel.type = type;
+        return this;
+    }
+
+    public withChannelName(name: string) {
+        this.message.channel.name = name;
+        return this;
+    }
+
+    public build() {
+        return this.message;
+    }
 }
