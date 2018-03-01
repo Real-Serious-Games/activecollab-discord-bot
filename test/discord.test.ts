@@ -749,7 +749,8 @@ describe('client receiving message', () => {
             .addField('!tasks', 
                 '*!tasks list* - lists your tasks.\n' +
                 '*!tasks list for @user* - lists tasks for mentioned user.\n' +
-                '*!tasks due* - lists tasks due this week for current channel\'s project\n'
+                '*!tasks due* - lists tasks due this week for current channel\'s project\n' +
+                '*!tasks create <task name>* - creates a task for current channel\'s project\n'
             );
 
         client.emit('message', message);
@@ -773,7 +774,8 @@ describe('client receiving message', () => {
             .addField('!tasks', 
                 '*!tasks list* - lists your tasks.\n' +
                 '*!tasks list for @user* - lists tasks for mentioned user.\n' +
-                '*!tasks due* - lists tasks due this week for current channel\'s project\n'
+                '*!tasks due* - lists tasks due this week for current channel\'s project\n' +
+                '*!tasks create <task name>* - creates a task for current channel\'s project\n'
         );
 
         client.emit('message', message);
