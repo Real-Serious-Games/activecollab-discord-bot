@@ -130,6 +130,7 @@ Once you have deployed the bot Active Collab needs to be configured to POST to i
 The bot currently supports 5 different commands, listed below with a prefix of '!':
 
 * _!tasks list_ - lists your tasks
+* _!tasks in [list]_ - lists all lasts in task list for current channe's project
 * _!tasks list_ for @user - lists tasks for mentioned user
 * _!tasks due_ - lists tasks due this week for current channel's project
 * _!help_ - lists all commands
