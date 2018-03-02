@@ -93,10 +93,6 @@ export class DiscordController implements IDiscordController {
                 message.channel.send(`Unknown command, *${message.content}*, `
                     + `use *!help* or *!commands*`);
             }
-
-            message
-                .channel
-                .stopTyping(true);
         });
     }
 
@@ -222,11 +218,15 @@ export class DiscordController implements IDiscordController {
             .startTyping();
 
         if (args.length === 3 && args[1] === 'for') {
-            sentMessage.edit(await this.commandController
-                .tasksForUser(message.mentions.users.first()));
+            message
+                .channel
+                .send(await this.commandController
+                    .tasksForUser(message.mentions.users.first()));
         } else {
-            sentMessage.edit(await this.commandController
-                .tasksForUser(message.author));
+            message
+                .channel
+                .send(await this.commandController
+                    .tasksForUser(message.author));
         }
     }
 
@@ -292,11 +292,17 @@ export class DiscordController implements IDiscordController {
                 .channel
                 .startTyping();
 
-            sentMessage.edit(await this.commandController
-                .tasksDueThisWeekForProject(projectId));
+            message
+                .channel
+                .send(await this.commandController
+                    .tasksDueThisWeekForProject(projectId)
+                );
         } catch (e) {
-            sentMessage.edit('Unable to find ActiveCollab' 
-                + ' project for channel ' + channelName);
+            message
+                .channel
+                .send('Unable to find ActiveCollab' 
+                    + ' project for channel ' + channelName
+                );
             this.logger.warn('Error getting tasks due for week: ' + e);
         }
     }

@@ -439,14 +439,10 @@ describe('client receiving message', () => {
                 .withCommandController(commandControllerMock)
                 .withClient(client)
                 .build();
-
-            const sentMessage = {
-                edit: jest.fn(() => Promise.resolve())
-            };
-
+                
             const message = new MessageBuilder()
                 .withContent('!tasks due')
-                .withSend(jest.fn(async () => sentMessage))
+                .withSend(jest.fn(() => Promise.resolve()))
                 .build();
 
             client.emit('message', message);
@@ -484,6 +480,7 @@ describe('client receiving message', () => {
             const projectId = 0;
             const error = 'error';
             const channelName = 'channel';
+            let messagesSent = 0;
 
             let sentMessageValue = '';
 
@@ -506,15 +503,15 @@ describe('client receiving message', () => {
                 .withLogger(loggerMock)
                 .build();
 
-            const sentMessage = {
-                edit: jest.fn(async value => {
-                    sentMessageValue = value;
-                })
-            };
-
             const message = new MessageBuilder()
                 .withContent('!tasks due')
-                .withSend(jest.fn(async () => sentMessage))
+                .withSend(jest.fn(async value => {
+                    messagesSent++;
+
+                    if (messagesSent === 2) {
+                        sentMessageValue = value;
+                    }
+                }))
                 .withChannelName(channelName)
                 .build();
 
@@ -529,6 +526,7 @@ describe('client receiving message', () => {
             const client = setupClient();
     
             const returnedTasks = new RichEmbed();
+            let numberMessages = 0;
     
             const commandControllerMock = new CommandControllerMockBuilder()
                 .withTasksForUser(jest.fn(() => Promise.resolve(returnedTasks)))
@@ -538,19 +536,24 @@ describe('client receiving message', () => {
                 .withCommandController(commandControllerMock)
                 .withClient(client)
                 .build();
-    
-            const sentMessage = {
-                edit: jest.fn(async value => {
-                    expect(commandControllerMock.tasksForUser).toBeCalledWith(message.author);
-                    expect(value).toBe(returnedTasks);
-                    expect(message.channel.startTyping).toBeCalled();
-                    done();
-                })
-            };
 
             const message = new MessageBuilder()
                 .withContent('!TASKS LIST')
-                .withSend(jest.fn(async () => sentMessage))
+                .withSend(jest.fn(async value => {
+                    numberMessages++;
+
+                    if (numberMessages === 1) {
+                        return;
+                    }
+
+                    if (numberMessages === 2) {
+                        expect(commandControllerMock.tasksForUser).toBeCalledWith(message.author);
+                        expect(value).toBe(returnedTasks);
+                        expect(message.channel.startTyping).toBeCalled();
+                        done();
+                        return;
+                    }
+                }))
                 .build();
     
             client.emit('message', message);
@@ -561,7 +564,7 @@ describe('client receiving message', () => {
             expect.assertions(3);
 
             const client = setupClient();
-
+            let messagesSent = 0;
             const returnedTasks = new RichEmbed();
 
             const commandControllerMock = new CommandControllerMockBuilder()
@@ -573,18 +576,18 @@ describe('client receiving message', () => {
                 .withCommandController(commandControllerMock)
                 .build();
 
-            const sentMessage = {
-                edit: jest.fn(async value => {
-                    expect(commandControllerMock.tasksForUser).toBeCalled();
-                    expect(value).toBe(returnedTasks);
-                    expect(message.channel.startTyping).toBeCalled();
-                    done();
-                })
-            };
-
             const message = new MessageBuilder()
                 .withContent('!tasks list for @user')
-                .withSend(jest.fn(async () => sentMessage))
+                .withSend(jest.fn(async value => {
+                    messagesSent++;
+
+                    if (messagesSent === 2) {
+                        expect(commandControllerMock.tasksForUser).toBeCalled();
+                        expect(value).toBe(returnedTasks);
+                        expect(message.channel.startTyping).toBeCalled();
+                        done();
+                    }
+                }))
                 .build();
 
             client.emit('message', message);
@@ -851,7 +854,6 @@ class MessageBuilder {
         channel: {
             send: jest.fn(() => Promise.resolve()),
             startTyping: jest.fn(() => Promise.resolve()),
-            stopTyping: jest.fn(() => Promise.resolve()),
             type: 'text',
             name: 'channelName'
         }
