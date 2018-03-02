@@ -22,7 +22,7 @@ export class CommandControllerBuilder {
         return this;
     }
 
-    public withActiveCollabApi(activeCollabApi: IActiveCollabAPI): CommandControllerBuilder {
+    public withActiveCollabApi(activeCollabApi: Partial<IActiveCollabAPI>): CommandControllerBuilder {
         this.activeCollabApi = activeCollabApi;
         return this;
     }

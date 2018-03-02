@@ -47,18 +47,32 @@ export class DiscordController implements IDiscordController {
                 return;
             }
 
-            const args = message.content.toLowerCase().slice(commandPrefix.length).trim().split(/ +/g);
-            const command = args.shift();
+            const args = message.content.slice(commandPrefix.length).trim().split(/ +/g);
+            let command = args.shift();
 
             if (command === undefined || command === '') {
                 return;
             }
 
+            command = command.toLowerCase();
+
+            if (args.length > 0) {
+                args[0] = args[0].toLowerCase();
+            }
+
             if (command === 'tasks') {
                 if (args[0] === 'list') {
-                    this.ListCommand(message, args);
-                } else if (args.length === 1 && args[0] === 'due') {
-                    this.DueCommand(message);
+                    this.listCommand(message, args);
+                } else if (args[0] === 'due' && args.length === 1) {
+                    this.dueCommand(message);
+                } else if (args[0] === 'in' && args.length > 1) {
+                    args.shift();
+                    const list = args.join(' ');
+                    this.inListCommand(message, list);
+                } else if (args[0] === 'create' && args.length > 1) {
+                    args.shift();
+                    const taskName = args.join(' ');
+                    this.createTaskCommand(message, taskName);
                 } else {
                     message.channel.send(`Unknown command, *${message.content}*, ` 
                         + `use *!tasks help* or *!tasks commands* for list of commands.`);
@@ -70,7 +84,9 @@ export class DiscordController implements IDiscordController {
                     .addField('!tasks', 
                         '*!tasks list* - lists your tasks.\n' +
                         '*!tasks list for @user* - lists tasks for mentioned user.\n' +
-                        '*!tasks due* - lists tasks due this week for current channel\'s project\n'
+                        '*!tasks due* - lists tasks due this week for current channel\'s project\n' +
+                        '*!tasks create <task name>* - creates a task for current channel\'s project\n' +
+                        '*!tasks in <list>* - lists tasks in task list for current channel\'s project\n'
                     )
                 );
             } else {
@@ -154,10 +170,52 @@ export class DiscordController implements IDiscordController {
             .catch(console.error);
     }
 
-    private async ListCommand(message: discord.Message, args: Array<string>): Promise<void> {
+    private async createTaskCommand(
+        message: discord.Message,
+        taskName: string
+    ): Promise<void> {
+        if (message.channel.type !== 'text') {
+            message.channel.send(`!tasks create command must be called`
+                + ' from a text channel associated with a project');
+            return;
+        }
+
+        message.channel.send('Creating task...');
+
+        const channelName = (<discord.TextChannel>message.channel).name;
+
+        try {
+            const projectId = this.mappingController
+                .getProjectId(channelName);
+
+            message
+                .channel
+                .startTyping();
+
+            const result = await this
+                .commandController
+                .createTask(projectId, taskName);
+
+            result.map(r => message.channel.send(r));
+        } catch (e) {
+            message
+                .channel
+                .send('Unable to find ActiveCollab' 
+                    + ' project for channel ' + channelName
+                );
+            this.logger.warn(`Error creating task: ` + e.message);
+        }
+    }
+
+    private async listCommand(
+        message: discord.Message,
+        args: Array<string>
+    ): Promise<void> {
         const sentMessage = await message
             .channel
             .send('Getting tasks...') as discord.Message;
+
+        args = args.map(a => a.toLowerCase());
 
         message
             .channel
@@ -165,14 +223,55 @@ export class DiscordController implements IDiscordController {
 
         if (args.length === 3 && args[1] === 'for') {
             sentMessage.edit(await this.commandController
-                .listTasksForUser(message.mentions.users.first()));
+                .tasksForUser(message.mentions.users.first()));
         } else {
             sentMessage.edit(await this.commandController
-                .listTasksForUser(message.author));
+                .tasksForUser(message.author));
         }
     }
 
-    private async DueCommand(message: discord.Message): Promise<void> {
+    private async inListCommand(
+        message: discord.Message, 
+        list: string
+    ): Promise<void> {
+        if (message.channel.type !== 'text') {
+            message.channel.send(`!tasks in ${list} command must be called`
+                + ' from a text channel associated with a project');
+            return;
+        }
+
+        message
+            .channel
+            .send(`Getting tasks in ${list}...`);
+
+        const channelName = (<discord.TextChannel>message.channel).name;
+
+        try {
+            const projectId = this.mappingController
+                .getProjectId(channelName);
+
+            message
+                .channel
+                .startTyping();
+
+            message
+                .channel
+                .send(await this.commandController.tasksInListForProject(
+                    list,
+                    projectId
+                )
+            );
+        } catch (e) {
+            message
+                .channel
+                .send('Unable to find ActiveCollab' 
+                    + ' project for channel ' + channelName
+                );
+            this.logger.warn(`Error getting tasks in ${list}: ` + e);
+        }
+    }
+
+    private async dueCommand(message: discord.Message): Promise<void> {
         if (message.channel.type !== 'text') {
             message.channel.send('!tasks due command must be called' 
                 + ' from a text channel associated with a project');
