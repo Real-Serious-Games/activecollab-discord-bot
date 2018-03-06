@@ -3,7 +3,7 @@ import * as _ from 'lodash';
 import * as moment from 'moment';
 import { Option, some, none } from 'fp-ts/lib/Option';
 
-import { Message, RichEmbed, User } from 'discord.js';
+import { Message, RichEmbed, User, RichEmbedOptions } from 'discord.js';
 import { Assignment } from '../models/report';
 import { Project } from '../models/project';
 import { IActiveCollabAPI } from '../controllers/activecollab-api';
@@ -96,25 +96,16 @@ async function tasksForUser(
                 return;
             }
 
-            let currentChars = 0;
+            const currentChars = 0;
 
-            taskGroup.forEach(t => { 
-                const task = `• [${t.name}](${t.permalink})\n`;
-                const newLength = currentChars + task.length;
-
-                if (formattedTasks.fields !== undefined 
-                    && formattedTasks.fields.length > 0 
-                    && currentChars !== 0 // If characters is 0 we're doing a new project
-                    && newLength <= maxFieldLength
-                ) {
-                    currentChars = newLength;
-
-                    formattedTasks.fields[formattedTasks.fields.length - 1].value += task;
-                } else {
-                    currentChars = (task + project.name).length;
-                    formattedTasks.addField(project.name, task);
-                }
-            });
+            determineFormattedFields(
+                taskGroup,
+                formattedTasks,
+                currentChars,
+                project.name,
+                t => (`• [${t.name}](${t.permalink})\n`),
+                t => ((t + project.name).length)
+            );
         });
 
     return formattedTasks;
@@ -160,26 +151,17 @@ async function tasksDueThisWeekForProject(
     tasks
         .groupBy(t => t.task_list)
         .forEach(taskGroup => {
-            let currentChars = 0;
+            const currentChars = 0;
 
-            taskGroup.forEach(t => { 
-                const task = `• [${t.name}](${t.permalink})` 
-                    + ` - ${moment.unix(t.due_on).format('ddd Do')}\n`;
-                const newLength = currentChars + task.length;
-
-                if (formattedTasks.fields !== undefined 
-                    && formattedTasks.fields.length > 0 
-                    && currentChars !== 0 // If characters is 0 we're doing a new task list
-                    && newLength <= maxFieldLength
-                ) {
-                    currentChars = newLength;
-
-                    formattedTasks.fields[formattedTasks.fields.length - 1].value += task;
-                } else {
-                    currentChars = (task + taskGroup[0].task_list).length;
-                    formattedTasks.addField(taskGroup[0].task_list, task);
-                }
-            });
+            determineFormattedFields(
+                taskGroup,
+                formattedTasks,
+                currentChars,
+                taskGroup[0].task_list,
+                t => (`• [${t.name}](${t.permalink})` 
+                    + ` - ${moment.unix(t.due_on).format('ddd Do')}\n`),
+                t => ((t + taskGroup[0].task_list).length)
+            );
         });
 
     return formattedTasks;
@@ -220,28 +202,46 @@ async function tasksInListForProject(
     tasks
         .groupBy(t => t.task_list)
         .forEach(taskGroup => {
-            let currentChars = 0;
+            const currentChars = 0;
 
-            taskGroup.forEach(t => { 
-                const task = `• [${t.name}](${t.permalink})\n`;
-                const newLength = currentChars + task.length;
-
-                if (formattedTasks.fields !== undefined 
-                    && formattedTasks.fields.length > 0 
-                    && currentChars !== 0 // If characters is 0 we're doing a new task list
-                    && newLength <= maxFieldLength
-                ) {
-                    currentChars = newLength;
-
-                    formattedTasks.fields[formattedTasks.fields.length - 1].value += task;
-                } else {
-                    currentChars = (task + taskGroup[0].task_list).length;
-                    formattedTasks.addField(`${taskGroup[0].task_list} Tasks`, task);
-                }
-            });
+            determineFormattedFields(
+                taskGroup,
+                formattedTasks,
+                currentChars,
+                `${taskGroup[0].task_list} Tasks`,
+                t => (`• [${t.name}](${t.permalink})\n`),
+                t => ((t + taskGroup[0].task_list).length)
+            );
         });
 
     return formattedTasks;
+}
+
+function determineFormattedFields(
+    taskGroup: Assignment[],
+    formattedTasks: RichEmbed,
+    currentChars: number,
+    title: string,
+    formatTask: (t: Assignment) => string,
+    calculateChars: (t: string) => number,
+) {
+    taskGroup.forEach(t => { 
+        const task = formatTask(t);
+        const newLength = currentChars + task.length;
+
+        if (formattedTasks.fields !== undefined 
+            && formattedTasks.fields.length > 0 
+            && currentChars !== 0 // If characters is 0 we're doing a new task list
+            && newLength <= maxFieldLength
+        ) {
+            currentChars = newLength;
+
+            formattedTasks.fields[formattedTasks.fields.length - 1].value += task;
+        } else {
+            currentChars = calculateChars(task);
+            formattedTasks.addField(title, task);
+        }
+    });
 }
 
 export function createCommandController(

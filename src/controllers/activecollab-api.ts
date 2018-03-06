@@ -76,8 +76,6 @@ async function createTask(
         throw new Error(`Invalid response received trying to POST ${url}: `
             + JSON.stringify(response, undefined, 4));
     }
-
-    return;
 }
 
 /**
