@@ -26,8 +26,8 @@ const discordUser: Partial<User> = {
 };
 
 describe('createTask', () => {
-    it('should call activeCollabApi and return confirmation message', async () => {
-        expect.assertions(2);
+    it('should call activeCollabApi', async () => {
+        expect.assertions(1);
 
         const projectId = 1;
         const taskName = 'name';
@@ -39,25 +39,19 @@ describe('createTask', () => {
             .withActiveCollabApi(activeCollabApiMock)
             .build();
 
-        await expect(commandController.createTask(projectId, taskName))
-            .resolves
-            .toMatchObject(none);
+        await commandController.createTask(projectId, taskName);
 
         expect(activeCollabApiMock.createTask)
             .toBeCalledWith(projectId, taskName);
     });
 
-    it('should return and log error message when error creating task', async () => {
-        expect.assertions(2);
+    it('should throw error and log warning message when error creating task', async () => {
+        expect.assertions(1);
 
         const projectId = 1;
         const taskName = 'name';
 
         const error = new Error('Error');
-
-        const expectedResponse = some(new RichEmbed()
-            .setTitle('Unable to create task: ' + taskName)
-            .setColor(eventColor));
 
         const activeCollabApiMock = new ActiveCollabApiMockBuilder()
             .withCreateTask(jest.fn(() => Promise.reject(error)))
@@ -72,10 +66,8 @@ describe('createTask', () => {
             .build();
 
         await expect(commandController.createTask(projectId, taskName))
-            .resolves
-            .toMatchObject(expectedResponse);
-
-        expect(loggerMock.warn).toBeCalledWith(`Error creating task: ${error.message}`);
+            .rejects
+            .toMatchObject(error);
     });
 });
 
@@ -192,7 +184,7 @@ describe ('tasksInListForProject', () => {
             .toEqual(`No tasks found for task list: ${taskList}.`);
     });
 
-    it('should return and log error message when unable to get tasks', async () => {
+    it('should return and log warning message when unable to get tasks', async () => {
         expect.assertions(2);
 
             const error = 'error';
@@ -362,7 +354,7 @@ describe('tasksDueThisWeekForProject', () => {
             .toEqual(`No tasks found that are due this week.`);
     });
     
-    it('should return error message and log error when error getting tasks', async () => {
+    it('should return error message and log warning when error getting tasks', async () => {
         expect.assertions(2);
 
         mockDate.set('2017-05-02');
@@ -676,7 +668,7 @@ describe('tasksForUser', () => {
             .toEqual(expectedReturn);
     });
 
-    it('should return error message and log error when error getting tasks', async () => {
+    it('should return error message and log warning when error getting tasks', async () => {
         expect.assertions(2);
         
         const expectedReturn = new RichEmbed()
@@ -698,7 +690,7 @@ describe('tasksForUser', () => {
         expect(logger.warn).toBeCalled();
     });
 
-    it('should return error message and log error when error getting projects', async () => {
+    it('should return error message and log warning when error getting projects', async () => {
         expect.assertions(2);
 
         const expectedReturn = new RichEmbed()

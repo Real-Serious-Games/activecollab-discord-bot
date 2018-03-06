@@ -1,6 +1,5 @@
 import { TextChannel, Client, RichEmbed, Collection, Channel, Guild } from 'discord.js';
 import { Logger } from 'structured-log';
-import { some } from 'fp-ts/lib/Option';
 
 import { DiscordController } from '../src/controllers/discord';
 import { DiscordControllerBuilder } from './builders/discordControllerBuilder';
@@ -340,11 +339,10 @@ describe('client receiving message', () => {
 
     describe('when message is "!tasks create"', () => {
         it('should call commandController.createTask when command'
-            + ' is sent from project channel', () => {
-            expect.assertions(3);
+            + ' is sent from project channel', done => {
+            expect.assertions(2);
 
             const firstMessage = 'Creating task...';
-            let messagesSent = 0;
 
             const client = setupClient();
 
@@ -359,31 +357,28 @@ describe('client receiving message', () => {
             const message = new MessageBuilder()
                 .withContent('!tasks create new task')
                 .withSend(jest.fn(async value => {
-                    messagesSent++;
-
-                    if (messagesSent === 1) {
-                        expect(value).toEqual(firstMessage);
-                    }
+                    expect(value).toEqual(firstMessage);
+                    done();
                 }))
                 .build();
 
             client.emit('message', message);
 
             expect(commandControllerMock.createTask).toHaveBeenCalled();
-            expect(messagesSent).toEqual(1);
         });
 
         it('should call send message when creating task fails', done => {
             expect.assertions(2);
 
+            const channelName = 'channelName';
             const firstMessage = 'Creating task...';
-            const secondMessage = new RichEmbed().setTitle('error');
+            const secondMessage = 'There was an error creating task for ' + channelName;
             let messagesSent = 0;
 
             const client = setupClient();
 
             const commandControllerMock = new CommandControllerMockBuilder()
-                .withCreateTask(jest.fn(() => Promise.resolve(some(secondMessage))))
+                .withCreateTask(jest.fn(() => Promise.reject(new Error('Error'))))
                 .build();
 
             const discordController = new DiscordControllerBuilder()
@@ -393,6 +388,7 @@ describe('client receiving message', () => {
 
             const message = new MessageBuilder()
                 .withContent('!tasks create new task')
+                .withChannelName(channelName)
                 .withSend(jest.fn(async value => {
                     messagesSent++;
 
@@ -448,7 +444,7 @@ describe('client receiving message', () => {
                 .build();
 
             const mappingControllerMock = new MappingControllerMockBuilder()
-                .withGetProjectId(jest.fn(() => { throw Error(error); }))
+                .withGetProjectId(jest.fn(() => { throw new Error(error); }))
                 .build();
 
             const discordController = new DiscordControllerBuilder()
@@ -537,7 +533,7 @@ describe('client receiving message', () => {
                 .build();
 
             const mappingControllerMock = new MappingControllerMockBuilder()
-                .withGetProjectId(jest.fn(() => { throw Error(error); }))
+                .withGetProjectId(jest.fn(() => { throw new Error(error); }))
                 .build();
 
             const discordController = new DiscordControllerBuilder()
@@ -564,10 +560,11 @@ describe('client receiving message', () => {
 
     describe('when command is "!tasks list"', () => {
         it('should call commandController.listTasksForUser when command all caps', done => {
-            expect.assertions(3);
+            expect.assertions(4);
     
             const client = setupClient();
     
+            const firstMessage = 'Getting tasks...';
             const returnedTasks = new RichEmbed();
             let numberMessages = 0;
     
@@ -586,7 +583,7 @@ describe('client receiving message', () => {
                     numberMessages++;
 
                     if (numberMessages === 1) {
-                        return;
+                        expect(value).toEqual(firstMessage);
                     }
 
                     if (numberMessages === 2) {
@@ -643,8 +640,10 @@ describe('client receiving message', () => {
             const client = setupClient();
 
             const taskList = 'Selected for Development';
+            const firstMessage = `Getting tasks in ${taskList}...`;
             const projectId = 0;
             const returnedTasks = new RichEmbed();
+            let messagesSent = 0;
 
             const commandControllerMock = new CommandControllerMockBuilder()
                 .withTasksInListForProject(jest.fn(() => Promise.resolve(returnedTasks)))
@@ -663,14 +662,17 @@ describe('client receiving message', () => {
             const message = new MessageBuilder()
                 .withContent(`!tasks in ${taskList}`)
                 .withSend(jest.fn(async value => {
-                    if (value !== returnedTasks) {
-                        return;
+                    messagesSent++;
+                    
+                    if (messagesSent === 1) {
+                        expect(value).toEqual(firstMessage);
                     }
 
-                    expect(commandControllerMock.tasksInListForProject)
+                    if (messagesSent === 2) {
+                        expect(commandControllerMock.tasksInListForProject)
                         .toBeCalledWith(taskList, projectId);
-                    done();
-                    return;
+                        done();
+                    }
                 }))
                 .build();
 
