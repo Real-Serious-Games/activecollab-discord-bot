@@ -294,6 +294,50 @@ describe('calling getUserId', () => {
 });
 
 describe('client receiving message', () => {
+    it('should send help message when message is "!tasks"', done => {
+        expect.assertions(1);
+        
+        const client = setupClient();
+
+        const discordController = new DiscordControllerBuilder()
+                .withClient(client)
+                .build();
+        
+        const message = new MessageBuilder()
+                .withContent('!tasks')
+                .withSend(jest.fn(async value => {
+                    expect(value).toEqual(`Unknown command, *${message.content}*, ` 
+                        + `use *!tasks help* or *!tasks commands* for list of commands.`);
+
+                    done();
+                }))
+                .build();
+
+        client.emit('message', message);
+    });
+
+    it('should send help message when message is "!tasks" with unknown command', done => {
+        expect.assertions(1);
+        
+        const client = setupClient();
+
+        const discordController = new DiscordControllerBuilder()
+                .withClient(client)
+                .build();
+
+        const message = new MessageBuilder()
+                .withContent('!tasks unknown')
+                .withSend(jest.fn(async value => {
+                    expect(value).toEqual(`Unknown command, *${message.content}*, ` 
+                        + `use *!tasks help* or *!tasks commands* for list of commands.`);
+
+                    done();
+                }))
+                .build();
+
+        client.emit('message', message);
+    });
+
     describe('when message is "!tasks create"', () => {
         it('should call commandController.createTask when command'
             + ' is sent from project channel', () => {
@@ -396,10 +440,9 @@ describe('client receiving message', () => {
             let sentMessageValue = '';
 
             const loggerMock = new LoggerMockBuilder()
-                .withWarn(jest.fn().mockImplementation(value => {
+                .withError(jest.fn().mockImplementation(value => {
                     expect(value).toBe(`Error creating task: ${error}`);
-                    expect(sentMessageValue).toBe(`Unable to find ActiveCollab project for channel ` 
-                        + channelName);
+                    expect(sentMessageValue).toBe(`There was an error creating task for ` + channelName);
                     done();
                 }))
                 .build();
@@ -669,9 +712,9 @@ describe('client receiving message', () => {
             let sentMessageValue = '';
 
             const loggerMock = new LoggerMockBuilder()
-                .withWarn(jest.fn().mockImplementation(value => {
+                .withError(jest.fn().mockImplementation(value => {
                     expect(value).toBe(`Error getting tasks in ${list}: Error: ${error}`);
-                    expect(sentMessageValue).toBe(`Unable to find ActiveCollab project for channel ` 
+                    expect(sentMessageValue).toBe(`There was an error creating task for ` 
                         + channelName);
                     done();
                 }))
