@@ -2,7 +2,7 @@ import { Logger } from 'structured-log';
 import * as _ from 'lodash';
 import * as moment from 'moment';
 
-import { Message, RichEmbed, User } from 'discord.js';
+import { Message, RichEmbed, User, RichEmbedOptions } from 'discord.js';
 import { Assignment } from '../models/report';
 import { Project } from '../models/project';
 import { IActiveCollabAPI } from '../controllers/activecollab-api';
@@ -10,14 +10,25 @@ import { IMappingController } from '../controllers/mapping';
 import { parse } from 'url';
 
 export interface ICommandController {
-    listTasksForUser: (user: User) => Promise<RichEmbed>;
+    tasksForUser: (user: User) => Promise<RichEmbed>;
+    tasksInListForProject: (column: string, projectId: number) => Promise<RichEmbed>;
     tasksDueThisWeekForProject: (projectId: number) => Promise<RichEmbed>;
+    createTask: (projectId: number, taskName: string) => Promise<void>;
 }
 
 const eventColor = '#449DF5';
 const maxFieldLength = 1024;
 
-async function listTasksForUser(
+async function createTask(
+    activeCollabApi: IActiveCollabAPI,
+    logger: Logger,
+    projectId: number,
+    taskName: string
+): Promise<void> {
+    await activeCollabApi.createTask(projectId, taskName);
+}
+
+async function tasksForUser(
     activecollabApi: IActiveCollabAPI,
     mappingController: IMappingController,
     logger: Logger,
@@ -29,7 +40,7 @@ async function listTasksForUser(
     try {
         user = mappingController.getActiveCollabUser(discordUser.tag);
     } catch (e) {
-        logger.warn(`Error getting ActiveCollab user for Discord user ` 
+        logger.error(`Error getting ActiveCollab user for Discord user ` 
             + ` ${discordUser.tag}: ${e}`);
         return new RichEmbed()
             .setTitle(`Unable to find user: <@${discordUser.id}>`)
@@ -43,7 +54,7 @@ async function listTasksForUser(
         tasks = _(await activecollabApi.getAssignmentTasksByUserId(user));
         projects = _(await activecollabApi.getAllProjects());
     } catch (e) {
-        logger.warn(`Error getting tasks and projects: ${e}`);
+        logger.error(`Error getting tasks and projects: ${e}`);
         return new RichEmbed()
             .setTitle(`There was an error getting tasks for <@${discordUser.id}>`)
             .setColor(eventColor);
@@ -74,25 +85,16 @@ async function listTasksForUser(
                 return;
             }
 
-            let currentChars = 0;
+            const currentChars = 0;
 
-            taskGroup.forEach(t => { 
-                const task = `• [${t.name}](${t.permalink})\n`;
-                const newLength = currentChars + task.length;
-
-                if (formattedTasks.fields !== undefined 
-                    && formattedTasks.fields.length > 0 
-                    && currentChars !== 0 // If characters is 0 we're doing a new project
-                    && newLength <= maxFieldLength
-                ) {
-                    currentChars = newLength;
-
-                    formattedTasks.fields[formattedTasks.fields.length - 1].value += task;
-                } else {
-                    currentChars = (task + project.name).length;
-                    formattedTasks.addField(project.name, task);
-                }
-            });
+            determineFormattedFields(
+                taskGroup,
+                formattedTasks,
+                currentChars,
+                project.name,
+                t => (`• [${t.name}](${t.permalink})\n`),
+                t => ((t + project.name).length)
+            );
         });
 
     return formattedTasks;
@@ -119,7 +121,7 @@ async function tasksDueThisWeekForProject(
                         '[]'
                 ));
     } catch (e) {
-        logger.warn(`Error getting tasks: ${e}`);
+        logger.error(`Error getting tasks: ${e}`);
         return new RichEmbed()
             .setTitle(`There was an error getting tasks.`)
             .setColor(eventColor);
@@ -138,29 +140,97 @@ async function tasksDueThisWeekForProject(
     tasks
         .groupBy(t => t.task_list)
         .forEach(taskGroup => {
-            let currentChars = 0;
+            const currentChars = 0;
 
-            taskGroup.forEach(t => { 
-                const task = `• [${t.name}](${t.permalink})` 
-                    + ` - ${moment.unix(t.due_on).format('ddd Do')}\n`;
-                const newLength = currentChars + task.length;
-
-                if (formattedTasks.fields !== undefined 
-                    && formattedTasks.fields.length > 0 
-                    && currentChars !== 0 // If characters is 0 we're doing a new task list
-                    && newLength <= maxFieldLength
-                ) {
-                    currentChars = newLength;
-
-                    formattedTasks.fields[formattedTasks.fields.length - 1].value += task;
-                } else {
-                    currentChars = (task + taskGroup[0].task_list).length;
-                    formattedTasks.addField(taskGroup[0].task_list, task);
-                }
-            });
+            determineFormattedFields(
+                taskGroup,
+                formattedTasks,
+                currentChars,
+                taskGroup[0].task_list,
+                t => (`• [${t.name}](${t.permalink})` 
+                    + ` - ${moment.unix(t.due_on).format('ddd Do')}\n`),
+                t => ((t + taskGroup[0].task_list).length)
+            );
         });
 
     return formattedTasks;
+}
+
+async function tasksInListForProject(
+    activeCollabApi: IActiveCollabAPI,
+    logger: Logger,
+    list: string,
+    projectId: number
+): Promise<RichEmbed> {
+
+    let tasks: _.LoDashImplicitArrayWrapper<Assignment>;
+
+    try {
+        tasks = _(await activeCollabApi.getAllAssignmentTasks())
+            .filter(t => t.project_id === projectId)
+            .filter(t => t.task_list.toLowerCase() === list.toLowerCase());
+
+    } catch (e) {
+        logger.error(`Error getting tasks: ${e}`);
+        return new RichEmbed()
+            .setTitle(`There was an error getting tasks.`)
+            .setColor(eventColor);
+    }
+
+    if (tasks.size() < 1) {
+        return new RichEmbed()
+            .setTitle(`No tasks found for task list: ${list}.`)
+            .setColor(eventColor);
+    }
+
+    const headTask = tasks.head() as Assignment;
+
+    const formattedTasks = new RichEmbed()
+        .setColor(eventColor);
+
+    tasks
+        .groupBy(t => t.task_list)
+        .forEach(taskGroup => {
+            const currentChars = 0;
+
+            determineFormattedFields(
+                taskGroup,
+                formattedTasks,
+                currentChars,
+                `${taskGroup[0].task_list} Tasks`,
+                t => (`• [${t.name}](${t.permalink})\n`),
+                t => ((t + taskGroup[0].task_list).length)
+            );
+        });
+
+    return formattedTasks;
+}
+
+function determineFormattedFields(
+    taskGroup: Assignment[],
+    formattedTasks: RichEmbed,
+    currentChars: number,
+    title: string,
+    formatTask: (t: Assignment) => string,
+    calculateChars: (t: string) => number,
+) {
+    taskGroup.forEach(t => { 
+        const task = formatTask(t);
+        const newLength = currentChars + task.length;
+
+        if (formattedTasks.fields !== undefined 
+            && formattedTasks.fields.length > 0 
+            && currentChars !== 0 // If characters is 0 we're doing a new task list
+            && newLength <= maxFieldLength
+        ) {
+            currentChars = newLength;
+
+            formattedTasks.fields[formattedTasks.fields.length - 1].value += task;
+        } else {
+            currentChars = calculateChars(task);
+            formattedTasks.addField(title, task);
+        }
+    });
 }
 
 export function createCommandController(
@@ -169,9 +239,13 @@ export function createCommandController(
     logger: Logger
 ) {
     return {
-        listTasksForUser: (u: User) => 
-            listTasksForUser(activeCollabApi, mappingController, logger, u),
+        tasksForUser: (u: User) => 
+            tasksForUser(activeCollabApi, mappingController, logger, u),
         tasksDueThisWeekForProject: (projectId: number) => 
-            tasksDueThisWeekForProject(activeCollabApi, logger, projectId)
+            tasksDueThisWeekForProject(activeCollabApi, logger, projectId),
+        tasksInListForProject: (list: string, projectId: number) => 
+            tasksInListForProject(activeCollabApi, logger, list, projectId),
+        createTask: (projectId: number, taskName: string) => 
+            createTask(activeCollabApi, logger, projectId, taskName)
     };
 }

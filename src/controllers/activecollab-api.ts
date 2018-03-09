@@ -11,6 +11,73 @@ interface TaskResponse {
     tasks: Array<Task>;
 }
 
+interface CreateTaskResponse {
+    single: {
+        name: string;
+    };
+}
+
+export interface IActiveCollabAPI {
+    /**
+     * Get the name of a specified task from its ID and project ID.
+     */
+    taskIdToName: (projectId: number, taskId: number) => Promise<string>;
+
+    /**
+     * Get the name of a specified task list from it's ID and project ID.
+     */
+    getTaskListNameById: (projectId: number, taskId: number) => Promise<string>;
+
+    /**
+     * Get a specified project from its ID.
+     */
+    getProjectById: (projectId: number) => Promise<Project>;
+
+    /**
+     * Get tasks by user ID.
+     */
+    getAssignmentTasksByUserId: (userId: number) => Promise<Assignment[]>;
+
+    /**
+     * Get all tasks across all projects
+     */
+    getAllAssignmentTasks: () => Promise<Assignment[]>;
+
+    /**
+     * Get all projects
+     */
+    getAllProjects: () => Promise<Project[]>;
+
+    /**
+     * Get the id of the project the specified task belongs to.
+     */
+    findProjectForTask: (taskId: number) => Promise<Option<number>>;
+
+    /**
+     * Add a task to a project.
+     */
+    createTask: (projectId: number, name: string) => Promise<void>;
+}
+
+/**
+ * Add task with name to project with ID
+ */
+async function createTask(
+    restClient: IActiveCollabRestClient,
+    projectId: number,
+    name: string
+): Promise<void> {
+    const url = `/projects/${projectId}/tasks`;
+
+    const response = await restClient
+        .post(url, { 'name': name }) as CreateTaskResponse;
+
+    if (!response.single || !response.single.name) {
+        throw new Error(`Invalid response received trying to POST ${url}: `
+            + JSON.stringify(response, undefined, 4));
+    }
+}
+
 /**
  * Get the name of a specified task from its ID and project ID.
  */
@@ -147,51 +214,23 @@ async function findProjectForTaskId(
     return task ? some(task.project_id) : none;
 }
 
-export interface IActiveCollabAPI {
-    /**
-     * Get the name of a specified task from its ID and project ID.
-     */
-    taskIdToName: (projectId: number, taskId: number) => Promise<string>;
-
-    /**
-     * Get the name of a specified task list from it's ID and project ID.
-     */
-    getTaskListNameById: (projectId: number, taskId: number) => Promise<string>;
-
-    /**
-     * Get a specified project from its ID.
-     */
-    getProjectById: (projectId: number) => Promise<Project>;
-
-    /**
-     * Get tasks by user ID.
-     */
-    getAssignmentTasksByUserId: (userId: number) => Promise<Assignment[]>;
-
-    /**
-     * Get all tasks across all projects
-     */
-    getAllAssignmentTasks: () => Promise<Assignment[]>;
-
-    /**
-     * Get all projects
-     */
-    getAllProjects: () => Promise<Project[]>;
-
-    /**
-     * Get the id of the project the specified task belongs to.
-     */
-    findProjectForTask: (taskId: number) => Promise<Option<number>>;
-}
-
 export function createActiveCollabAPI(restClient: IActiveCollabRestClient): IActiveCollabAPI {
     return {
-        taskIdToName: (p, t) => taskIdToName(restClient, p, t),
-        getTaskListNameById: (p, t) => getTaskListNameById(restClient, p, t),
-        getProjectById: p => getProjectById(restClient, p),
-        getAssignmentTasksByUserId: p => getAssignmentTasksByUserId(restClient, p),
-        getAllAssignmentTasks: () => getAllAssignmentTasksLazy(restClient).then(a => a.value()),
-        getAllProjects: () => getAllProjectsLazy(restClient).then(a => a.value()),
-        findProjectForTask: t => findProjectForTaskId(restClient, t)
+        taskIdToName: (projectId, taskId) => 
+            taskIdToName(restClient, projectId, taskId),
+        getTaskListNameById: (projectId, taskId) => 
+            getTaskListNameById(restClient, projectId, taskId),
+        getProjectById: projectId => 
+            getProjectById(restClient, projectId),
+        getAssignmentTasksByUserId: projectId => 
+            getAssignmentTasksByUserId(restClient, projectId),
+        getAllAssignmentTasks: () => 
+            getAllAssignmentTasksLazy(restClient).then(a => a.value()),
+        getAllProjects: () => 
+            getAllProjectsLazy(restClient).then(a => a.value()),
+        findProjectForTask: task => 
+            findProjectForTaskId(restClient, task),
+        createTask: (projectId, taskName) => 
+            createTask(restClient, projectId, taskName)
     };
 }
