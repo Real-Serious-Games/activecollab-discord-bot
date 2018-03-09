@@ -45,7 +45,7 @@ describe('createTask', () => {
             .toBeCalledWith(projectId, taskName);
     });
 
-    it('should throw error and log warning message when error creating task', async () => {
+    it('should throw error and log error message when error creating task', async () => {
         expect.assertions(1);
 
         const projectId = 1;
@@ -184,7 +184,7 @@ describe ('tasksInListForProject', () => {
             .toEqual(`No tasks found for task list: ${taskList}.`);
     });
 
-    it('should return and log warning message when unable to get tasks', async () => {
+    it('should return and log error message when unable to get tasks', async () => {
         expect.assertions(2);
 
             const error = 'error';
@@ -203,7 +203,7 @@ describe ('tasksInListForProject', () => {
                 
             expect((await commandController.tasksInListForProject('columnm', 0)).title)
                 .toEqual(expectedReturn);
-            expect(logger.warn).toBeCalledWith(`Error getting tasks: ${error}`);
+            expect(logger.error).toBeCalledWith(`Error getting tasks: ${error}`);
     });
 });
 
@@ -354,7 +354,7 @@ describe('tasksDueThisWeekForProject', () => {
             .toEqual(`No tasks found that are due this week.`);
     });
     
-    it('should return error message and log warning when error getting tasks', async () => {
+    it('should return error message and log error when error getting tasks', async () => {
         expect.assertions(2);
 
         mockDate.set('2017-05-02');
@@ -376,7 +376,7 @@ describe('tasksDueThisWeekForProject', () => {
                 
             expect((await commandController.tasksDueThisWeekForProject(0)).title)
                 .toEqual(expectedReturn);
-            expect(logger.warn).toBeCalledWith(`Error getting tasks: ${error}`);
+            expect(logger.error).toBeCalledWith(`Error getting tasks: ${error}`);
         }
         finally {
             mockDate.reset();
@@ -668,7 +668,7 @@ describe('tasksForUser', () => {
             .toEqual(expectedReturn);
     });
 
-    it('should return error message and log warning when error getting tasks', async () => {
+    it('should return error message and log error when error getting tasks', async () => {
         expect.assertions(2);
         
         const expectedReturn = new RichEmbed()
@@ -687,10 +687,10 @@ describe('tasksForUser', () => {
             .build();
         expect((await commandController.tasksForUser(<User>discordUser)))
             .toEqual(expectedReturn);
-        expect(logger.warn).toBeCalled();
+        expect(logger.error).toBeCalled();
     });
 
-    it('should return error message and log warning when error getting projects', async () => {
+    it('should return error message and log error when error getting projects', async () => {
         expect.assertions(2);
 
         const expectedReturn = new RichEmbed()
@@ -709,7 +709,7 @@ describe('tasksForUser', () => {
             .build();
         expect((await commandController.tasksForUser(<User>discordUser)))
             .toEqual(expectedReturn);
-        expect(logger.warn).toBeCalled();
+        expect(logger.error).toBeCalled();
     });
 
     it('should return error message when ActiveCollab user not found', async () => {
@@ -727,6 +727,7 @@ describe('tasksForUser', () => {
 
         const commandController = new CommandControllerBuilder()
             .withMappingController(mappingControllerMock as IMappingController)
+            .withLogger(logger)
             .build();
 
         expect((await commandController.tasksForUser(<User>discordUser)))

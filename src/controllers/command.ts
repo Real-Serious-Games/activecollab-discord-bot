@@ -40,7 +40,7 @@ async function tasksForUser(
     try {
         user = mappingController.getActiveCollabUser(discordUser.tag);
     } catch (e) {
-        logger.warn(`Error getting ActiveCollab user for Discord user ` 
+        logger.error(`Error getting ActiveCollab user for Discord user ` 
             + ` ${discordUser.tag}: ${e}`);
         return new RichEmbed()
             .setTitle(`Unable to find user: <@${discordUser.id}>`)
@@ -54,7 +54,7 @@ async function tasksForUser(
         tasks = _(await activecollabApi.getAssignmentTasksByUserId(user));
         projects = _(await activecollabApi.getAllProjects());
     } catch (e) {
-        logger.warn(`Error getting tasks and projects: ${e}`);
+        logger.error(`Error getting tasks and projects: ${e}`);
         return new RichEmbed()
             .setTitle(`There was an error getting tasks for <@${discordUser.id}>`)
             .setColor(eventColor);
@@ -121,7 +121,7 @@ async function tasksDueThisWeekForProject(
                         '[]'
                 ));
     } catch (e) {
-        logger.warn(`Error getting tasks: ${e}`);
+        logger.error(`Error getting tasks: ${e}`);
         return new RichEmbed()
             .setTitle(`There was an error getting tasks.`)
             .setColor(eventColor);
@@ -171,7 +171,7 @@ async function tasksInListForProject(
             .filter(t => t.task_list.toLowerCase() === list.toLowerCase());
 
     } catch (e) {
-        logger.warn(`Error getting tasks: ${e}`);
+        logger.error(`Error getting tasks: ${e}`);
         return new RichEmbed()
             .setTitle(`There was an error getting tasks.`)
             .setColor(eventColor);

@@ -723,7 +723,7 @@ describe('client receiving message', () => {
                 .build();
 
             const mappingControllerMock = new MappingControllerMockBuilder()
-                .withGetProjectId(jest.fn(() => { throw Error(error); }))
+                .withGetProjectId(jest.fn(() => { throw new Error(error); }))
                 .build();
 
             const discordController = new DiscordControllerBuilder()
