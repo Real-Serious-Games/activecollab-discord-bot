@@ -24,7 +24,6 @@ module.exports = {
         'test/builders/'
     ],
     testEnvironment: 'node',
-    mapCoverage: true,
     transform: {
         '^.+\\.tsx?$': 'ts-jest'
     }
