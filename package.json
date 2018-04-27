@@ -63,7 +63,7 @@
     "express": "^4.16.2",
     "fp-ts": "^0.6.8",
     "lodash": "^4.17.5",
-    "moment": "^2.20.1",
+    "moment": "^2.22.1",
     "morgan": "^1.9.0",
     "request-promise-native": "^1.0.5",
     "structured-log": "^0.2.0"
