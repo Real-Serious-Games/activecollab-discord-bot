@@ -13,8 +13,12 @@ import * as logsCommand from './logsCommand';
 
 export interface ICommandController {
     logsSendFile: () => Promise<RichEmbed>;
+    logsSendMessage: (user: User) => Promise<void>;
     tasksForUser: (user: User) => Promise<RichEmbed>;
-    tasksInListForProject: (column: string, projectId: number) => Promise<RichEmbed>;
+    tasksInListForProject: (
+        column: string,
+        projectId: number
+    ) => Promise<RichEmbed>;
     tasksDueThisWeekForProject: (projectId: number) => Promise<RichEmbed>;
     createTask: (projectId: number, taskName: string) => Promise<void>;
 }
@@ -244,6 +248,8 @@ export function createCommandController(
     return {
         logsSendFile: () =>
             logsCommand.logsSendFile(eventColor),
+        logsSendMessage: (u: User) =>
+            logsCommand.logsSendMessage(eventColor, u),
         tasksForUser: (u: User) =>
             tasksForUser(activeCollabApi, mappingController, logger, u),
         tasksDueThisWeekForProject: (projectId: number) =>

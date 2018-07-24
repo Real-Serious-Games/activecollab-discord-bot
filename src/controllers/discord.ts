@@ -83,6 +83,8 @@ export class DiscordController implements IDiscordController {
             else if (command === 'logs') {
                 if (firstArgument === 'sendfile') {
                     this.logsSendFileCommand(message, args);
+                } else if (firstArgument === 'message') {
+                    this.logsSendMessageCommand(message, args);
                 } else {
                     message.channel.send(`Unknown command, *${message.content}*, `
                         + `use *!logs help* or *!logs commands* for list of commands.`);
@@ -99,7 +101,8 @@ export class DiscordController implements IDiscordController {
                         '*!tasks in <list>* - lists tasks in task list for current channel\'s project\n'
                     )
                     .addField('!logs',
-                        '*!logs sendfile* - sends the logfile.\n'
+                        '*!logs sendfile* - sends the logfile.\n' +
+                        '*!logs message* - sends the logfile as text in a private message.\n'
                     )
                 );
             } else {
@@ -234,6 +237,20 @@ export class DiscordController implements IDiscordController {
             .channel
             .send(await this.commandController
                 .logsSendFile());
+    }
+
+    /**
+     * Lists all tasks for first user specified in discord message mentions
+     */
+    private async logsSendMessageCommand(
+        message: discord.Message,
+        args: Array<string>
+    ): Promise<void> {
+        const sentMessage = await message
+            .channel
+            .send('Sending full log to ' + message.author) as discord.Message;
+
+        await this.commandController.logsSendMessage(message.author);
     }
 
     /**
