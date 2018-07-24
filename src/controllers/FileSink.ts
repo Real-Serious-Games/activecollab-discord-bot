@@ -3,6 +3,9 @@ import { LogEvent } from 'structured-log/logEvent';
 import { Sink } from 'structured-log/sink';
 import fs = require('fs');
 
+// Todo: move to config file
+const brisbaneUtcOffset = 10;
+
 export class FileSink implements Sink {
     constructor() {
         // Create Logs/ folder if it doesn't exist
@@ -71,10 +74,20 @@ export class FileSink implements Sink {
 }
 
 /**
+ * Return a new date in the given timezone
+ * @param timezone UTC Timezone eg: brisbane: UTC+10 = 10
+ */
+const getDateInTimezone = (timezone: number): Date => {
+    const date = new Date();
+    const utc = date.getTime() + (date.getTimezoneOffset() * 60000);
+    return new Date(utc + (3600000 * timezone));
+};
+
+/**
  * Get the current date for logfile name
  */
-const getDate = () => {
-    const date = new Date();
+export const getDate = () => {
+    const date = getDateInTimezone(brisbaneUtcOffset);
 
     const year = date.getFullYear();
     const month = date.getMonth() + 1;
@@ -88,7 +101,7 @@ const getDate = () => {
  * Get the current time for the events in the log file
  */
 const getTime = () => {
-    const date = new Date();
+    const date = getDateInTimezone(brisbaneUtcOffset);
 
     const hour = date.getHours();
     const shour = (hour < 10 ? '0' : '') + hour;
