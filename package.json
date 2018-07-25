@@ -55,11 +55,13 @@
     "typescript": "^2.8.3"
   },
   "dependencies": {
+    "@types/exceljs": "^0.5.2",
     "body-parser": "^1.18.2",
     "bufferutil": "^3.0.4",
     "confucious": "0.0.12",
     "discord.js": "^11.3.2",
     "erlpack": "github:hammerandchisel/erlpack",
+    "exceljs": "^1.5.1",
     "express": "^4.16.3",
     "fp-ts": "^0.6.8",
     "lodash": "^4.17.10",
