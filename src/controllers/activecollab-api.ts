@@ -1,4 +1,3 @@
-import { Report, Assignment } from '../models/report';
 import * as _ from 'lodash';
 import { Option, some, none } from 'fp-ts/lib/Option';
 
@@ -6,6 +5,8 @@ import { TaskList } from '../models/taskList';
 import { IActiveCollabRestClient } from './activecollab-rest';
 import { Task } from '../models/taskEvent';
 import { Project } from '../models/project';
+import { BulkTimeRecord, TimeRecord } from '../models/timeRecords';
+import { Report, Assignment } from '../models/report';
 
 interface TaskResponse {
     tasks: Array<Task>;
@@ -61,7 +62,7 @@ export interface IActiveCollabAPI {
     getAllAssignmentTasksDateRange: (
         startDate: string,
         endDate: string
-    ) => Promise<Assignment[]>;
+    ) => Promise<TimeRecord[]>;
 }
 
 /**
@@ -226,25 +227,26 @@ async function getAllAssignmentTasksDateRange(
     startDate: string,
     endDate: string,
     restClient: IActiveCollabRestClient
-): Promise<_.LoDashImplicitWrapper<Assignment[]>> {
+): Promise<_.LoDashImplicitWrapper<TimeRecord[]>> {
     const res = await restClient.get('/reports/run', {
-        type: 'AssignmentFilter',
+        type: 'TrackingFilter',
         include_subtasks: false,
-        created_on_filter: 'selected_range_' + startDate + ':' + endDate
-    }) as Report;
+        tracked_on_filter: 'selected_range_' + startDate + ':' + endDate,
+        include_tracking_data: true
+    }) as BulkTimeRecord;
 
     if (!res.all) {
         return _([]);
     }
 
-    if (!res.all || !res.all.assignments) {
+    if (!res.all || !res.all.records) {
         throw new Error('Invalid response trying to get report: '
             + JSON.stringify(res, undefined, 4));
     }
 
-    return _(res.all.assignments)
+    return _(res.all.records)
         .values()
-        .filter(a => a.type === 'Task');
+        .filter(a => a.type === 'TimeRecord');
 }
 
 export function createActiveCollabAPI(restClient: IActiveCollabRestClient): IActiveCollabAPI {

@@ -31,4 +31,6 @@ export interface Assignment {
     position: number;
 
     permalink: string;
+
+    tracked_time: number;
 }

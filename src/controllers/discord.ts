@@ -134,9 +134,6 @@ export class DiscordController implements IDiscordController {
                             endDate.length > 0 ? endDate : moment().format('YYYY-MM-DD')
                         );
                     }
-                    console.log(args);
-                    console.log(projectFilters);
-                    console.log(nameFilters);
                 } else {
                     message.channel.send(`Wrong syntax. Please enter a date`);
                     message.channel.send(`Eg: rndSpreadsheet 2018-01-20`);

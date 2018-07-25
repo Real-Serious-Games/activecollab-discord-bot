@@ -1,11 +1,12 @@
 import { Logger } from 'structured-log';
 import * as Excel from 'exceljs';
 import * as _ from 'lodash';
+import * as moment from 'moment';
 
 import * as discord from 'discord.js';
 import { IActiveCollabAPI } from './activecollab-api';
-import { Assignment } from '../models/report';
 import { ICommandController } from './command';
+import { TimeRecord } from '../models/timeRecords';
 
 export async function filteredTasks(
     nameFilters: string[],
@@ -17,7 +18,7 @@ export async function filteredTasks(
     logger: Logger
 ): Promise<discord.RichEmbed> {
 
-    let tasks: _.LoDashImplicitArrayWrapper<Assignment>;
+    let tasks: _.LoDashImplicitArrayWrapper<TimeRecord>;
     try {
         tasks = _(await activeCollabApi.getAllAssignmentTasksDateRange(startDate, endDate));
     } catch (e) {
@@ -32,7 +33,7 @@ export async function filteredTasks(
         .setColor(eventColor);
     tasks = tasks
         .filter(task => {
-            const name = task.name.toLocaleLowerCase();
+            const name = task.parent_name.toLocaleLowerCase();
             let isInFilter: boolean = false;
 
             if (nameFilters.length > 0 || projectFilters.length > 0) {
@@ -49,10 +50,10 @@ export async function filteredTasks(
             return isInFilter;
         })
         .sort((a, b) => {
-            if (a.assignee_id < b.assignee_id) {
+            if (a.user_id < b.user_id) {
                 return -1;
             }
-            if (a.assignee_id > b.assignee_id) {
+            if (a.user_id > b.user_id) {
                 return 1;
             }
             return 0;
@@ -65,7 +66,7 @@ export async function filteredTasks(
         { header: 'Id', key: 'id', width: 5 },
         { header: 'Project', key: 'project', width: 50 },
         { header: 'Assignee', key: 'assignee', width: 20 },
-        { header: 'Module', key: 'module', width: 6 },
+        // { header: 'Module', key: 'module', width: 6 },
         { header: 'Work Type', key: 'workType', width: 10 },
         { header: 'Name', key: 'name', width: 90 },
         { header: 'Date', key: 'date', width: 12 },
@@ -77,11 +78,13 @@ export async function filteredTasks(
         worksheet.addRow({
             client: task.client_name,
             id: task.id,
-            project: task.project,
-            assignee: task.assignee,
-            workType: task.position.toString(),
-            name: task.name,
-            date: task.completed_on,
+            project: task.project_name,
+            assignee: task.user_name,
+            workType: task.group_name,
+            name: task.parent_name,
+            date: moment.unix(task.record_date).format('DD/MM/YYYY'),
+            time: task.value,
+            billable: task.billable_status > 0 ? 'yes' : ''
         });
     });
 
@@ -109,7 +112,7 @@ export async function spreadsheetRangeCommand(
 ): Promise<void> {
     message
         .channel
-        .send(`Getting tasks...`);
+        .send(`Getting tasks... (This may take a while)`);
 
     try {
         message
