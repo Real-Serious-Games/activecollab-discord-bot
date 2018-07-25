@@ -49,7 +49,13 @@ export class DiscordController implements IDiscordController {
                 return;
             }
 
-            const args = message.content.slice(commandPrefix.length).trim().split(/ +/g);
+            const args = message.content
+                .slice(commandPrefix.length)
+                .trim()
+                .match(/(?:[^\s"]+|"[^"]*")+/g) as string[];
+            if (args.length <= 0) {
+                return;
+            }
             let command = args.shift();
 
             if (!command) {
@@ -83,27 +89,54 @@ export class DiscordController implements IDiscordController {
                 }
             }
             else if (command === 'spreadsheet') {
-                if (firstArgument && args[1]) {
-                    spreadsheetRangeCommand(
-                        this.commandController,
-                        this.logger,
-                        message,
-                        args[2] ? args[2].split(',') : [],
-                        args[3] ? args[3].split(',') : [],
-                        firstArgument,
-                        args[1]
-                    );
-                }
-                else if (firstArgument) {
-                    spreadsheetRangeCommand(
-                        this.commandController,
-                        this.logger,
-                        message,
-                        [],
-                        [],
-                        firstArgument,
-                        moment().format('YYYY-MM-DD')
-                    );
+                if (firstArgument) {
+                    let startDate: string = '';
+                    let endDate: string = '';
+                    let nameFilters: string[] = [];
+                    let projectFilters: string[] = [];
+                    args.forEach(arg => {
+                        // If date (check for - becuase dates contain -)
+                        if (arg.includes('-')) {
+                            if (!startDate) {
+                                startDate = arg;
+                            } else {
+                                endDate = arg;
+                            }
+                        }
+
+                        // If nameFilter (check for names=)
+                        if (arg.includes('names=')) {
+                            nameFilters = arg
+                                .replace('names=', '')
+                                .split('"')
+                                .join('')
+                                .split(',');
+                        }
+
+                        // If projectFilter (check for projects=)
+                        if (arg.includes('projects=')) {
+                            projectFilters = arg
+                                .replace('projects=', '')
+                                .split('"')
+                                .join('')
+                                .split(',');
+                        }
+                    });
+
+                    if (startDate.length > 0) {
+                        spreadsheetRangeCommand(
+                            this.commandController,
+                            this.logger,
+                            message,
+                            nameFilters,
+                            projectFilters,
+                            startDate,
+                            endDate.length > 0 ? endDate : moment().format('YYYY-MM-DD')
+                        );
+                    }
+                    console.log(args);
+                    console.log(projectFilters);
+                    console.log(nameFilters);
                 } else {
                     message.channel.send(`Wrong syntax. Please enter a date`);
                     message.channel.send(`Eg: rndSpreadsheet 2018-01-20`);

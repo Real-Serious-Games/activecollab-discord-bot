@@ -37,7 +37,7 @@ export async function filteredTasks(
 
             if (nameFilters.length > 0 || projectFilters.length > 0) {
                 nameFilters.forEach(filter => {
-                    isInFilter = isInFilter || name.includes(filter);
+                    isInFilter = isInFilter || name.includes(filter.toLocaleLowerCase());
                 });
                 projectFilters.forEach(filter => {
                     isInFilter = isInFilter || task.project_id.toString() === filter;
