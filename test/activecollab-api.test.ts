@@ -3,19 +3,19 @@ import { none, some } from 'fp-ts/lib/Option';
 import { RestClientMockBuilder } from './builders/restClientMockBuilder';
 import { createActiveCollabAPI } from '../src/controllers/activecollab-api';
 import { IActiveCollabRestClient, QueryParams } from '../src/controllers/activecollab-rest';
-import { getEmptyReport } from './testData';
+import { getEmptyReport, getEmptyBulkTimeRecord } from './testData';
 
 describe('ActiveCollab API', () => {
     describe('createTask', () => {
         it('posts task to specified project', async () => {
             expect.assertions(1);
-            
+
             const projectId = 123;
             const taskName = 'name';
-    
+
             const restClientMock = new RestClientMockBuilder()
-                .withPost(jest.fn(async () => { return { 'single': { 'name': taskName }}; }))
-                .build(); 
+                .withPost(jest.fn(async () => { return { 'single': { 'name': taskName } }; }))
+                .build();
 
             const activeCollabApi = createActiveCollabAPI(restClientMock);
 
@@ -32,10 +32,10 @@ describe('ActiveCollab API', () => {
 
         it('throws error when invalid response received', async () => {
             expect.assertions(1);
-            
+
             const projectId = 123;
             const taskName = 'name';
-    
+
             const restClientMock = new RestClientMockBuilder()
                 .withPost(jest.fn().mockReturnValue(Promise.resolve({})))
                 .build();
@@ -56,7 +56,7 @@ describe('ActiveCollab API', () => {
             const projectId = 123;
             const taskId = 0;
 
-            const mockGet = jest.fn().mockReturnValue(Promise.resolve({ 
+            const mockGet = jest.fn().mockReturnValue(Promise.resolve({
                 'tasks': [{
                     id: taskId,
                     name: 'Test task',
@@ -81,7 +81,7 @@ describe('ActiveCollab API', () => {
             const taskId = 3445;
             const expectedName = 'Test task';
 
-            const mockGet = jest.fn().mockReturnValue(Promise.resolve({ 
+            const mockGet = jest.fn().mockReturnValue(Promise.resolve({
                 'tasks': [{
                     id: taskId,
                     name: expectedName,
@@ -107,7 +107,7 @@ describe('ActiveCollab API', () => {
             const projectId = 123;
 
             const restClientMock = new RestClientMockBuilder()
-                .withGet(jest.fn().mockReturnValue(Promise.resolve({'tasks': []})))
+                .withGet(jest.fn().mockReturnValue(Promise.resolve({ 'tasks': [] })))
                 .build();
 
             const api = createActiveCollabAPI(restClientMock);
@@ -512,6 +512,116 @@ describe('ActiveCollab API', () => {
             const projectId = await api.findProjectForTask(0);
 
             expect(projectId).toEqual(none);
+        });
+    });
+
+    describe('getAllAssignmentTasksDateRange', () => {
+        it('requests TrackingFilter report', async () => {
+            expect.assertions(1);
+
+            const restClientMock = new RestClientMockBuilder()
+                .withGet(jest.fn().mockReturnValue(getEmptyBulkTimeRecord()))
+                .build();
+
+            const api = createActiveCollabAPI(restClientMock);
+
+            await api.getAllAssignmentTasksDateRange('', '');
+
+            const expectedQuery: QueryParams = {
+                type: 'TrackingFilter',
+                include_subtasks: false,
+                tracked_on_filter: 'selected_range_' + ':',
+                include_tracking_data: true
+            };
+
+            expect(restClientMock.get).toBeCalledWith('/reports/run', expectedQuery);
+        });
+
+        it('returns an empty array if no time records', async () => {
+            expect.assertions(1);
+
+            const restClientMock = new RestClientMockBuilder()
+                .withGet(jest.fn().mockReturnValue([]))
+                .build();
+
+            const api = createActiveCollabAPI(restClientMock);
+
+            await expect(api.getAllAssignmentTasksDateRange('', '')).toMatchObject({});
+        });
+
+        it('returns only tasks from api', async () => {
+            expect.assertions(2);
+
+            const testTask = {
+                id: 2,
+                type: 'TimeRecord',
+                parent_type: 'Task',
+                parent_id: 2,
+                group_id: 2,
+                record_date: 2,
+                user_id: 2,
+                user_name: 'Name',
+                user_email: 'user_email@userEmail.com',
+                summary: 'description',
+                value: 2,
+                billable_status: 2,
+                project_id: 2,
+                project_name: 'project_name',
+                project_url: 'https://app.activecollab.com/project_url',
+                client_id: 2,
+                client_name: 'client_name',
+                currency_id: 2,
+                custom_hourly_rate: 100,
+                parent_name: 'parent_name',
+                parent_url: 'https://app.activecollab.com/parent_name',
+                group_name: 'group_name',
+                billable_name: 'billable_name'
+            };
+
+            const mockGet = jest.fn().mockReturnValue({
+                all: {
+                    label: 'All Records',
+                    records: {
+                        1: {
+                            id: 1,
+                            type: 'TimeRecord',
+                            parent_type: 'Task',
+                            parent_id: 1,
+                            group_id: 1,
+                            record_date: 1,
+                            user_id: 1,
+                            user_name: 'Name',
+                            user_email: 'user_email@userEmail.com',
+                            summary: 'description',
+                            value: 1,
+                            billable_status: 1,
+                            project_id: 1,
+                            project_name: 'project_name',
+                            project_url: 'https://app.activecollab.com/project_url',
+                            client_id: 1,
+                            client_name: 'client_name',
+                            currency_id: 1,
+                            custom_hourly_rate: 100,
+                            parent_name: 'parent_name',
+                            parent_url: 'https://app.activecollab.com/parent_name',
+                            group_name: 'group_name',
+                            billable_name: 'billable_name'
+                        },
+                        2: testTask
+                    }
+                }
+            });
+
+            const restClientMock = new RestClientMockBuilder()
+                .withGet(mockGet)
+                .build();
+
+            const api = createActiveCollabAPI(restClientMock);
+
+            const tasks = await api.getAllAssignmentTasksDateRange('', '');
+
+            expect(tasks).toContain(testTask);
+            expect(tasks).toHaveLength(2);
         });
     });
 });

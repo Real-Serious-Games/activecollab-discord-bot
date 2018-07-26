@@ -34,6 +34,12 @@ export async function filteredTasks(
             .setColor(eventColor);
     }
 
+    if (tasks.size() === 0) {
+        return new discord.RichEmbed()
+            .setTitle(`There was no tasks in that specified command.`)
+            .setColor(eventColor);
+    }
+
     tasks = tasks
         .filter(task => {
             const name = task.parent_name.toLocaleLowerCase();

@@ -239,11 +239,6 @@ async function getAllAssignmentTasksDateRange(
         return _([]);
     }
 
-    if (!res.all || !res.all.records) {
-        throw new Error('Invalid response trying to get report: '
-            + JSON.stringify(res, undefined, 4));
-    }
-
     return _(res.all.records)
         .values()
         .filter(a => a.type === 'TimeRecord');
