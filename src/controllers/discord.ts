@@ -99,29 +99,29 @@ export class DiscordController implements IDiscordController {
                     );
                 } else {
                     message.channel.send(`Wrong syntax. Please enter at least one date`);
-                    message.channel.send(`Eg: rndSpreadsheet 2018-01-20`);
+                    message.channel.send(`Eg: !spreadsheet ` + moment().format('YYYY-MM-DD'));
                 }
             }
             else if (command === 'help' || command === 'commands') {
                 message.channel.send(new discord.RichEmbed()
                     .setTitle('Commands')
                     .addField('!tasks',
-                        '*!tasks list* - lists your tasks.\n' +
-                        '*!tasks list for @user* - lists tasks for mentioned user.\n' +
-                        '*!tasks due* - lists tasks due this week for current channel\'s project\n' +
-                        '*!tasks create <task name>* - creates a task for current channel\'s project\n' +
-                        '*!tasks in <list>* - lists tasks in task list for current channel\'s project\n'
+                        '**!tasks list** - lists your tasks.\n' +
+                        '**!tasks list for @user** - lists tasks for mentioned user.\n' +
+                        '**!tasks due** - lists tasks due this week for current channel\'s project\n' +
+                        '**!tasks create <task name>** - creates a task for current channel\'s project\n' +
+                        '**!tasks in <list>** - lists tasks in task list for current channel\'s project\n'
                     )
                     .addField('!spreadsheet',
-                        '*!spreadsheet <date>* - All time records since <date>.\n' +
-                        '*!spreadsheet <startdate> <enddate>* - All time records between <startdate> and <enddate>.\n' +
+                        '**!spreadsheet <date>** - All time records since <date>.\n' +
+                        '**!spreadsheet <startdate> <enddate>** - All time records between <startdate> and <enddate>.\n' +
                         'You can also add optional filters in the command:\n' +
-                        '*names=<name>* - This will only show times with <name> in thier task name\n' +
-                        '*names=<name>,<name>* - Filters are separated by commas\n' +
-                        '*names="<Name with spaces>"* - If your filter has spaces, wrap it in quotes\n' +
-                        '*projects=<ID>* - This will only show times from the project with the ID <ID>\n' +
+                        '**names=<name>** - This will only show times with <name> in thier task name\n' +
+                        '**names=<name>,<name>** - Filters are separated by commas\n' +
+                        '**names="<Name with spaces>"** - If your filter has spaces, wrap it in quotes\n' +
+                        '**projects=<ID>** - This will only show times from the project with the ID <ID>\n' +
                         'Note: project ID can be found by looking in the URL in active collab\n' +
-                        '*projects=<ID>,<ID>* - Filters are separated by commas\n'
+                        '**projects=<ID>,<ID>** - Filters are separated by commas\n'
                     )
                 );
             } else {
