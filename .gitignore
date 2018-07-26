@@ -11,6 +11,10 @@ config.json
 # Exclude Files
 *EXCLUDE.*
 
+# Spreadsheets
+Spreadsheets
+*.xlsx
+
 # Runtime data
 pids
 *.pid
