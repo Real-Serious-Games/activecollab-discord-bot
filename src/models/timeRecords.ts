@@ -33,7 +33,7 @@ export interface TimeRecord {
     group_name: string;         // Name of group
 
     value: number;              // Hours logged
-    billable_name: number;      // Name of billable type (usually billable)
+    billable_name: string;      // Name of billable type (usually billable)
     billable_status: number;    // If billable (0|1)
     summary: string;            // Description of time record inputted by user
     record_date: number;        // Date recorded
