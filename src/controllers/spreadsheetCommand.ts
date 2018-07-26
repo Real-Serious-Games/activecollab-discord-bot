@@ -20,7 +20,10 @@ export async function filteredTasks(
     endDate: string,
     eventColor: any,
     activeCollabApi: IActiveCollabAPI,
-    logger: Logger
+    logger: Logger,
+    writeToExcel: (workbook: Excel.Workbook,
+        filename: string,
+        logger: Logger) => Promise<void>
 ): Promise<discord.RichEmbed> {
     const message = new discord.RichEmbed();
 
@@ -70,18 +73,7 @@ export async function filteredTasks(
 
     const workbook = new Excel.Workbook();
     const worksheet = workbook.addWorksheet('Sheet');
-    worksheet.columns = [
-        { header: 'Client', key: 'client', width: 25 },
-        { header: '#', key: 'id', width: 5 },
-        { header: 'Project', key: 'project', width: 50 },
-        { header: 'Assignee', key: 'assignee', width: 20 },
-        { header: 'Module', key: 'module', width: 6 },
-        { header: 'Work Type', key: 'workType', width: 10 },
-        { header: 'Name', key: 'name', width: 90 },
-        { header: 'Date', key: 'date', width: 12 },
-        { header: 'Time', key: 'time', width: 12 },
-        { header: 'Billable', key: 'billable', width: 5 },
-    ];
+    worksheet.columns = spreadsheetHeader;
 
     tasks.forEach(task => {
         worksheet.addRow({
@@ -113,27 +105,14 @@ export async function filteredTasks(
             }
         });
 
-        let filename = spreadsheetPath
-            + '/'
-            + spreadsheetBaseName
-            + '_';
-        if (nameFilters.length > 0) {
-            filename = filename
-                + nameFilters.toString()
-                + '_';
-        }
-        if (projectFilters.length > 0) {
-            filename = filename
-                + projectFilters.toString()
-                + '_';
-        }
-        filename = filename
-            + startDate
-            + '-'
-            + endDate
-            + '.xlsx';
+        const filename = getFilePath(
+            nameFilters,
+            projectFilters,
+            startDate,
+            endDate
+        );
 
-        await workbook.xlsx.writeFile(filename);
+        await writeToExcel(workbook, filename, logger);
         message.setTitle('Successful')
             .attachFile(filename)
             .setColor(eventColor);
@@ -146,6 +125,60 @@ export async function filteredTasks(
 
     return message;
 }
+
+const spreadsheetHeader = [
+    { header: 'Client', key: 'client', width: 25 },
+    { header: '#', key: 'id', width: 5 },
+    { header: 'Project', key: 'project', width: 50 },
+    { header: 'Assignee', key: 'assignee', width: 20 },
+    { header: 'Module', key: 'module', width: 6 },
+    { header: 'Work Type', key: 'workType', width: 10 },
+    { header: 'Name', key: 'name', width: 90 },
+    { header: 'Date', key: 'date', width: 12 },
+    { header: 'Time', key: 'time', width: 12 },
+    { header: 'Billable', key: 'billable', width: 5 },
+];
+
+const getFilePath = (
+    nameFilters: string[],
+    projectFilters: string[],
+    startDate: string,
+    endDate: string
+): string => {
+    let filename = spreadsheetPath
+        + '/'
+        + spreadsheetBaseName
+        + '_';
+    if (nameFilters.length > 0) {
+        filename = filename
+            + nameFilters.toString()
+            + '_';
+    }
+    if (projectFilters.length > 0) {
+        filename = filename
+            + projectFilters.toString()
+            + '_';
+    }
+    filename = filename
+        + startDate
+        + '-'
+        + endDate
+        + '.xlsx';
+
+    return filename;
+};
+
+export const writeToExcel = async (
+    workbook: Excel.Workbook,
+    filename: string,
+    logger: Logger
+) => {
+    try {
+        await workbook.xlsx.writeFile(filename);
+    } catch (error) {
+        logger.error(error);
+    }
+};
 
 export async function spreadsheetRangeCommand(
     commandController: ICommandController,
@@ -203,7 +236,7 @@ export const spreadsheetParseCommand = (
         }
 
         // If nameFilter (check for names=)
-        if (arg.includes('names=')) {
+        if (arg.toLocaleLowerCase().includes('names=')) {
             nameFilters = arg
                 .replace('names=', '')
                 .split('"')
@@ -212,7 +245,7 @@ export const spreadsheetParseCommand = (
         }
 
         // If projectFilter (check for projects=)
-        if (arg.includes('projects=')) {
+        if (arg.toLocaleLowerCase().includes('projects=')) {
             projectFilters = arg
                 .replace('projects=', '')
                 .split('"')

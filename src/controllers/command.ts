@@ -8,7 +8,7 @@ import { Project } from '../models/project';
 import { IActiveCollabAPI } from '../controllers/activecollab-api';
 import { IMappingController } from '../controllers/mapping';
 import { parse } from 'url';
-import { filteredTasks } from './spreadsheetCommand';
+import * as spreadsheetCommand from './spreadsheetCommand';
 
 export interface ICommandController {
     tasksForUser: (user: User) => Promise<RichEmbed>;
@@ -260,14 +260,15 @@ export function createCommandController(
             startDate: string,
             endDate: string
         ) =>
-            filteredTasks(
+            spreadsheetCommand.filteredTasks(
                 nameFilters,
                 projectFilters,
                 startDate,
                 endDate,
                 eventColor,
                 activeCollabApi,
-                logger
+                logger,
+                spreadsheetCommand.writeToExcel
             )
     };
 }
