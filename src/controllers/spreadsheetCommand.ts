@@ -66,10 +66,10 @@ export async function filteredTasks(
     const worksheet = workbook.addWorksheet('Sheet');
     worksheet.columns = [
         { header: 'Client', key: 'client', width: 25 },
-        { header: 'Id', key: 'id', width: 5 },
+        { header: '#', key: 'id', width: 5 },
         { header: 'Project', key: 'project', width: 50 },
         { header: 'Assignee', key: 'assignee', width: 20 },
-        // { header: 'Module', key: 'module', width: 6 },
+        { header: 'Module', key: 'module', width: 6 },
         { header: 'Work Type', key: 'workType', width: 10 },
         { header: 'Name', key: 'name', width: 90 },
         { header: 'Date', key: 'date', width: 12 },
@@ -80,7 +80,7 @@ export async function filteredTasks(
     tasks.forEach(task => {
         worksheet.addRow({
             client: task.client_name,
-            id: task.id,
+            id: task.project_id,
             project: task.project_name,
             assignee: task.user_name,
             workType: task.group_name,
