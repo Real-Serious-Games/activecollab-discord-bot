@@ -5,7 +5,7 @@ import * as moment from 'moment';
 
 import { IMappingController } from '../controllers/mapping';
 import { ICommandController } from '../controllers/command';
-import { spreadsheetRangeCommand } from '../controllers/spreadsheetCommand';
+import { spreadsheetRangeCommand, spreadsheetParseCommand } from '../controllers/spreadsheetCommand';
 
 export interface IDiscordController {
     sendMessageToChannel: (
@@ -90,52 +90,15 @@ export class DiscordController implements IDiscordController {
             }
             else if (command === 'spreadsheet') {
                 if (firstArgument) {
-                    let startDate: string = '';
-                    let endDate: string = '';
-                    let nameFilters: string[] = [];
-                    let projectFilters: string[] = [];
-                    args.forEach(arg => {
-                        // If date (check for - becuase dates contain -)
-                        if (arg.includes('-')) {
-                            if (!startDate) {
-                                startDate = arg;
-                            } else {
-                                endDate = arg;
-                            }
-                        }
-
-                        // If nameFilter (check for names=)
-                        if (arg.includes('names=')) {
-                            nameFilters = arg
-                                .replace('names=', '')
-                                .split('"')
-                                .join('')
-                                .split(',');
-                        }
-
-                        // If projectFilter (check for projects=)
-                        if (arg.includes('projects=')) {
-                            projectFilters = arg
-                                .replace('projects=', '')
-                                .split('"')
-                                .join('')
-                                .split(',');
-                        }
-                    });
-
-                    if (startDate.length > 0) {
-                        spreadsheetRangeCommand(
-                            this.commandController,
-                            this.logger,
-                            message,
-                            nameFilters,
-                            projectFilters,
-                            startDate,
-                            endDate.length > 0 ? endDate : moment().format('YYYY-MM-DD')
-                        );
-                    }
+                    spreadsheetParseCommand(
+                        firstArgument,
+                        args,
+                        this.commandController,
+                        this.logger,
+                        message
+                    );
                 } else {
-                    message.channel.send(`Wrong syntax. Please enter a date`);
+                    message.channel.send(`Wrong syntax. Please enter at least one date`);
                     message.channel.send(`Eg: rndSpreadsheet 2018-01-20`);
                 }
             }
@@ -148,6 +111,17 @@ export class DiscordController implements IDiscordController {
                         '*!tasks due* - lists tasks due this week for current channel\'s project\n' +
                         '*!tasks create <task name>* - creates a task for current channel\'s project\n' +
                         '*!tasks in <list>* - lists tasks in task list for current channel\'s project\n'
+                    )
+                    .addField('!spreadsheet',
+                        '*!spreadsheet <date>* - All time records since <date>.\n' +
+                        '*!spreadsheet <startdate> <enddate>* - All time records between <startdate> and <enddate>.\n' +
+                        'You can also add optional filters in the command:\n' +
+                        '*names=<name>* - This will only show times with <name> in thier task name\n' +
+                        '*names=<name>,<name>* - Filters are separated by commas\n' +
+                        '*names="<Name with spaces>"* - If your filter has spaces, wrap it in quotes\n' +
+                        '*projects=<ID>* - This will only show times from the project with the ID <ID>\n' +
+                        'Note: project ID can be found by looking in the URL in active collab\n' +
+                        '*projects=<ID>,<ID>* - Filters are separated by commas\n'
                     )
                 );
             } else {

@@ -2,11 +2,16 @@ import { Logger } from 'structured-log';
 import * as Excel from 'exceljs';
 import * as _ from 'lodash';
 import * as moment from 'moment';
+import * as fs from 'fs';
+import * as path from 'path';
 
 import * as discord from 'discord.js';
 import { IActiveCollabAPI } from './activecollab-api';
 import { ICommandController } from './command';
 import { TimeRecord } from '../models/timeRecords';
+
+const spreadsheetPath: string = 'Spreadsheets';
+const spreadsheetBaseName: string = 'Spreadsheet';
 
 export async function filteredTasks(
     nameFilters: string[],
@@ -17,6 +22,7 @@ export async function filteredTasks(
     activeCollabApi: IActiveCollabAPI,
     logger: Logger
 ): Promise<discord.RichEmbed> {
+    const message = new discord.RichEmbed();
 
     let tasks: _.LoDashImplicitArrayWrapper<TimeRecord>;
     try {
@@ -28,9 +34,6 @@ export async function filteredTasks(
             .setColor(eventColor);
     }
 
-    const message = new discord.RichEmbed();
-    message.setTitle('Spreadsheet')
-        .setColor(eventColor);
     tasks = tasks
         .filter(task => {
             const name = task.parent_name.toLocaleLowerCase();
@@ -88,15 +91,52 @@ export async function filteredTasks(
         });
     });
 
-    workbook.xlsx.writeFile('Logs/RnDSpreadsheet.xlsx')
-        .then(() => {
-            message.addField('Status', 'Successful')
-                .attachFile('Logs/RnDSpreadsheet.xlsx');
-        })
-        .catch(err => {
-            console.log(err);
-            message.addField('Status', 'Unsuccessful');
+    try {
+        // Make spreadsheets Directory
+        if (!fs.existsSync(spreadsheetPath)) {
+            fs.mkdirSync(spreadsheetPath);
+        }
+
+        fs.readdir(spreadsheetPath, (err, files) => {
+            if (err) throw err;
+
+            for (const file of files) {
+                fs.unlink(path.join(spreadsheetPath, file), err => {
+                    if (err) throw err;
+                });
+            }
         });
+
+        let filename = spreadsheetPath
+            + '/'
+            + spreadsheetBaseName
+            + '_';
+        if (nameFilters.length > 0) {
+            filename = filename
+                + nameFilters.toString()
+                + '_';
+        }
+        if (projectFilters.length > 0) {
+            filename = filename
+                + projectFilters.toString()
+                + '_';
+        }
+        filename = filename
+            + startDate
+            + '-'
+            + endDate
+            + '.xlsx';
+
+        await workbook.xlsx.writeFile(filename);
+        message.setTitle('Successful')
+            .attachFile(filename)
+            .setColor(eventColor);
+    } catch (err) {
+        logger.error(err);
+        message.setTitle('Spreadsheet')
+            .addField('Status', 'Unsuccessful due to error: ' + err)
+            .setColor(eventColor);
+    }
 
     return message;
 }
@@ -134,3 +174,57 @@ export async function spreadsheetRangeCommand(
         logger.error(`Error getting tasks for spreadsheet ` + e);
     }
 }
+
+export const spreadsheetParseCommand = (
+    firstArgument: string,
+    args: string[],
+    commandController: ICommandController,
+    logger: Logger,
+    message: discord.Message
+) => {
+    let startDate: string = '';
+    let endDate: string = '';
+    let nameFilters: string[] = [];
+    let projectFilters: string[] = [];
+    args.forEach(arg => {
+        // If date (check for - becuase dates contain -)
+        if (arg.includes('-')) {
+            if (!startDate) {
+                startDate = arg;
+            } else {
+                endDate = arg;
+            }
+        }
+
+        // If nameFilter (check for names=)
+        if (arg.includes('names=')) {
+            nameFilters = arg
+                .replace('names=', '')
+                .split('"')
+                .join('')
+                .split(',');
+        }
+
+        // If projectFilter (check for projects=)
+        if (arg.includes('projects=')) {
+            projectFilters = arg
+                .replace('projects=', '')
+                .split('"')
+                .join('')
+                .split(',');
+        }
+    });
+
+    if (startDate.length > 0) {
+        spreadsheetRangeCommand(
+            commandController,
+            logger,
+            message,
+            nameFilters,
+            projectFilters,
+            startDate,
+            endDate.length > 0 ? endDate : moment().format('YYYY-MM-DD')
+        );
+    }
+
+};
