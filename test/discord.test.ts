@@ -1,13 +1,11 @@
 import { TextChannel, Client, RichEmbed, Collection, Channel, Guild } from 'discord.js';
-import { Logger } from 'structured-log';
 
-import { DiscordController } from '../src/controllers/discord';
 import { DiscordControllerBuilder } from './builders/discordControllerBuilder';
 import { MappingControllerMockBuilder } from './builders/mappingControllerMockBuilder';
 import { DiscordClientMockBuilder } from './builders/discordClientMockBuilder';
-import { map } from 'fp-ts/lib/Either';
 import { LoggerMockBuilder } from './builders/loggerMockBuilder';
 import { CommandControllerMockBuilder } from './builders/commandControllerMockBuilder';
+import * as Moment from '../node_modules/moment';
 
 describe('calling sendMessageToChannel', () => {
     it('should send message to channel when channel is valid', () => {
@@ -742,6 +740,52 @@ describe('client receiving message', () => {
         });
     });
 
+    describe('when command is "!spreadsheet"', () => {
+        it('should reply with a rich embed', () => {
+            const client = setupClient();
+
+            const commandControllerMock = new CommandControllerMockBuilder()
+                .withFilteredTasks(jest.fn(() => Promise.resolve(new RichEmbed())))
+                .build();
+
+            const discordController = new DiscordControllerBuilder()
+                .withCommandController(commandControllerMock)
+                .withClient(client)
+                .build();
+
+            const message = new MessageBuilder()
+                .withContent('!spreadsheet ' + Moment().format('YYYY-MM-DD'))
+                .build();
+
+            client.emit('message', message);
+        });
+
+        it('should reply with syntax help if no arguments are given', () => {
+            expect.assertions(2);
+            const client = setupClient();
+
+            const commandControllerMock = new CommandControllerMockBuilder()
+                .withFilteredTasks(jest.fn(() => Promise.resolve(new RichEmbed())))
+                .build();
+
+            const discordController = new DiscordControllerBuilder()
+                .withCommandController(commandControllerMock)
+                .withClient(client)
+                .build();
+
+            const message = new MessageBuilder()
+                .withContent('!spreadsheet')
+                .build();
+
+            client.emit('message', message);
+
+            expect(message.channel.send)
+                .toBeCalledWith('Eg: !spreadsheet ' + Moment().format('YYYY-MM-DD'));
+            expect(message.channel.send)
+                .toBeCalledWith('Wrong syntax. Please enter at least one date');
+        });
+    });
+
     it('should send message when command is unknown', () => {
         const unknownCommand = '!unknown';
 
@@ -879,6 +923,28 @@ describe('client receiving message', () => {
         client.emit('message', message);
 
         expect(commandControllerMock.tasksForUser).toHaveBeenCalledTimes(0);
+    });
+
+    it('should not split spaces into args that are wrapped in quotes', () => {
+        const client = setupClient();
+
+        const filterMock = jest.fn(() => Promise.resolve(new RichEmbed()));
+        const commandControllerMock = new CommandControllerMockBuilder()
+            .withFilteredTasks(filterMock)
+            .build();
+
+        const discordController = new DiscordControllerBuilder()
+            .withClient(client)
+            .withCommandController(commandControllerMock)
+            .build();
+
+        const message = new MessageBuilder()
+            .withContent('!spreadsheet ' + Moment().format('YYYY-MM-DD') + 'names="this that"')
+            .build();
+
+        client.emit('message', message);
+
+        // expect(filterMock.)
     });
 
     it('should do nothing when message is empty and starts with prefix', () => {

@@ -8,7 +8,8 @@ export class CommandControllerMockBuilder {
     private tasksDueThisWeekForProject = jest.fn(() => Promise.resolve(new RichEmbed()));
     private tasksInListForProject = jest.fn(() => Promise.resolve(new RichEmbed()));
     private createTask: jest.Mock<Promise<void>> = jest.fn(() => Promise.resolve());
-    
+    private filteredTasks = jest.fn(() => Promise.resolve(new RichEmbed()));
+
     public withTasksForUser(mock: jest.Mock<Promise<RichEmbed>>) {
         this.tasksForUser = mock;
         return this;
@@ -29,12 +30,18 @@ export class CommandControllerMockBuilder {
         return this;
     }
 
+    public withFilteredTasks(mock: jest.Mock<Promise<RichEmbed>>) {
+        this.filteredTasks = mock;
+        return this;
+    }
+
     public build(): ICommandController {
         return {
             tasksForUser: this.tasksForUser,
             tasksDueThisWeekForProject: this.tasksDueThisWeekForProject,
             tasksInListForProject: this.tasksInListForProject,
-            createTask: this.createTask
+            createTask: this.createTask,
+            filteredTasks: this.filteredTasks
         };
     }
 }
