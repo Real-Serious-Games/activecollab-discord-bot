@@ -1,11 +1,7 @@
 import { Logger } from 'structured-log';
-import * as Excel from 'exceljs';
-import * as _ from 'lodash';
-
 import * as discord from 'discord.js';
 import { IActiveCollabAPI } from './activecollab-api';
 import { ICommandController } from './command';
-import { Assignment, Report } from '../models/report';
 import * as ProjectTasks from '../models/projectTasks';
 
 export async function dailyReport(
@@ -16,12 +12,12 @@ export async function dailyReport(
 ): Promise<discord.RichEmbed> {
     const message = new discord.RichEmbed();
     message
-        .setTitle('Tasks for project: ' + projects)
+        .setTitle('')
         .setColor(eventColor);
     for (const projectID of projects) {
-        let tasks: _.LoDashImplicitArrayWrapper<ProjectTasks.Task>;
+        let taskData: ProjectTasks.TasksData;
         try {
-            tasks = _(await activeCollabApi.getAssignmentTasksByProject(projectID));
+            taskData = await activeCollabApi.getAssignmentTasksByProject(projectID);
         } catch (e) {
             logger.error(`Error getting tasks: ${e}`);
             return new discord.RichEmbed()
@@ -29,7 +25,22 @@ export async function dailyReport(
                 .setColor(eventColor);
         }
 
-        tasks.groupBy(t => t.task_list_id).forEach(listGroup => {
+        const tasks = taskData.tasks;
+        const taskLists = taskData.task_lists.sort((a, b) => {
+            if (a.position > b.position) {
+                return 1;
+            }
+            if (a.position < b.position) {
+                return -1;
+            }
+            return 0;
+        });
+
+        let messageField: string = '';
+
+        taskLists.forEach(list => {
+            const listGroup = tasks.filter(t => t.task_list_id == list.id);
+
             let fullCount = listGroup.filter(t => t.total_subtasks === 0).length;
             listGroup.forEach(task => {
                 fullCount += task.total_subtasks;
@@ -40,16 +51,24 @@ export async function dailyReport(
                 remainingCount += task.open_subtasks;
             });
 
-            message.addField('Project: ' + projectID,
-                remainingCount + '/' + fullCount
+            messageField += (
+                '```ini\n'
+                + '[' + list.name + '] '
+                + remainingCount + '/' + fullCount + '\n'
+                + '```'
             );
         });
+
+        message.addField('**Remaining tasks for project: ' + projectID + '**',
+            messageField
+        );
     }
 
     return message;
 }
 
 export async function dailyReportCommand(
+    projects: string[],
     commandController: ICommandController,
     logger: Logger,
     message: discord.Message
@@ -65,12 +84,12 @@ export async function dailyReportCommand(
 
         message
             .channel
-            .send(await commandController.dailyReport(['14']));
+            .send(await commandController.dailyReport(projects));
     } catch (e) {
         message
             .channel
-            .send('There was an error creating the spreadsheet');
-        logger.error(`Error getting tasks for spreadsheet ` + e);
+            .send('There was an error getting the tasks');
+        logger.error(`Error getting tasks ` + e);
     }
 }
 
@@ -80,5 +99,5 @@ export const dailyReportParseCommand = (
     logger: Logger,
     message: discord.Message
 ) => {
-    dailyReportCommand(commandController, logger, message);
+    dailyReportCommand(args, commandController, logger, message);
 };

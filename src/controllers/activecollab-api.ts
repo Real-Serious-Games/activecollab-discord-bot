@@ -59,7 +59,7 @@ export interface IActiveCollabAPI {
      */
     createTask: (projectId: number, name: string) => Promise<void>;
 
-    getAssignmentTasksByProject: (project: string) => Promise<ProjectTasks.Task[]>;
+    getAssignmentTasksByProject: (project: string) => Promise<ProjectTasks.TasksData>;
 }
 
 /**
@@ -223,16 +223,16 @@ async function findProjectForTaskId(
 async function getAssignmentTasksByProject(
     projectID: string,
     restClient: IActiveCollabRestClient
-): Promise<ProjectTasks.Task[]> {
+): Promise<ProjectTasks.TasksData> {
     const res = await restClient.get('/projects/' + projectID + '/tasks', {
     }) as ProjectTasks.TasksData;
 
-    if (!res.tasks) {
+    if (!res.tasks || !res.task_lists) {
         throw new Error('Invalid response trying to get tasks: '
             + JSON.stringify(res, undefined, 4));
     }
 
-    return res.tasks;
+    return res;
 }
 
 export function createActiveCollabAPI(restClient: IActiveCollabRestClient): IActiveCollabAPI {

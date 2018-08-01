@@ -1,5 +1,6 @@
 export interface TasksData {
-    [id: string]: Task[];
+    tasks: Task[];
+    task_lists: TaskList[];
 }
 
 export interface Task {
@@ -42,4 +43,29 @@ export interface Task {
     completed_subtasks: number;
     open_subtasks: number;
     created_from_recurring_task_id: number;
+}
+
+export interface TaskList {
+    id: number;
+    class: string;
+    url_path: string;
+    name: string;
+    is_trashed: boolean;
+    trashed_on?: number;
+    trashed_by_id: number;
+    completed_on?: number;
+    completed_by_id?: number;
+    is_completed: boolean;
+    project_id: number;
+    created_on: number;
+    created_by_id: number;
+    created_by_name: string;
+    created_by_email: string;
+    updated_on: number;
+    updated_by_id: number;
+    start_on?: number;
+    due_on?: number;
+    position: number;
+    open_tasks: number;
+    completed_tasks: number;
 }

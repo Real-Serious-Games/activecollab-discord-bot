@@ -5,6 +5,7 @@ import { Logger } from 'structured-log';
 import { IMappingController } from '../controllers/mapping';
 import { ICommandController } from '../controllers/command';
 import { dailyReportParseCommand } from './dailyReportCommand';
+import { userConfigParseCommand } from './userController';
 
 export interface IDiscordController {
     sendMessageToChannel: (
@@ -88,6 +89,9 @@ export class DiscordController implements IDiscordController {
                     logger,
                     message
                 );
+            }
+            else if (command === 'users') {
+                userConfigParseCommand(args, logger, message);
             }
             else if (command === 'help' || command === 'commands') {
                 message.channel.send(new discord.RichEmbed()
