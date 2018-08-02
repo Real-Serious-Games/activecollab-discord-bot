@@ -7,11 +7,16 @@ import fs = require('fs');
 const brisbaneUtcOffset = 10;
 
 export class FileSink implements Sink {
-    constructor() {
+    private appendFileSync: (filename: string, contents: string) => void;
+    constructor(
+        appendFileSync: (filename: string, contents: string)
+            => void = fs.appendFileSync
+    ) {
         // Create Logs/ folder if it doesn't exist
         if (!fs.existsSync('Logs/')) {
             fs.mkdirSync('Logs/');
         }
+        this.appendFileSync = appendFileSync;
     }
 
     /**
@@ -69,7 +74,7 @@ export class FileSink implements Sink {
         // filename = Logs/<current-date>.txt
         const filename: string = 'Logs/' + getDate() + '.txt';
         // Write lines to file
-        fs.appendFileSync(filename, '\n' + output);
+        this.appendFileSync(filename, '\n' + output);
     }
 }
 
@@ -77,8 +82,7 @@ export class FileSink implements Sink {
  * Return a new date in the given timezone
  * @param timezone UTC Timezone eg: brisbane: UTC+10 = 10
  */
-const getDateInTimezone = (timezone: number): Date => {
-    const date = new Date();
+export const getDateInTimezone = (date: Date, timezone: number): Date => {
     const utc = date.getTime() + (date.getTimezoneOffset() * 60000);
     return new Date(utc + (3600000 * timezone));
 };
@@ -86,8 +90,8 @@ const getDateInTimezone = (timezone: number): Date => {
 /**
  * Get the current date for logfile name
  */
-export const getDate = () => {
-    const date = getDateInTimezone(brisbaneUtcOffset);
+export const getDate = (localDate: Date = new Date()) => {
+    const date = getDateInTimezone(localDate, brisbaneUtcOffset);
 
     const year = date.getFullYear();
     const month = date.getMonth() + 1;
@@ -100,8 +104,8 @@ export const getDate = () => {
 /**
  * Get the current time for the events in the log file
  */
-const getTime = () => {
-    const date = getDateInTimezone(brisbaneUtcOffset);
+export const getTime = (localDate: Date = new Date()) => {
+    const date = getDateInTimezone(localDate, brisbaneUtcOffset);
 
     const hour = date.getHours();
     const shour = (hour < 10 ? '0' : '') + hour;
