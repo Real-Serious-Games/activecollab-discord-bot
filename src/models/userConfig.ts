@@ -7,5 +7,5 @@ export interface User {
     active_collab_id: number;
     active_collab_name: string;
 
-    daily_report_subs: number[];
+    daily_report_subs: string[];
 }

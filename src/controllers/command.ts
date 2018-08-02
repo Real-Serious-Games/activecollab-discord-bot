@@ -250,6 +250,12 @@ export function createCommandController(
         createTask: (projectId: number, taskName: string) =>
             createTask(activeCollabApi, logger, projectId, taskName),
         dailyReport: (projects: string[]) =>
-            dailyReportCommand.dailyReport(projects, eventColor, activeCollabApi, logger)
+            dailyReportCommand.dailyReport(
+                projects,
+                eventColor,
+                activeCollabApi,
+                logger,
+                dailyReportCommand.writeToExcel
+            )
     };
 }

@@ -4,7 +4,6 @@ import * as UserConfig from '../models/userConfig';
 import * as util from 'util';
 import { Logger } from 'structured-log';
 import * as discord from 'discord.js';
-import { json } from '../../node_modules/@types/express';
 
 const configPath = 'Config/UserConfig.json';
 
@@ -52,10 +51,38 @@ const getConfig = async (): Promise<UserConfig.Config> => {
     }
 };
 
+export const getUser = async (
+    discordUser: discord.User
+) => {
+    try {
+        const config = await getConfig();
+        const matchingUser = config.Users.find(
+            u => u.discord_id == discordUser.tag
+        );
+        if (matchingUser) {
+            return matchingUser;
+        } else {
+            const user: UserConfig.User = {
+                discord_id: discordUser.tag,
+                active_collab_id: -1,
+                active_collab_name: '',
+                daily_report_subs: []
+            };
+            config.Users.push(user);
+            saveConfig(config);
+            return user;
+        }
+    } catch (error) {
+        throw new Error('Error when setting user: ' + error);
+    }
+};
+
 export const setUser = async (user: UserConfig.User) => {
     try {
         const config = await getConfig();
-        const matchingUser = config.Users.find(u => u.discord_id == user.discord_id);
+        const matchingUser = config.Users.find(
+            u => u.discord_id == user.discord_id
+        );
         if (matchingUser) {
             const newUsers = config.Users.map(u => {
                 if (u.discord_id === user.discord_id) {
@@ -73,6 +100,42 @@ export const setUser = async (user: UserConfig.User) => {
             config.Users.push(user);
             saveConfig(config);
         }
+    } catch (error) {
+        throw new Error('Error when setting user: ' + error);
+    }
+};
+
+export const getSubscriptions = async (
+    discordUser: discord.User
+) => {
+    try {
+        const user = await getUser(discordUser);
+        return user.daily_report_subs;
+    } catch (error) {
+        throw new Error('Error when setting user: ' + error);
+    }
+};
+
+export const addSubscriptions = async (
+    discordUser: discord.User,
+    projects: string[]
+) => {
+    try {
+        const config = await getConfig();
+        const user = await getUser(discordUser);
+        user.daily_report_subs = projects;
+        const newUsers = config.Users.map(u => {
+            if (u.discord_id === user.discord_id) {
+                return user;
+            } else {
+                return u;
+            }
+        });
+        const newConfig: UserConfig.Config = {
+            Users: newUsers
+        };
+        saveConfig(newConfig);
+        return;
     } catch (error) {
         throw new Error('Error when setting user: ' + error);
     }
