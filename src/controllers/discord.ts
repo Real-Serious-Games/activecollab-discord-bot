@@ -99,7 +99,7 @@ export class DiscordController implements IDiscordController {
                     );
                 } else {
                     message.channel.send(`Wrong syntax. Please enter at least one date`);
-                    message.channel.send(`Eg: !spreadsheet ` + moment().format('YYYY-MM-DD'));
+                    message.channel.send(`Eg: !spreadsheet ` + moment().format('DD-MM-YYYY'));
                 }
             }
             else if (command === 'help' || command === 'commands') {
