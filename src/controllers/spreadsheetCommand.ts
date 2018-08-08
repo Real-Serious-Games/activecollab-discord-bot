@@ -78,10 +78,10 @@ export async function filteredTasks(
         'Client',
         '#',
         'Project',
-        'Assignee',
+        'Person',
         'Module',
-        'Work Type',
-        'Name',
+        'Work type',
+        'Task',
         'Date',
         'Time',
         'Billable'
