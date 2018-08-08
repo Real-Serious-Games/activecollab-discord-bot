@@ -198,7 +198,6 @@ export async function spreadsheetRangeCommand(
 }
 
 export const spreadsheetParseCommand = (
-    firstArgument: string,
     args: string[],
     commandController: ICommandController,
     logger: Logger,

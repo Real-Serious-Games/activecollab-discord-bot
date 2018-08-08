@@ -5,7 +5,7 @@ import * as moment from 'moment';
 
 import { IMappingController } from '../controllers/mapping';
 import { ICommandController } from '../controllers/command';
-import { spreadsheetRangeCommand, spreadsheetParseCommand } from '../controllers/spreadsheetCommand';
+import { spreadsheetParseCommand } from '../controllers/spreadsheetCommand';
 
 export interface IDiscordController {
     sendMessageToChannel: (
@@ -91,7 +91,6 @@ export class DiscordController implements IDiscordController {
             else if (command === 'spreadsheet') {
                 if (firstArgument) {
                     spreadsheetParseCommand(
-                        firstArgument,
                         args,
                         this.commandController,
                         this.logger,
