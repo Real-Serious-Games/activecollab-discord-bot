@@ -60,6 +60,15 @@ const splitLogMessage = (fileContents: Buffer | string, embed: RichEmbed) => {
                 console.log(
                     'Embed field exceeds maximum value after splitting! Consider lowering the splitting threshold'
                 );
+                if (embed.fields.length < 25) {
+                    embed.addField(
+                        'Error',
+                        'A log message exceeded maximum length, sent maximum slice. Field: ' +
+                            i.toString()
+                    );
+                }
+                const newVal = embed.fields[i].value.slice(0, 1023);
+                embed.fields[i].value = newVal;
             }
         }
     }
