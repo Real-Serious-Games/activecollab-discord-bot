@@ -9,6 +9,7 @@ import { IActiveCollabAPI } from '../controllers/activecollab-api';
 import { IMappingController } from '../controllers/mapping';
 import { parse } from 'url';
 import * as spreadsheetCommand from './spreadsheetCommand';
+import { writeToCsv } from './csvHandle';
 
 export interface ICommandController {
     tasksForUser: (user: User) => Promise<RichEmbed>;
@@ -268,7 +269,7 @@ export function createCommandController(
                 eventColor,
                 activeCollabApi,
                 logger,
-                spreadsheetCommand.writeToExcel
+                writeToCsv
             )
     };
 }

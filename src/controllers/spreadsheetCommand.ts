@@ -1,5 +1,4 @@
 import { Logger } from 'structured-log';
-import * as Excel from 'exceljs';
 import * as _ from 'lodash';
 import * as moment from 'moment';
 import * as fs from 'fs';
@@ -9,6 +8,7 @@ import * as discord from 'discord.js';
 import { IActiveCollabAPI } from './activecollab-api';
 import { ICommandController } from './command';
 import { TimeRecord } from '../models/timeRecords';
+import { promisify } from 'util';
 
 const spreadsheetPath: string = 'Spreadsheets';
 const spreadsheetBaseName: string = 'Spreadsheet';
@@ -21,9 +21,12 @@ export async function filteredTasks(
     eventColor: any,
     activeCollabApi: IActiveCollabAPI,
     logger: Logger,
-    writeToExcel: (workbook: Excel.Workbook,
-        filename: string,
-        logger: Logger) => Promise<void>
+    writeToCsv: (
+        columnNames: string[],
+        rows: string[][],
+        filePath: string,
+        logger: Logger
+    ) => Promise<void>
 ): Promise<discord.RichEmbed> {
     const message = new discord.RichEmbed();
 
@@ -71,22 +74,33 @@ export async function filteredTasks(
             return 0;
         });
 
-    const workbook = new Excel.Workbook();
-    const worksheet = workbook.addWorksheet('Sheet');
-    worksheet.columns = spreadsheetHeader;
+    const columns = [
+        'Client',
+        '#',
+        'Project',
+        'Assignee',
+        'Module',
+        'Work Type',
+        'Name',
+        'Date',
+        'Time',
+        'Billable'
+    ];
+    const rows: string[][] = [];
 
     tasks.forEach(task => {
-        worksheet.addRow({
-            client: task.client_name,
-            id: task.project_id,
-            project: task.project_name,
-            assignee: task.user_name,
-            workType: task.group_name,
-            name: task.parent_name,
-            date: moment.unix(task.record_date).format('DD/MM/YYYY'),
-            time: task.value,
-            billable: task.billable_status > 0 ? 'yes' : ''
-        });
+        rows.push([
+            task.client_name,
+            task.project_id.toString(),
+            task.project_name,
+            task.user_name,
+            '',
+            task.group_name,
+            task.parent_name,
+            moment.unix(task.record_date).format('DD/MM/YYYY'),
+            task.value.toString(),
+            task.billable_status > 0 ? 'yes' : ''
+        ]);
     });
 
     try {
@@ -95,15 +109,11 @@ export async function filteredTasks(
             fs.mkdirSync(spreadsheetPath);
         }
 
-        fs.readdir(spreadsheetPath, (err, files) => {
-            if (err) throw err;
-
-            for (const file of files) {
-                fs.unlink(path.join(spreadsheetPath, file), err => {
-                    if (err) throw err;
-                });
-            }
-        });
+        // Delete all spreadsheets
+        const files = await promisify(fs.readdir)(spreadsheetPath);
+        for (const file of files) {
+            await promisify(fs.unlink)(path.join(spreadsheetPath, file));
+        }
 
         const filename = getFilePath(
             nameFilters,
@@ -112,7 +122,8 @@ export async function filteredTasks(
             endDate
         );
 
-        await writeToExcel(workbook, filename, logger);
+        await writeToCsv(columns, rows, filename, logger);
+
         message.setTitle('Successful')
             .attachFile(filename)
             .setColor(eventColor);
@@ -125,19 +136,6 @@ export async function filteredTasks(
 
     return message;
 }
-
-const spreadsheetHeader = [
-    { header: 'Client', key: 'client', width: 25 },
-    { header: '#', key: 'id', width: 5 },
-    { header: 'Project', key: 'project', width: 50 },
-    { header: 'Assignee', key: 'assignee', width: 20 },
-    { header: 'Module', key: 'module', width: 6 },
-    { header: 'Work Type', key: 'workType', width: 10 },
-    { header: 'Name', key: 'name', width: 90 },
-    { header: 'Date', key: 'date', width: 12 },
-    { header: 'Time', key: 'time', width: 12 },
-    { header: 'Billable', key: 'billable', width: 5 },
-];
 
 const getFilePath = (
     nameFilters: string[],
@@ -163,21 +161,9 @@ const getFilePath = (
         + startDate
         + '-'
         + endDate
-        + '.xlsx';
+        + '.csv';
 
     return filename;
-};
-
-export const writeToExcel = async (
-    workbook: Excel.Workbook,
-    filename: string,
-    logger: Logger
-) => {
-    try {
-        await workbook.xlsx.writeFile(filename);
-    } catch (error) {
-        logger.error(error);
-    }
 };
 
 export async function spreadsheetRangeCommand(
