@@ -120,7 +120,8 @@ export async function dailyReportCommand(
                 message.channel.send(embed);
             });
         } else {
-            message.channel.send('No tasks');
+            message.channel.send('Not subscribed to any projects.');
+            message.channel.send('Please use !dailyReport subscribe <id>');
         }
 
     } catch (e) {
@@ -138,9 +139,7 @@ export async function reportSubscribeCommand(
     message.channel.startTyping();
     message.channel.send(`Subscribing to project: ` + projects);
     try {
-        message.channel.send(
-            await userController.addSubscriptions(message.author, projects)
-        );
+        await userController.addSubscriptions(message.author, projects);
     } catch (e) {
         message
             .channel
@@ -156,23 +155,28 @@ export const dailyReportParseCommand = (
     logger: Logger,
     message: discord.Message
 ) => {
+    if (args[0].toLowerCase() === 'projects') {
+
+    }
     if (args.length === 2 && args[0].toLowerCase() === 'subscribe') {
         // If projects (check for projects=)
         let projects: string[];
-        if (args[1].toLocaleLowerCase().includes('projects=')) {
-            projects = args[1]
-                .replace('projects=', '')
-                .split('"')
-                .join('')
-                .split(',');
-            reportSubscribeCommand(projects, logger, message);
-        }
+        projects = args[1]
+            .split('"')
+            .join('')
+            .split(',');
+        projects.forEach(project => {
+            // const projectNumber =  ;
+        });
+        reportSubscribeCommand(projects, logger, message);
     }
     else if (args.length === 0) {
         dailyReportCommand(message.author, commandController, logger, message);
     }
     else {
         // return some sort of help
-        message.channel.send('Invalid syntax');
+        message.channel
+            .send('Invalid syntax. Please enter projects to subscribe to');
+        message.channel.send('Eg: !dailyReport subscribe 2,14');
     }
 };
