@@ -41,7 +41,7 @@ export async function filteredTasks(
 
     if (tasks.size() === 0) {
         return new discord.RichEmbed()
-            .setTitle(`There was no tasks in that specified command.`)
+            .setTitle(`There were no tasks in that specified command.`)
             .setColor(eventColor);
     }
 
