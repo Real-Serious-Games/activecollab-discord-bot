@@ -242,8 +242,7 @@ export const spreadsheetParseCommand = (
     if (!startDate) {
         message.channel.send('No dates found. Please use DD-MM-YYYY format');
     }
-
-    if (startDate.length > 0) {
+    else if (startDate.length > 0) {
         spreadsheetRangeCommand(
             commandController,
             logger,
