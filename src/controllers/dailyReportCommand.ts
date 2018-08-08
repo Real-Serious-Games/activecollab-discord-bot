@@ -1,39 +1,38 @@
 import { Logger } from 'structured-log';
 import * as discord from 'discord.js';
-import * as fs from 'fs';
 import { IActiveCollabAPI } from './activecollab-api';
 import { ICommandController } from './command';
 import * as ProjectTasks from '../models/projectTasks';
 import * as userController from './userController';
-import * as Excel from 'exceljs';
 
 export async function dailyReport(
     projects: string[],
     eventColor: any,
     activeCollabApi: IActiveCollabAPI,
     logger: Logger,
-    writeToExcel: (workbook: Excel.Workbook,
+    writeToCsv: (
+        columNames: string[],
+        rows: string[][],
         filename: string,
-        logger: Logger) => Promise<void>
-): Promise<discord.RichEmbed> {
-    const workbook = new Excel.Workbook();
+        logger: Logger
+    ) => Promise<void>
+): Promise<Array<discord.RichEmbed>> {
 
-    const message = new discord.RichEmbed();
-    message
-        .setTitle('')
-        .setColor(eventColor);
+    const messages: discord.RichEmbed[] = [];
+
     for (const projectID of projects) {
         let taskData: ProjectTasks.TasksData;
         try {
             taskData = await activeCollabApi
                 .getAssignmentTasksByProject(projectID);
         } catch (e) {
-            logger.error(`Error getting tasks for project[${projectID}]: ${e}`);
-            return new discord.RichEmbed()
-                .setTitle(
-                    `There was an error getting tasks for project: ${projectID}`
-                )
-                .setColor(eventColor);
+            const errorMsg = `Error getting tasks for project[${projectID}]`;
+            logger.error(errorMsg + `: ${e}`);
+            return [
+                new discord.RichEmbed()
+                    .setTitle(errorMsg)
+                    .setColor(eventColor)
+            ];
         }
         const tasks = taskData.tasks;
         const taskLists = taskData.task_lists.sort((a, b) => {
@@ -48,12 +47,14 @@ export async function dailyReport(
 
         let messageField: string = '';
 
-        const worksheet = workbook.addWorksheet('Project ' + projectID);
-        worksheet.columns = [
-            { header: 'Task List', key: 'list', width: 20 },
-            { header: 'Remaining', key: 'remaining', width: 15 },
-            { header: 'Total', key: 'total', width: 10 },
+        const columns = [
+            'Task List',
+            'Remaining',
+            'Total'
         ];
+
+        const rows: string[][] = [];
+
         taskLists.forEach(list => {
             const listGroup = tasks
                 .filter(t => t.task_list_id == list.id);
@@ -70,11 +71,9 @@ export async function dailyReport(
                 remainingCount += task.open_subtasks;
             });
 
-            worksheet.addRow({
-                list: list.name,
-                remaining: remainingCount,
-                total: fullCount
-            });
+            rows.push(
+                [list.name, remainingCount.toString(), fullCount.toString()]
+            );
 
             messageField += (
                 '```ini\n'
@@ -84,32 +83,25 @@ export async function dailyReport(
             );
         });
 
-        message.addField('**Remaining tasks for project: ' + projectID + '**',
-            messageField
+        await writeToCsv(
+            columns,
+            rows,
+            `Spreadsheets/project-${projectID}-report.csv`,
+            logger
         );
+        const message = new discord.RichEmbed()
+            .setTitle('')
+            .setColor(eventColor)
+            .addField(
+                '**Remaining tasks for project: ' + projectID + '**',
+                messageField
+            )
+            .attachFile(`Spreadsheets/project-${projectID}-report.csv`);
+        messages.push(message);
     }
 
-    if (!fs.existsSync('Spreadsheets/')) {
-        fs.mkdirSync('Spreadsheets/');
-    }
-    await writeToExcel(workbook, 'Spreadsheets/dailyReport.xlsx', logger);
-    message.attachFile('Spreadsheets/dailyReport.xlsx');
-
-    return message;
+    return messages;
 }
-
-export const writeToExcel = async (
-    workbook: Excel.Workbook,
-    filename: string,
-    logger: Logger
-) => {
-    try {
-        await workbook.xlsx.writeFile(filename);
-    } catch (error) {
-        logger.error(error);
-    }
-};
-
 
 export async function dailyReportCommand(
     discordUser: discord.User,
@@ -121,13 +113,14 @@ export async function dailyReportCommand(
     message.channel.send('Generating report...');
 
     try {
-        message
-            .channel
-            .send(
-                await commandController.dailyReport(
-                    await userController.getSubscriptions(discordUser)
-                )
-            );
+
+        const embeds = await commandController.dailyReport(
+            await userController.getSubscriptions(discordUser)
+        );
+        embeds.forEach(embed => {
+            message.channel.send(embed);
+        });
+
     } catch (e) {
         message.channel.send('There was an error generating the report');
         logger.error(`Error generating report ` + e);

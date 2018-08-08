@@ -9,13 +9,14 @@ import { IActiveCollabAPI } from '../controllers/activecollab-api';
 import { IMappingController } from '../controllers/mapping';
 import { parse } from 'url';
 import * as dailyReportCommand from '../controllers/dailyReportCommand';
+import { writeToCsv } from './csvHandle';
 
 export interface ICommandController {
     tasksForUser: (user: User) => Promise<RichEmbed>;
     tasksInListForProject: (column: string, projectId: number) => Promise<RichEmbed>;
     tasksDueThisWeekForProject: (projectId: number) => Promise<RichEmbed>;
     createTask: (projectId: number, taskName: string) => Promise<void>;
-    dailyReport: (projects: string[]) => Promise<RichEmbed>;
+    dailyReport: (projects: string[]) => Promise<Array<RichEmbed>>;
 }
 
 const eventColor = '#449DF5';
@@ -255,7 +256,7 @@ export function createCommandController(
                 eventColor,
                 activeCollabApi,
                 logger,
-                dailyReportCommand.writeToExcel
+                writeToCsv
             )
     };
 }
