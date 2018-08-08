@@ -64,7 +64,7 @@ const splitLogMessage = (fileContents: Buffer | string, embed: RichEmbed) => {
                     embed.addField(
                         'Error',
                         'A log message exceeded maximum length, sent maximum slice. Field: ' +
-                            i.toString()
+                            (i + 1).toString()
                     );
                 }
                 const newVal = embed.fields[i].value.slice(0, 1023);
