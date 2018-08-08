@@ -113,13 +113,15 @@ export async function dailyReportCommand(
     message.channel.send('Generating report...');
 
     try {
-
-        const embeds = await commandController.dailyReport(
-            await userController.getSubscriptions(discordUser)
-        );
-        embeds.forEach(embed => {
-            message.channel.send(embed);
-        });
+        const projects = await userController.getSubscriptions(discordUser);
+        if (projects.length > 0) {
+            const embeds = await commandController.dailyReport(projects);
+            embeds.forEach(embed => {
+                message.channel.send(embed);
+            });
+        } else {
+            message.channel.send('No tasks');
+        }
 
     } catch (e) {
         message.channel.send('There was an error generating the report');
@@ -166,7 +168,11 @@ export const dailyReportParseCommand = (
             reportSubscribeCommand(projects, logger, message);
         }
     }
-    else {
+    else if (args.length === 0) {
         dailyReportCommand(message.author, commandController, logger, message);
+    }
+    else {
+        // return some sort of help
+        message.channel.send('Invalid syntax');
     }
 };
