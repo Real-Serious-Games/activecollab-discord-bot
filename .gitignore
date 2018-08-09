@@ -8,6 +8,15 @@ yarn-error.log*
 # config file
 config.json
 
+# Spreadsheets
+Spreadsheets
+*.xlsx
+*.csv
+
+# User Config
+Config
+UserConfig.json
+
 # Runtime data
 pids
 *.pid

@@ -2,8 +2,10 @@ import * as discord from 'discord.js';
 import { assert } from 'console';
 import { Logger } from 'structured-log';
 
-import { IMappingController } from './mapping';
-import { ICommandController } from './command';
+import { IMappingController } from '../controllers/mapping';
+import { ICommandController } from '../controllers/command';
+import { dailyReportParseCommand } from './dailyReportCommand';
+import { userConfigParseCommand } from './userController';
 import { CommandEvent } from '../models/commandEvent';
 import { TextChannel } from 'discord.js';
 
@@ -91,6 +93,37 @@ export class DiscordController implements IDiscordController {
                             `use *!tasks help* or *!tasks commands* for list of commands.`
                     );
                 }
+            } else if (command === 'listprojects') {
+                const channels = mappingController.getAllChannels();
+                let messageField: string = '';
+                channels.forEach(channel => {
+                    messageField +=
+                        '```ini\n' +
+                        '[' +
+                        channel.channelName +
+                        '] ' +
+                        'ID: ' +
+                        channel.projectId +
+                        '\n' +
+                        '```';
+                });
+
+                const projectsMessage = new discord.RichEmbed().addField(
+                    'Projects:',
+                    messageField
+                );
+
+                message.channel.send(projectsMessage);
+            } else if (command === 'dailyreport') {
+                dailyReportParseCommand(
+                    args,
+                    commandController,
+                    mappingController,
+                    logger,
+                    message
+                );
+            } else if (command === 'users') {
+                userConfigParseCommand(args, logger, message);
             } else if (command === 'help' || command === 'commands') {
                 message.channel.send(
                     new discord.RichEmbed()
@@ -102,6 +135,16 @@ export class DiscordController implements IDiscordController {
                                 "*!tasks due* - lists tasks due this week for current channel's project\n" +
                                 "*!tasks create <task name>* - creates a task for current channel's project\n" +
                                 "*!tasks in <list>* - lists tasks in task list for current channel's project\n"
+                        )
+                        .addField(
+                            '!listProjects',
+                            '*!listProjects* - lists all the known projects and thier IDs'
+                        )
+                        .addField(
+                            '!dailyReport',
+                            '*!dailyReport* - sends the daily report manually\n' +
+                                '*!dailyReport subscribe <Project ID>* - subscribes to a daily report of that project\n' +
+                                '*!dailyReport unsubscribe <Project ID>* - unsubscribes from a project project'
                         )
                 );
             } else {

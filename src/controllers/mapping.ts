@@ -8,10 +8,15 @@ export interface IMappingController {
     getChannels: (projectId: number) => Array<ChannelMap>;
 
     /**
+     * Returns all channels in the config
+     */
+    getAllChannels: () => Array<ChannelMap>;
+
+    /**
      * Map Discord channel name to ActiveCollab project ID
      */
     getProjectId: (channelName: string) => number;
-    
+
     /**
      * Map Discord user to ActiveCollab user ID
      */
@@ -46,6 +51,18 @@ function getChannels(
 
     if (!channelMap || channelMap.length < 1) {
         throw Error(`Channel not found with project ID: ${projectId}`);
+    }
+
+    return channelMap;
+}
+
+function getAllChannels(
+    channelsMap: () => Array<ChannelMap>
+): Array<ChannelMap> {
+    const channelMap = channelsMap();
+
+    if (!channelMap || channelMap.length < 1) {
+        throw Error(`No channels found`);
     }
 
     return channelMap;
@@ -111,8 +128,9 @@ export function createMappingController(
 ): IMappingController {
     return {
         getChannels: getChannels.bind(undefined, channelsMap),
+        getAllChannels: getAllChannels.bind(undefined, channelsMap),
         getProjectId: getProjectId.bind(undefined, channelsMap),
         getDiscordUser: getDiscordUser.bind(undefined, usersMap),
-        getActiveCollabUser: getActiveCollabUser.bind(undefined, usersMap) 
+        getActiveCollabUser: getActiveCollabUser.bind(undefined, usersMap)
     };
 }
