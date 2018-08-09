@@ -186,13 +186,13 @@ export const dailyReportParseCommand = (
             } catch (error) {
                 message.channel.send(
                     'Invalid project ID. ' +
-                        'Please use !listProjects to see valid project IDs'
+                    'Please use !listProjects to see valid project IDs'
                 );
             }
         } else {
             message.channel.send(
                 'Invalid project ID. ' +
-                    'Please use !listProjects to see valid project IDs'
+                'Please use !listProjects to see valid project IDs'
             );
         }
     } else if (
@@ -213,7 +213,7 @@ export const dailyReportParseCommand = (
             } catch (error) {
                 message.channel.send(
                     'Invalid project ID. ' +
-                        'Please use !listProjects to see valid project IDs'
+                    'Please use !listProjects to see valid project IDs'
                 );
             }
         }

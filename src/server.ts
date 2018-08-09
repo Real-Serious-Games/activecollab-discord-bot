@@ -43,7 +43,7 @@ async function createServer() {
             mappingController,
             logger
         );
-    
+
         const discordController = new DiscordController(
             getConfigValue('discordBotToken'),
             new discord.Client(),
@@ -96,5 +96,5 @@ function getConfigValue(key: string): any {
 
 export = createServer()
     .catch(e => {
-        console.log(  `Server Error: ${e}`);
-     });
+        console.log(`Server Error: ${e}`);
+    });

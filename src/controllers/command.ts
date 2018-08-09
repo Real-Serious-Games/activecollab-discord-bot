@@ -47,7 +47,7 @@ async function tasksForUser(
     } catch (e) {
         logger.error(
             `Error getting ActiveCollab user for Discord user ` +
-                ` ${discordUser.tag}: ${e}`
+            ` ${discordUser.tag}: ${e}`
         );
         return new RichEmbed()
             .setTitle(`Unable to find user: <@${discordUser.id}>`)

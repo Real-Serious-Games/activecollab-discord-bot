@@ -47,7 +47,7 @@ export class DiscordController implements IDiscordController {
 
         // The ready event is vital, it means that your bot will only start
         // reacting to information from Discord _after_ ready is emitted
-        this.client.on('ready', () => {});
+        this.client.on('ready', () => { });
 
         this.client.login(token).catch(console.error);
 
@@ -93,7 +93,7 @@ export class DiscordController implements IDiscordController {
                 } else {
                     message.channel.send(
                         `Unknown command, *${message.content}*, ` +
-                            `use *!tasks help* or *!tasks commands* for list of commands.`
+                        `use *!tasks help* or *!tasks commands* for list of commands.`
                     );
                 }
             } else if (command === 'listprojects') {
@@ -134,10 +134,10 @@ export class DiscordController implements IDiscordController {
                         .addField(
                             '!tasks',
                             '*!tasks list* - lists your tasks.\n' +
-                                '*!tasks list for @user* - lists tasks for mentioned user.\n' +
-                                "*!tasks due* - lists tasks due this week for current channel's project\n" +
-                                "*!tasks create <task name>* - creates a task for current channel's project\n" +
-                                "*!tasks in <list>* - lists tasks in task list for current channel's project\n"
+                            '*!tasks list for @user* - lists tasks for mentioned user.\n' +
+                            "*!tasks due* - lists tasks due this week for current channel's project\n" +
+                            "*!tasks create <task name>* - creates a task for current channel's project\n" +
+                            "*!tasks in <list>* - lists tasks in task list for current channel's project\n"
                         )
                         .addField(
                             '!listProjects',
@@ -146,14 +146,14 @@ export class DiscordController implements IDiscordController {
                         .addField(
                             '!dailyReport',
                             '*!dailyReport* - sends the daily report manually\n' +
-                                '*!dailyReport subscribe <Project ID>* - subscribes to a daily report of that project\n' +
-                                '*!dailyReport unsubscribe <Project ID>* - unsubscribes from a project project'
+                            '*!dailyReport subscribe <Project ID>* - subscribes to a daily report of that project\n' +
+                            '*!dailyReport unsubscribe <Project ID>* - unsubscribes from a project project'
                         )
                 );
             } else {
                 message.channel.send(
                     `Unknown command, *${message.content}*, ` +
-                        `use *!help* or *!commands*`
+                    `use *!help* or *!commands*`
                 );
             }
         });
@@ -175,7 +175,7 @@ export class DiscordController implements IDiscordController {
                     channelMap =>
                         channelMap.channelName === textChannel.name &&
                         this.guildNames[channelMap.guildIndex] ===
-                            textChannel.guild.name
+                        textChannel.guild.name
                 )
             );
 
@@ -245,7 +245,7 @@ export class DiscordController implements IDiscordController {
         if (message.channel.type !== 'text') {
             message.channel.send(
                 `!tasks create command must be called` +
-                    ' from a text channel associated with a project'
+                ' from a text channel associated with a project'
             );
             return;
         }
@@ -310,7 +310,7 @@ export class DiscordController implements IDiscordController {
         if (message.channel.type !== 'text') {
             message.channel.send(
                 `!tasks in ${list} command must be called` +
-                    ' from a text channel associated with a project'
+                ' from a text channel associated with a project'
             );
             return;
         }
@@ -346,7 +346,7 @@ export class DiscordController implements IDiscordController {
         if (message.channel.type !== 'text') {
             message.channel.send(
                 '!tasks due command must be called' +
-                    ' from a text channel associated with a project'
+                ' from a text channel associated with a project'
             );
             return;
         }
@@ -370,11 +370,15 @@ export class DiscordController implements IDiscordController {
         } catch (e) {
             message.channel.send(
                 'Unable to find ActiveCollab' +
-                    ' project for channel ' +
-                    channelName
+                ' project for channel ' +
+                channelName
             );
             this.logger.warn('Error getting tasks due for week: ' + e);
         }
+    }
+
+    private async sendLogMessage(user: discord.User) {
+        return; // await this.commandController.logsSendMessage(user);
     }
 
     public runUserCommand(e: CommandEvent): number {
@@ -388,6 +392,8 @@ export class DiscordController implements IDiscordController {
                 user.send(e.parameters[0]);
                 return 200;
             case 'log':
+                // this.commandController.logsSendMessage(user);
+                this.sendLogMessage(user);
                 break;
             case 'dailyreport':
                 dailyReportCommand(user, this.commandController, this.logger);
