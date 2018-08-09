@@ -155,9 +155,6 @@ export const dailyReportParseCommand = (
     logger: Logger,
     message: discord.Message
 ) => {
-    if (args[0].toLowerCase() === 'projects') {
-
-    }
     if (args.length === 2 && args[0].toLowerCase() === 'subscribe') {
         // If projects (check for projects=)
         let projects: string[];

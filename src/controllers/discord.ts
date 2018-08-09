@@ -82,6 +82,23 @@ export class DiscordController implements IDiscordController {
                         + `use *!tasks help* or *!tasks commands* for list of commands.`);
                 }
             }
+            else if (command === 'listprojects') {
+                const channels = mappingController.getAllChannels();
+                let messageField: string = '';
+                channels.forEach(channel => {
+                    messageField += (
+                        '```ini\n'
+                        + '[' + channel.channelName + '] '
+                        + 'ID: ' + channel.projectId + '\n'
+                        + '```'
+                    );
+                });
+
+                const projectsMessage = new discord.RichEmbed()
+                    .addField('Projects:', messageField);
+
+                message.channel.send(projectsMessage);
+            }
             else if (command === 'dailyreport') {
                 dailyReportParseCommand(
                     args,
