@@ -156,7 +156,7 @@ export async function reportUnsubscribeCommand(
     message: discord.Message
 ): Promise<void> {
     message.channel.startTyping();
-    message.channel.send(`Unsubscribing to project: ` + projectID);
+    message.channel.send(`Unsubscribing from project: ` + projectID);
     try {
         await userController.rmSubscription(message.author, projectID);
     } catch (e) {
@@ -175,7 +175,11 @@ export const dailyReportParseCommand = (
     logger: Logger,
     message: discord.Message
 ) => {
-    if (args.length === 2 && args[0].toLowerCase() === 'subscribe') {
+    if (
+        args.length === 2 &&
+        (args[0].toLowerCase() === 'subscribe' ||
+            args[0].toLowerCase() === 'sub')
+    ) {
         const projectNumber = parseInt(args[1]);
         if (projectNumber) {
             try {
@@ -194,8 +198,17 @@ export const dailyReportParseCommand = (
                         + 'Please use !listProjects to see valid project IDs');
             }
         }
+        else {
+            message.channel
+                .send('Invalid project ID. '
+                    + 'Please use !listProjects to see valid project IDs');
+        }
     }
-    else if (args.length === 2 && args[0].toLowerCase() === 'unsubscribe') {
+    else if (
+        args.length === 2 &&
+        (args[0].toLowerCase() === 'unsubscribe' ||
+            args[0].toLowerCase() === 'unsub')
+    ) {
         const projectNumber = parseInt(args[1]);
         if (projectNumber) {
             try {
