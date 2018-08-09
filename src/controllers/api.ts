@@ -64,7 +64,7 @@ async function postCommandWebhook(
 
     const commandEvent = <CommandEvent>req.body;
 
-    switch (commandEvent.addressType) {
+    switch (commandEvent.addressType.toLowerCase()) {
         case 'user':
             res.sendStatus(discordController.runUserCommand(commandEvent));
             return;

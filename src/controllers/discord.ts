@@ -4,7 +4,10 @@ import { Logger } from 'structured-log';
 
 import { IMappingController } from '../controllers/mapping';
 import { ICommandController } from '../controllers/command';
-import { dailyReportParseCommand } from './dailyReportCommand';
+import {
+    dailyReportParseCommand,
+    dailyReportCommand
+} from './dailyReportCommand';
 import { userConfigParseCommand } from './userController';
 import { CommandEvent } from '../models/commandEvent';
 import { TextChannel } from 'discord.js';
@@ -375,20 +378,20 @@ export class DiscordController implements IDiscordController {
     }
 
     public runUserCommand(e: CommandEvent): number {
-        switch (e.command) {
+        const user = this.client.users.filter(u => u.tag === e.address).first();
+        if (!user) {
+            return 400;
+        }
+
+        switch (e.command.toLowerCase()) {
             case 'msg':
-                const user = this.client.users
-                    .filter(u => u.tag === e.address)
-                    .first();
-                if (user) {
-                    user.send(e.parameters[0]);
-                    return 200;
-                }
-                break;
+                user.send(e.parameters[0]);
+                return 200;
             case 'log':
                 break;
-            case 'dailyReport':
-                break;
+            case 'dailyreport':
+                dailyReportCommand(user, this.commandController, this.logger);
+                return 200;
             case 'spreadsheet':
                 break;
             default:
@@ -401,12 +404,13 @@ export class DiscordController implements IDiscordController {
     }
 
     public runChannelCommand(e: CommandEvent): number {
-        switch (e.command) {
+        switch (e.command.toLowerCase()) {
             case 'msg':
                 break;
             case 'log':
                 break;
-            case 'dailyReport':
+            case 'dailyreport':
+                // Not to be implemented, log warning
                 break;
             case 'spreadsheet':
                 break;

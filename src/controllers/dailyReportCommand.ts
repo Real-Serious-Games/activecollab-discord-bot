@@ -18,21 +18,19 @@ export async function dailyReport(
         logger: Logger
     ) => Promise<void>
 ): Promise<Array<discord.RichEmbed>> {
-
     const messages: discord.RichEmbed[] = [];
 
     for (const projectID of projects) {
         let taskData: ProjectTasks.TasksData;
         try {
-            taskData = await activeCollabApi
-                .getAssignmentTasksByProject(projectID);
+            taskData = await activeCollabApi.getAssignmentTasksByProject(
+                projectID
+            );
         } catch (e) {
             const errorMsg = `Error getting tasks for project[${projectID}]`;
             logger.error(errorMsg + `: ${e}`);
             return [
-                new discord.RichEmbed()
-                    .setTitle(errorMsg)
-                    .setColor(eventColor)
+                new discord.RichEmbed().setTitle(errorMsg).setColor(eventColor)
             ];
         }
         const tasks = taskData.tasks;
@@ -48,40 +46,41 @@ export async function dailyReport(
 
         let messageField: string = '';
 
-        const columns = [
-            'Task List',
-            'Remaining',
-            'Total'
-        ];
+        const columns = ['Task List', 'Remaining', 'Total'];
 
         const rows: string[][] = [];
 
         taskLists.forEach(list => {
-            const listGroup = tasks
-                .filter(t => t.task_list_id == list.id);
+            const listGroup = tasks.filter(t => t.task_list_id == list.id);
 
-            let fullCount = listGroup
-                .filter(t => t.total_subtasks === 0).length;
+            let fullCount = listGroup.filter(t => t.total_subtasks === 0)
+                .length;
             listGroup.forEach(task => {
                 fullCount += task.total_subtasks;
             });
 
-            let remainingCount = listGroup
-                .filter(t => t.total_subtasks === 0).length;
+            let remainingCount = listGroup.filter(t => t.total_subtasks === 0)
+                .length;
             listGroup.forEach(task => {
                 remainingCount += task.open_subtasks;
             });
 
-            rows.push(
-                [list.name, remainingCount.toString(), fullCount.toString()]
-            );
+            rows.push([
+                list.name,
+                remainingCount.toString(),
+                fullCount.toString()
+            ]);
 
-            messageField += (
-                '```ini\n'
-                + '[' + list.name + '] '
-                + remainingCount + '/' + fullCount + '\n'
-                + '```'
-            );
+            messageField +=
+                '```ini\n' +
+                '[' +
+                list.name +
+                '] ' +
+                remainingCount +
+                '/' +
+                fullCount +
+                '\n' +
+                '```';
         });
 
         await writeToCsv(
@@ -107,29 +106,25 @@ export async function dailyReport(
 export async function dailyReportCommand(
     discordUser: discord.User,
     commandController: ICommandController,
-    logger: Logger,
-    message: discord.Message
+    logger: Logger
 ): Promise<void> {
-    message.channel.startTyping();
-    message.channel.send('Generating report...');
+    discordUser.send('Generating report...');
 
     try {
         const projects = await userController.getSubscriptions(discordUser);
         if (projects.length > 0) {
             const embeds = await commandController.dailyReport(projects);
             embeds.forEach(embed => {
-                message.channel.send(embed);
+                discordUser.send(embed);
             });
         } else {
-            message.channel.send('Not subscribed to any projects.');
-            message.channel.send('Please use !dailyReport subscribe <id>');
+            discordUser.send('Not subscribed to any projects.');
+            discordUser.send('Please use !dailyReport subscribe <id>');
         }
-
     } catch (e) {
-        message.channel.send('There was an error generating the report');
+        discordUser.send('There was an error generating the report');
         logger.error(`Error generating report ` + e);
     }
-    message.channel.stopTyping();
 }
 
 export async function reportSubscribeCommand(
@@ -142,9 +137,7 @@ export async function reportSubscribeCommand(
     try {
         await userController.addSubscription(message.author, projectID);
     } catch (e) {
-        message
-            .channel
-            .send('There was an error subscribing to the project');
+        message.channel.send('There was an error subscribing to the project');
         logger.error(`Error subscribing from the project ` + e);
     }
     message.channel.stopTyping();
@@ -160,9 +153,9 @@ export async function reportUnsubscribeCommand(
     try {
         await userController.rmSubscription(message.author, projectID);
     } catch (e) {
-        message
-            .channel
-            .send('There was an error unsubscribing from the project');
+        message.channel.send(
+            'There was an error unsubscribing from the project'
+        );
         logger.error(`Error unsubscribing from the project ` + e);
     }
     message.channel.stopTyping();
@@ -183,9 +176,7 @@ export const dailyReportParseCommand = (
         const projectNumber = parseInt(args[1]);
         if (projectNumber) {
             try {
-                if (
-                    mappingController.getChannels(projectNumber).length > 0
-                ) {
+                if (mappingController.getChannels(projectNumber).length > 0) {
                     reportSubscribeCommand(
                         projectNumber.toString(),
                         logger,
@@ -193,18 +184,18 @@ export const dailyReportParseCommand = (
                     );
                 }
             } catch (error) {
-                message.channel
-                    .send('Invalid project ID. '
-                        + 'Please use !listProjects to see valid project IDs');
+                message.channel.send(
+                    'Invalid project ID. ' +
+                        'Please use !listProjects to see valid project IDs'
+                );
             }
+        } else {
+            message.channel.send(
+                'Invalid project ID. ' +
+                    'Please use !listProjects to see valid project IDs'
+            );
         }
-        else {
-            message.channel
-                .send('Invalid project ID. '
-                    + 'Please use !listProjects to see valid project IDs');
-        }
-    }
-    else if (
+    } else if (
         args.length === 2 &&
         (args[0].toLowerCase() === 'unsubscribe' ||
             args[0].toLowerCase() === 'unsub')
@@ -212,9 +203,7 @@ export const dailyReportParseCommand = (
         const projectNumber = parseInt(args[1]);
         if (projectNumber) {
             try {
-                if (
-                    mappingController.getChannels(projectNumber).length > 0
-                ) {
+                if (mappingController.getChannels(projectNumber).length > 0) {
                     reportUnsubscribeCommand(
                         projectNumber.toString(),
                         logger,
@@ -222,19 +211,19 @@ export const dailyReportParseCommand = (
                     );
                 }
             } catch (error) {
-                message.channel
-                    .send('Invalid project ID. '
-                        + 'Please use !listProjects to see valid project IDs');
+                message.channel.send(
+                    'Invalid project ID. ' +
+                        'Please use !listProjects to see valid project IDs'
+                );
             }
         }
-    }
-    else if (args.length === 0) {
-        dailyReportCommand(message.author, commandController, logger, message);
-    }
-    else {
+    } else if (args.length === 0) {
+        dailyReportCommand(message.author, commandController, logger);
+    } else {
         // return some sort of help
-        message.channel
-            .send('Invalid syntax. Please enter projects to subscribe to');
+        message.channel.send(
+            'Invalid syntax. Please enter projects to subscribe to'
+        );
         message.channel.send('Eg: !dailyReport subscribe <ID>');
     }
 };
