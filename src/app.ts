@@ -6,7 +6,7 @@ import * as config from 'confucious';
 import { IDiscordController } from './controllers/discord';
 import { IApiController } from './controllers/api';
 
-export function setupApp (
+export function setupApp(
     express: express.Express,
     apiController: IApiController
 ): void {
@@ -16,6 +16,8 @@ export function setupApp (
     express.use(bodyParser.json());
 
     const postActiveCollabWebhook = apiController.postActiveCollabWebhook;
+    const postCommandWebhook = apiController.postCommandWebhook;
 
     express.post('/api/webhook', postActiveCollabWebhook);
+    express.post('/api/cwebhook', postCommandWebhook);
 }

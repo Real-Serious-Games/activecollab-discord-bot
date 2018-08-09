@@ -1,7 +1,6 @@
 import { IDiscordController } from '../../src/controllers/discord';
 
 export class DiscordControllerMockBuilder {
-
     private sendMessageToChannel = jest.fn();
     private getUserId = jest.fn().mockReturnValue(1);
     private determineChannels = jest.fn().mockReturnValue([
@@ -12,6 +11,8 @@ export class DiscordControllerMockBuilder {
             name: 'channel 2'
         }
     ]);
+    private runUserCommand = jest.fn().mockReturnValue(200);
+    private runChannelCommand = jest.fn().mockReturnValue(200);
 
     public withDetermineChannels(func: jest.Mock) {
         this.determineChannels = func;
@@ -22,7 +23,9 @@ export class DiscordControllerMockBuilder {
         return {
             sendMessageToChannel: this.sendMessageToChannel,
             determineChannels: this.determineChannels,
-            getUserId: this.getUserId
+            getUserId: this.getUserId,
+            runUserCommand: this.runUserCommand,
+            runChannelCommand: this.runChannelCommand
         };
     }
 }
