@@ -116,16 +116,16 @@ export const getSubscriptions = async (
     }
 };
 
-export const addSubscriptions = async (
+export const addSubscription = async (
     discordUser: discord.User,
     projectID: string
 ) => {
     try {
-        const config = await getConfig();
         const user = await getUser(discordUser);
         if (user.daily_report_subs.filter(i => i === projectID).length === 0) {
             user.daily_report_subs.push(projectID);
         }
+        const config = await getConfig();
         const newUsers = config.Users.map(u => {
             if (u.discord_id === user.discord_id) {
                 return user;
@@ -139,30 +139,34 @@ export const addSubscriptions = async (
         saveConfig(newConfig);
         return;
     } catch (error) {
-        throw new Error('Error when setting user: ' + error);
+        throw new Error('Error when subscribing to project: ' + error);
     }
 };
 
-export const getUsersCommand = async (
-    logger: Logger,
-    message: discord.Message
-): Promise<void> => {
-    message.channel.startTyping();
-    message.channel.send(`Getting users...`);
+export const rmSubscription = async (
+    discordUser: discord.User,
+    projectID: string
+) => {
     try {
+        const user = await getUser(discordUser);
+        user.daily_report_subs = user.daily_report_subs
+            .filter(i => i !== projectID);
         const config = await getConfig();
-        if (config.Users.length > 0) {
-            message.channel.send(JSON.stringify(config.Users, undefined, 4));
-        } else {
-            message.channel.send('No users in config');
-        }
-    } catch (e) {
-        message
-            .channel
-            .send('There was an error getting the users config');
-        logger.error(`Error getting users config ` + e);
+        const newUsers = config.Users.map(u => {
+            if (u.discord_id === user.discord_id) {
+                return user;
+            } else {
+                return u;
+            }
+        });
+        const newConfig: UserConfig.Config = {
+            Users: newUsers
+        };
+        saveConfig(newConfig);
+        return;
+    } catch (error) {
+        throw new Error('Error when unsubscribing from project: ' + error);
     }
-    message.channel.stopTyping();
 };
 
 export const addUserCommand = async (
@@ -213,8 +217,5 @@ export const userConfigParseCommand = (
                 }
             }
         }
-    }
-    else {
-        getUsersCommand(logger, message);
     }
 };

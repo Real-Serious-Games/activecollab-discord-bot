@@ -140,12 +140,30 @@ export async function reportSubscribeCommand(
     message.channel.startTyping();
     message.channel.send(`Subscribing to project: ` + projectID);
     try {
-        await userController.addSubscriptions(message.author, projectID);
+        await userController.addSubscription(message.author, projectID);
     } catch (e) {
         message
             .channel
-            .send('There was an error getting the tasks');
-        logger.error(`Error getting tasks ` + e);
+            .send('There was an error subscribing to the project');
+        logger.error(`Error subscribing from the project ` + e);
+    }
+    message.channel.stopTyping();
+}
+
+export async function reportUnsubscribeCommand(
+    projectID: string,
+    logger: Logger,
+    message: discord.Message
+): Promise<void> {
+    message.channel.startTyping();
+    message.channel.send(`Unsubscribing to project: ` + projectID);
+    try {
+        await userController.rmSubscription(message.author, projectID);
+    } catch (e) {
+        message
+            .channel
+            .send('There was an error unsubscribing from the project');
+        logger.error(`Error unsubscribing from the project ` + e);
     }
     message.channel.stopTyping();
 }
@@ -165,6 +183,26 @@ export const dailyReportParseCommand = (
                     mappingController.getChannels(projectNumber).length > 0
                 ) {
                     reportSubscribeCommand(
+                        projectNumber.toString(),
+                        logger,
+                        message
+                    );
+                }
+            } catch (error) {
+                message.channel
+                    .send('Invalid project ID. '
+                        + 'Please use !listProjects to see valid project IDs');
+            }
+        }
+    }
+    else if (args.length === 2 && args[0].toLowerCase() === 'unsubscribe') {
+        const projectNumber = parseInt(args[1]);
+        if (projectNumber) {
+            try {
+                if (
+                    mappingController.getChannels(projectNumber).length > 0
+                ) {
+                    reportUnsubscribeCommand(
                         projectNumber.toString(),
                         logger,
                         message

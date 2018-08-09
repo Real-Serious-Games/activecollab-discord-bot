@@ -121,6 +121,14 @@ export class DiscordController implements IDiscordController {
                         '*!tasks create <task name>* - creates a task for current channel\'s project\n' +
                         '*!tasks in <list>* - lists tasks in task list for current channel\'s project\n'
                     )
+                    .addField('!listProjects',
+                        '*!listProjects* - lists all the known projects and thier IDs'
+                    )
+                    .addField('!dailyReport',
+                        '*!dailyReport* - sends the daily report manually\n' +
+                        '*!dailyReport subscribe <Project ID>* - subscribes to a daily report of that project\n' +
+                        '*!dailyReport unsubscribe <Project ID>* - unsubscribes from a project project'
+                    )
                 );
             } else {
                 message.channel.send(`Unknown command, *${message.content}*, `
