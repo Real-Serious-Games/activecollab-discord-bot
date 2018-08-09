@@ -4,6 +4,7 @@ import { IActiveCollabAPI } from './activecollab-api';
 import { ICommandController } from './command';
 import * as ProjectTasks from '../models/projectTasks';
 import * as userController from './userController';
+import { IMappingController } from './mapping';
 
 export async function dailyReport(
     projects: string[],
@@ -132,14 +133,14 @@ export async function dailyReportCommand(
 }
 
 export async function reportSubscribeCommand(
-    projects: string[],
+    projectID: string,
     logger: Logger,
     message: discord.Message
 ): Promise<void> {
     message.channel.startTyping();
-    message.channel.send(`Subscribing to project: ` + projects);
+    message.channel.send(`Subscribing to project: ` + projectID);
     try {
-        await userController.addSubscriptions(message.author, projects);
+        await userController.addSubscriptions(message.author, projectID);
     } catch (e) {
         message
             .channel
@@ -152,20 +153,29 @@ export async function reportSubscribeCommand(
 export const dailyReportParseCommand = (
     args: string[],
     commandController: ICommandController,
+    mappingController: IMappingController,
     logger: Logger,
     message: discord.Message
 ) => {
     if (args.length === 2 && args[0].toLowerCase() === 'subscribe') {
-        // If projects (check for projects=)
-        let projects: string[];
-        projects = args[1]
-            .split('"')
-            .join('')
-            .split(',');
-        projects.forEach(project => {
-            // const projectNumber =  ;
-        });
-        reportSubscribeCommand(projects, logger, message);
+        const projectNumber = parseInt(args[1]);
+        if (projectNumber) {
+            try {
+                if (
+                    mappingController.getChannels(projectNumber).length > 0
+                ) {
+                    reportSubscribeCommand(
+                        projectNumber.toString(),
+                        logger,
+                        message
+                    );
+                }
+            } catch (error) {
+                message.channel
+                    .send('Invalid project ID. '
+                        + 'Please use !listProjects to see valid project IDs');
+            }
+        }
     }
     else if (args.length === 0) {
         dailyReportCommand(message.author, commandController, logger, message);
@@ -174,6 +184,6 @@ export const dailyReportParseCommand = (
         // return some sort of help
         message.channel
             .send('Invalid syntax. Please enter projects to subscribe to');
-        message.channel.send('Eg: !dailyReport subscribe 2,14');
+        message.channel.send('Eg: !dailyReport subscribe <ID>');
     }
 };

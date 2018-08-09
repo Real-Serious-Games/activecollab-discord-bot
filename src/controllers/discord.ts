@@ -103,6 +103,7 @@ export class DiscordController implements IDiscordController {
                 dailyReportParseCommand(
                     args,
                     commandController,
+                    mappingController,
                     logger,
                     message
                 );

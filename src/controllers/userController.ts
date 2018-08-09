@@ -118,12 +118,14 @@ export const getSubscriptions = async (
 
 export const addSubscriptions = async (
     discordUser: discord.User,
-    projects: string[]
+    projectID: string
 ) => {
     try {
         const config = await getConfig();
         const user = await getUser(discordUser);
-        user.daily_report_subs = projects;
+        if (user.daily_report_subs.filter(i => i === projectID).length === 0) {
+            user.daily_report_subs.push(projectID);
+        }
         const newUsers = config.Users.map(u => {
             if (u.discord_id === user.discord_id) {
                 return user;
