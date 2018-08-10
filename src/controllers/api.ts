@@ -64,7 +64,9 @@ async function postCommandWebhook(
 
     const commandEvent = <CommandEvent>req.body;
 
-    switch (commandEvent.addressType.toLowerCase()) {
+    const addressType = commandEvent.addressType ? commandEvent.addressType.toLowerCase() : '';
+
+    switch (addressType) {
         case 'user':
             res.sendStatus(discordController.runUserCommand(commandEvent));
             return;
@@ -73,7 +75,7 @@ async function postCommandWebhook(
             return;
         default:
             logger.error(
-                'Failed to process CommandEvent: Invalid CommandAddressType or type not supported!'
+                'Failed to process CommandEvent: Invalid AddressType or type not supported!'
             );
             res.sendStatus(400);
             return;

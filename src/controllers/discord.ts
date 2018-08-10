@@ -384,10 +384,15 @@ export class DiscordController implements IDiscordController {
     public runUserCommand(e: CommandEvent): number {
         const user = this.client.users.filter(u => u.tag === e.address).first();
         if (!user) {
+            this.logger.error(
+                'Failed to find User! Tag may have changed or the Address value was invalid!'
+            );
             return 400;
         }
 
-        switch (e.command.toLowerCase()) {
+        const command = e.command ? e.command.toLowerCase() : '';
+
+        switch (command) {
             case 'msg':
                 user.send(e.parameters[0]);
                 return 200;
@@ -410,7 +415,16 @@ export class DiscordController implements IDiscordController {
     }
 
     public runChannelCommand(e: CommandEvent): number {
-        switch (e.command.toLowerCase()) {
+        if (!e.address) {
+            this.logger.error(
+                'Failed to find Address! Tag may have changed or the value was invalid!'
+            );
+            return 400;
+        }
+
+        const command = e.command ? e.command.toLowerCase() : '';
+
+        switch (command) {
             case 'msg':
                 break;
             case 'log':

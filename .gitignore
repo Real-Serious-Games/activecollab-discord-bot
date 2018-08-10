@@ -17,6 +17,9 @@ Spreadsheets
 Config
 UserConfig.json
 
+#SSL Keys
+keys/
+
 # Runtime data
 pids
 *.pid

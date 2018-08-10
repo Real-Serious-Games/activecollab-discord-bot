@@ -1,3 +1,5 @@
+import * as https from 'https';
+import * as fs from 'fs';
 import * as express from 'express';
 import * as bodyParser from 'body-parser';
 import * as logger from 'morgan';
@@ -20,4 +22,16 @@ export function setupApp(
 
     express.post('/api/webhook', postActiveCollabWebhook);
     express.post('/api/cwebhook', postCommandWebhook);
+    express.disable('x-powered-by');
+
+    // https configuration
+    const options = {
+        key: fs.readFileSync('./keys/key.pem'),
+        cert: fs.readFileSync('./keys/cert.pem')
+    };
+
+    if (options.key.length > 0 && options.cert.length > 0) {
+        https.createServer(options, express).listen(8443);
+        console.log('listening on port 8443');
+    }
 }
