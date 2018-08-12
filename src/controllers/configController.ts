@@ -4,8 +4,8 @@ import * as util from 'util';
 import { Logger } from 'structured-log';
 
 export interface IConfigController {
-    saveConfig: (config: any) => void;
-    getConfig: <T>() => Promise<T | undefined>;
+    saveConfig: <T>(config: T) => void;
+    getConfig: <T>() => Promise<T>;
 }
 
 export class ConfigController implements IConfigController {
@@ -20,7 +20,7 @@ export class ConfigController implements IConfigController {
         this.logger = logger;
     }
 
-    public async saveConfig(config: any) {
+    public async saveConfig<T>(config: T) {
         try {
             // Check for config folder
             const folder = path.dirname(this.configFile);
@@ -38,7 +38,7 @@ export class ConfigController implements IConfigController {
         }
     }
 
-    public async getConfig<T>(): Promise<T | undefined> {
+    public async getConfig<T>(): Promise<T> {
         try {
             // If no config file exists
             if (!fs.existsSync(this.configFile)) {
