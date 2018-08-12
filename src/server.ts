@@ -12,6 +12,8 @@ import { createActiveCollabAPI } from './controllers/activecollab-api';
 import { createActiveCollabRestClient } from './controllers/activecollab-rest';
 import { createMappingController, ChannelMap, UserMap } from './controllers/mapping';
 import { createCommandController } from './controllers/command';
+import { HelpController } from './controllers/helpController';
+import { ConfigController } from './controllers/configController';
 
 async function createServer() {
     // Setup config
@@ -43,12 +45,23 @@ async function createServer() {
             mappingController,
             logger
         );
-    
+
+        const helpConfigController = new ConfigController(
+            'Config/help-config.json',
+            logger
+        );
+
+        const helpController = new HelpController(
+            helpConfigController,
+            logger
+        );
+
         const discordController = new DiscordController(
             getConfigValue('discordBotToken'),
             new discord.Client(),
             mappingController,
             commandController,
+            helpController,
             logger,
             getConfigValue('commandPrefix'),
             getConfigValue('guildNames')
@@ -96,5 +109,5 @@ function getConfigValue(key: string): any {
 
 export = createServer()
     .catch(e => {
-        console.log(  `Server Error: ${e}`);
-     });
+        console.log(`Server Error: ${e}`);
+    });

@@ -8,6 +8,7 @@ import { DiscordClientMockBuilder } from './builders/discordClientMockBuilder';
 import { map } from 'fp-ts/lib/Either';
 import { LoggerMockBuilder } from './builders/loggerMockBuilder';
 import { CommandControllerMockBuilder } from './builders/commandControllerMockBuilder';
+import { HelpControllerMockBuilder } from './builders/helpControllerMockBuilder';
 
 describe('calling sendMessageToChannel', () => {
     it('should send message to channel when channel is valid', () => {
@@ -23,17 +24,17 @@ describe('calling sendMessageToChannel', () => {
         expect(channel.send).toBeCalledWith(message);
     }),
 
-    it('should error when channel is invalid', () => {
-        const discordController = new DiscordControllerBuilder().build();
+        it('should error when channel is invalid', () => {
+            const discordController = new DiscordControllerBuilder().build();
 
-        expect(() => discordController.sendMessageToChannel(undefined, undefined))
-            .toThrow('Cannot send without a channel: undefined');
-    });
+            expect(() => discordController.sendMessageToChannel(undefined, undefined))
+                .toThrow('Cannot send without a channel: undefined');
+        });
 });
 
 describe('calling determineChannels', () => {
     const projectId = 1;
-    
+
     const guildNames = [
         'guild 1',
         'guild 2'
@@ -59,35 +60,35 @@ describe('calling determineChannels', () => {
 
         const clientChannels = new Collection<string, Channel>();
 
-        clientChannels.set(   
+        clientChannels.set(
             '1',
             {
                 name: 'channel',
-                guild: { name: guildNames[0]}
+                guild: { name: guildNames[0] }
             } as TextChannel
         );
 
-        clientChannels.set(   
+        clientChannels.set(
             '2',
             {
                 name: 'channel 2',
-                guild: { name: guildNames[1]}
+                guild: { name: guildNames[1] }
             } as TextChannel
         );
 
-        clientChannels.set(   
+        clientChannels.set(
             '3',
             {
                 name: 'channel 3',
-                guild: { name: guildNames[0]}
+                guild: { name: guildNames[0] }
             } as TextChannel
         );
 
-        clientChannels.set(   
+        clientChannels.set(
             '4',
             {
                 name: 'channel',
-                guild: { name: guildNames[1]}
+                guild: { name: guildNames[1] }
             } as TextChannel
         );
 
@@ -109,47 +110,47 @@ describe('calling determineChannels', () => {
         expect(returnedChannels[0]).toEqual(clientChannels.first());
     });
 
-    it ('should return found channels when given valid project ID and log warning ' 
+    it('should return found channels when given valid project ID and log warning '
         + ' when not all channels found', () => {
-        const mappingControllerMock = new MappingControllerMockBuilder()
-            .withGetChannels(jest.fn().mockReturnValue(mappingChannels))
-            .build();
+            const mappingControllerMock = new MappingControllerMockBuilder()
+                .withGetChannels(jest.fn().mockReturnValue(mappingChannels))
+                .build();
 
-        const clientChannels = new Collection<string, Channel>();
+            const clientChannels = new Collection<string, Channel>();
 
-        clientChannels.set(   
-            '1',
-            {
-                name: 'channel',
-                guild: { name: guildNames[0]}
-            } as TextChannel
-        );
+            clientChannels.set(
+                '1',
+                {
+                    name: 'channel',
+                    guild: { name: guildNames[0] }
+                } as TextChannel
+            );
 
-        const clientMock = new DiscordClientMockBuilder()
-            .withChannels({
-                findAll: jest.fn().mockReturnValue(clientChannels)
-            })
-            .build();
+            const clientMock = new DiscordClientMockBuilder()
+                .withChannels({
+                    findAll: jest.fn().mockReturnValue(clientChannels)
+                })
+                .build();
 
-        const warnMock = jest.fn();
+            const warnMock = jest.fn();
 
-        const loggerMock = new LoggerMockBuilder()
-            .withWarn(warnMock)
-            .build();
+            const loggerMock = new LoggerMockBuilder()
+                .withWarn(warnMock)
+                .build();
 
-        const discordController = new DiscordControllerBuilder()
-            .withMappingController(mappingControllerMock)
-            .withClient(clientMock)
-            .withGuildNames(guildNames)
-            .withLogger(loggerMock)
-            .build();
+            const discordController = new DiscordControllerBuilder()
+                .withMappingController(mappingControllerMock)
+                .withClient(clientMock)
+                .withGuildNames(guildNames)
+                .withLogger(loggerMock)
+                .build();
 
-        const returnedChannels = discordController.determineChannels(projectId);
+            const returnedChannels = discordController.determineChannels(projectId);
 
-        expect(returnedChannels.length).toEqual(1);
-        expect(warnMock).toBeCalledWith('Unable to find channels: '
-            + `${mappingChannels[1].channelName} (${guildNames[mappingChannels[1].guildIndex]})`);
-    });
+            expect(returnedChannels.length).toEqual(1);
+            expect(warnMock).toBeCalledWith('Unable to find channels: '
+                + `${mappingChannels[1].channelName} (${guildNames[mappingChannels[1].guildIndex]})`);
+        });
 
     it('should return ID not found error when channels for project ID not found', () => {
         const mappingControllerMock = new MappingControllerMockBuilder()
@@ -182,11 +183,11 @@ describe('calling determineChannels', () => {
 
         const clientChannels = new Collection<string, Channel>();
 
-        clientChannels.set(   
+        clientChannels.set(
             '1',
             {
                 name: 'non matching channel',
-                guild: { name: guildNames[0]}
+                guild: { name: guildNames[0] }
             } as TextChannel
         );
 
@@ -201,9 +202,9 @@ describe('calling determineChannels', () => {
             .withGuildNames(guildNames)
             .withMappingController(mappingControllerMock)
             .build();
-        
+
         expect(() => discordController.determineChannels(projectId))
-            .toThrow(`Channels do not exist on Discord: ` 
+            .toThrow(`Channels do not exist on Discord: `
                 + `${mappingChannels[0].channelName} (${guildNames[mappingChannels[0].guildIndex]}), `
                 + `${mappingChannels[1].channelName} (${guildNames[mappingChannels[1].guildIndex]})`
             );
@@ -218,10 +219,10 @@ describe('calling getUserId', () => {
         const guildsMock: Partial<Collection<string, Guild>> = {
             find: jest.fn().mockReturnValue({
                 members: {
-                    find: jest.fn().mockReturnValue({ 
-                            user: { username: username },
-                            id: expectedId
-                        }
+                    find: jest.fn().mockReturnValue({
+                        user: { username: username },
+                        id: expectedId
+                    }
                     )
                 }
             })
@@ -295,44 +296,44 @@ describe('calling getUserId', () => {
 describe('client receiving message', () => {
     it('should send help message when message is "!tasks"', done => {
         expect.assertions(1);
-        
+
         const client = setupClient();
 
         const discordController = new DiscordControllerBuilder()
-                .withClient(client)
-                .build();
-        
-        const message = new MessageBuilder()
-                .withContent('!tasks')
-                .withSend(jest.fn(async value => {
-                    expect(value).toEqual(`Unknown command, *${message.content}*, ` 
-                        + `use *!tasks help* or *!tasks commands* for list of commands.`);
+            .withClient(client)
+            .build();
 
-                    done();
-                }))
-                .build();
+        const message = new MessageBuilder()
+            .withContent('!tasks')
+            .withSend(jest.fn(async value => {
+                expect(value).toEqual(`Unknown command, *${message.content}*, `
+                    + `use *!tasks help* or *!tasks commands* for list of commands.`);
+
+                done();
+            }))
+            .build();
 
         client.emit('message', message);
     });
 
     it('should send help message when message is "!tasks" with unknown command', done => {
         expect.assertions(1);
-        
+
         const client = setupClient();
 
         const discordController = new DiscordControllerBuilder()
-                .withClient(client)
-                .build();
+            .withClient(client)
+            .build();
 
         const message = new MessageBuilder()
-                .withContent('!tasks unknown')
-                .withSend(jest.fn(async value => {
-                    expect(value).toEqual(`Unknown command, *${message.content}*, ` 
-                        + `use *!tasks help* or *!tasks commands* for list of commands.`);
+            .withContent('!tasks unknown')
+            .withSend(jest.fn(async value => {
+                expect(value).toEqual(`Unknown command, *${message.content}*, `
+                    + `use *!tasks help* or *!tasks commands* for list of commands.`);
 
-                    done();
-                }))
-                .build();
+                done();
+            }))
+            .build();
 
         client.emit('message', message);
     });
@@ -340,32 +341,32 @@ describe('client receiving message', () => {
     describe('when message is "!tasks create"', () => {
         it('should call commandController.createTask when command'
             + ' is sent from project channel', done => {
-            expect.assertions(2);
+                expect.assertions(2);
 
-            const firstMessage = 'Creating task...';
+                const firstMessage = 'Creating task...';
 
-            const client = setupClient();
+                const client = setupClient();
 
-            const commandControllerMock = new CommandControllerMockBuilder()
-                .build();
+                const commandControllerMock = new CommandControllerMockBuilder()
+                    .build();
 
-            const discordController = new DiscordControllerBuilder()
-                .withClient(client)
-                .withCommandController(commandControllerMock)
-                .build();
+                const discordController = new DiscordControllerBuilder()
+                    .withClient(client)
+                    .withCommandController(commandControllerMock)
+                    .build();
 
-            const message = new MessageBuilder()
-                .withContent('!tasks create new task')
-                .withSend(jest.fn(async value => {
-                    expect(value).toEqual(firstMessage);
-                    done();
-                }))
-                .build();
+                const message = new MessageBuilder()
+                    .withContent('!tasks create new task')
+                    .withSend(jest.fn(async value => {
+                        expect(value).toEqual(firstMessage);
+                        done();
+                    }))
+                    .build();
 
-            client.emit('message', message);
+                client.emit('message', message);
 
-            expect(commandControllerMock.createTask).toHaveBeenCalled();
-        });
+                expect(commandControllerMock.createTask).toHaveBeenCalled();
+            });
 
         it('should call send message when creating task fails', done => {
             expect.assertions(2);
@@ -405,7 +406,7 @@ describe('client receiving message', () => {
             client.emit('message', message);
         });
 
-        it('should send warning message when channel type is not text' , () => {
+        it('should send warning message when channel type is not text', () => {
             const client = setupClient();
 
             const discordController = new DiscordControllerBuilder()
@@ -420,13 +421,13 @@ describe('client receiving message', () => {
             client.emit('message', message);
 
             expect(message.channel.send)
-                .toBeCalledWith('!tasks create command must be called from a text channel' 
+                .toBeCalledWith('!tasks create command must be called from a text channel'
                     + ' associated with a project');
         });
 
         it('should send error message and log when error getting project ID', done => {
             expect.assertions(2);
-                
+
             const client = setupClient();
 
             const projectId = 0;
@@ -464,30 +465,30 @@ describe('client receiving message', () => {
             client.emit('message', message);
         });
     });
-    
-    describe('when message is "!tasks due"', () => {   
-        it('should call commandController.tasksDueThisWeekForProject when command is' 
+
+    describe('when message is "!tasks due"', () => {
+        it('should call commandController.tasksDueThisWeekForProject when command is'
             + ' sent from project channel', done => {
-            const client = setupClient();
+                const client = setupClient();
 
-            const commandControllerMock = new CommandControllerMockBuilder()
-                .withTasksDueThisWeekForProject(jest.fn(async () => done()))
-                .build();
+                const commandControllerMock = new CommandControllerMockBuilder()
+                    .withTasksDueThisWeekForProject(jest.fn(async () => done()))
+                    .build();
 
-            const discordController = new DiscordControllerBuilder()
-                .withCommandController(commandControllerMock)
-                .withClient(client)
-                .build();
-                
-            const message = new MessageBuilder()
-                .withContent('!tasks due')
-                .withSend(jest.fn(() => Promise.resolve()))
-                .build();
+                const discordController = new DiscordControllerBuilder()
+                    .withCommandController(commandControllerMock)
+                    .withClient(client)
+                    .build();
 
-            client.emit('message', message);
-        });
+                const message = new MessageBuilder()
+                    .withContent('!tasks due')
+                    .withSend(jest.fn(() => Promise.resolve()))
+                    .build();
 
-        it('should send warning message when channel type is not text' , () => {
+                client.emit('message', message);
+            });
+
+        it('should send warning message when channel type is not text', () => {
             const client = setupClient();
 
             const commandControllerMock = new CommandControllerMockBuilder()
@@ -507,13 +508,13 @@ describe('client receiving message', () => {
             client.emit('message', message);
 
             expect(message.channel.send)
-                .toBeCalledWith('!tasks due command must be called from a text channel' 
+                .toBeCalledWith('!tasks due command must be called from a text channel'
                     + ' associated with a project');
         });
 
         it('should send error message and log when error getting project ID', done => {
             expect.assertions(2);
-                
+
             const client = setupClient();
 
             const projectId = 0;
@@ -526,7 +527,7 @@ describe('client receiving message', () => {
             const loggerMock = new LoggerMockBuilder()
                 .withWarn(jest.fn().mockImplementation(value => {
                     expect(value).toBe(`Error getting tasks due for week: Error: ${error}`);
-                    expect(sentMessageValue).toBe(`Unable to find ActiveCollab project for channel ` 
+                    expect(sentMessageValue).toBe(`Unable to find ActiveCollab project for channel `
                         + channelName);
                     done();
                 }))
@@ -561,17 +562,17 @@ describe('client receiving message', () => {
     describe('when command is "!tasks list"', () => {
         it('should call commandController.listTasksForUser when command all caps', done => {
             expect.assertions(4);
-    
+
             const client = setupClient();
-    
+
             const firstMessage = 'Getting tasks...';
             const returnedTasks = new RichEmbed();
             let numberMessages = 0;
-    
+
             const commandControllerMock = new CommandControllerMockBuilder()
                 .withTasksForUser(jest.fn(() => Promise.resolve(returnedTasks)))
                 .build();
-    
+
             const discordController = new DiscordControllerBuilder()
                 .withCommandController(commandControllerMock)
                 .withClient(client)
@@ -595,89 +596,89 @@ describe('client receiving message', () => {
                     }
                 }))
                 .build();
-    
+
             client.emit('message', message);
         });
 
         it('should call commandController.listTasksForUser and send  '
             + 'message when command is "!tasks list for @user"', done => {
-            expect.assertions(3);
+                expect.assertions(3);
 
-            const client = setupClient();
-            let messagesSent = 0;
-            const returnedTasks = new RichEmbed();
+                const client = setupClient();
+                let messagesSent = 0;
+                const returnedTasks = new RichEmbed();
 
-            const commandControllerMock = new CommandControllerMockBuilder()
-                .withTasksForUser(jest.fn(() => Promise.resolve(returnedTasks)))
-                .build();
+                const commandControllerMock = new CommandControllerMockBuilder()
+                    .withTasksForUser(jest.fn(() => Promise.resolve(returnedTasks)))
+                    .build();
 
-            const discordController = new DiscordControllerBuilder()
-                .withClient(client)
-                .withCommandController(commandControllerMock)
-                .build();
+                const discordController = new DiscordControllerBuilder()
+                    .withClient(client)
+                    .withCommandController(commandControllerMock)
+                    .build();
 
-            const message = new MessageBuilder()
-                .withContent('!tasks list for @user')
-                .withSend(jest.fn(async value => {
-                    messagesSent++;
+                const message = new MessageBuilder()
+                    .withContent('!tasks list for @user')
+                    .withSend(jest.fn(async value => {
+                        messagesSent++;
 
-                    if (messagesSent === 2) {
-                        expect(commandControllerMock.tasksForUser).toBeCalled();
-                        expect(value).toBe(returnedTasks);
-                        expect(message.channel.startTyping).toBeCalled();
-                        done();
-                    }
-                }))
-                .build();
+                        if (messagesSent === 2) {
+                            expect(commandControllerMock.tasksForUser).toBeCalled();
+                            expect(value).toBe(returnedTasks);
+                            expect(message.channel.startTyping).toBeCalled();
+                            done();
+                        }
+                    }))
+                    .build();
 
-            client.emit('message', message);
-        });
+                client.emit('message', message);
+            });
     });
 
     describe('when message is "!tasks in <list>"', () => {
         it('should call commandController.taskInListForProject with list from '
-        +   'command and project ID from channel', done => {
-            const client = setupClient();
+            + 'command and project ID from channel', done => {
+                const client = setupClient();
 
-            const taskList = 'Selected for Development';
-            const firstMessage = `Getting tasks in ${taskList}...`;
-            const projectId = 0;
-            const returnedTasks = new RichEmbed();
-            let messagesSent = 0;
+                const taskList = 'Selected for Development';
+                const firstMessage = `Getting tasks in ${taskList}...`;
+                const projectId = 0;
+                const returnedTasks = new RichEmbed();
+                let messagesSent = 0;
 
-            const commandControllerMock = new CommandControllerMockBuilder()
-                .withTasksInListForProject(jest.fn(() => Promise.resolve(returnedTasks)))
-                .build();
+                const commandControllerMock = new CommandControllerMockBuilder()
+                    .withTasksInListForProject(jest.fn(() => Promise.resolve(returnedTasks)))
+                    .build();
 
-            const mappingControllerMock = new MappingControllerMockBuilder()
-                .withGetProjectId(jest.fn().mockReturnValue(projectId))
-                .build();
+                const mappingControllerMock = new MappingControllerMockBuilder()
+                    .withGetProjectId(jest.fn().mockReturnValue(projectId))
+                    .build();
 
-            const discordController = new DiscordControllerBuilder()
-                .withClient(client)
-                .withMappingController(mappingControllerMock)
-                .withCommandController(commandControllerMock)
-                .build();
+                const discordController = new DiscordControllerBuilder()
+                    .withClient(client)
+                    .withMappingController(mappingControllerMock)
+                    .withCommandController(commandControllerMock)
+                    .build();
 
-            const message = new MessageBuilder()
-                .withContent(`!tasks in ${taskList}`)
-                .withSend(jest.fn(async value => {
-                    messagesSent++;
-                    
-                    if (messagesSent === 1) {
-                        expect(value).toEqual(firstMessage);
-                    }
+                const message = new MessageBuilder()
+                    .withContent(`!tasks in ${taskList}`)
+                    .withSend(jest.fn(async value => {
+                        messagesSent++;
 
-                    if (messagesSent === 2) {
-                        expect(commandControllerMock.tasksInListForProject)
-                        .toBeCalledWith(taskList, projectId);
-                        done();
-                    }
-                }))
-                .build();
+                        if (messagesSent === 1) {
+                            expect(value).toEqual(firstMessage);
+                        }
 
-            client.emit('message', message);
-        });
+                        if (messagesSent === 2) {
+                            expect(commandControllerMock.tasksInListForProject)
+                                .toBeCalledWith(taskList, projectId);
+                            done();
+                        }
+                    }))
+                    .build();
+
+                client.emit('message', message);
+            });
 
         it('should send warning when channel type is not text', () => {
             const client = setupClient();
@@ -699,7 +700,7 @@ describe('client receiving message', () => {
             client.emit('message', message);
 
             expect(message.channel.send)
-                .toBeCalledWith('!tasks in list command must be called from' 
+                .toBeCalledWith('!tasks in list command must be called from'
                     + ' a text channel associated with a project');
         });
 
@@ -716,7 +717,7 @@ describe('client receiving message', () => {
             const loggerMock = new LoggerMockBuilder()
                 .withError(jest.fn().mockImplementation(value => {
                     expect(value).toBe(`Error getting tasks in ${list}: Error: ${error}`);
-                    expect(sentMessageValue).toBe(`There was an error creating task for ` 
+                    expect(sentMessageValue).toBe(`There was an error creating task for `
                         + channelName);
                     done();
                 }))
@@ -744,7 +745,7 @@ describe('client receiving message', () => {
 
     it('should send message when command is unknown', () => {
         const unknownCommand = '!unknown';
-        
+
         const client = setupClient();
 
         const discordController = new DiscordControllerBuilder()
@@ -757,13 +758,13 @@ describe('client receiving message', () => {
 
         client.emit('message', message);
 
-        expect(message.channel.send).toHaveBeenCalledWith(`Unknown command, ` 
+        expect(message.channel.send).toHaveBeenCalledWith(`Unknown command, `
             + `*${unknownCommand}*, use *!help* or *!commands*`);
     });
 
     it('should send message when command is unknown task command', () => {
         const unknownCommand = '!tasks unknown';
-        
+
         const client = setupClient();
 
         const discordController = new DiscordControllerBuilder()
@@ -776,61 +777,51 @@ describe('client receiving message', () => {
 
         client.emit('message', message);
 
-        expect(message.channel.send).toHaveBeenCalledWith(`Unknown command, ` 
-            + `*${unknownCommand}*, use *!tasks help* or *!tasks commands* ` 
+        expect(message.channel.send).toHaveBeenCalledWith(`Unknown command, `
+            + `*${unknownCommand}*, use *!tasks help* or *!tasks commands* `
             + `for list of commands.`);
     });
 
-    it('should send list of commands when command is !help', () => {
+    it('should call all help function when command is !help', () => {
         const client = setupClient();
+        const fullHelpMock = jest.fn(() => new RichEmbed());
+        const helpControllerMock = new HelpControllerMockBuilder()
+            .withFullHelp(fullHelpMock)
+            .build();
 
         const discordController = new DiscordControllerBuilder()
             .withClient(client)
+            .withHelpController(helpControllerMock)
             .build();
 
         const message = new MessageBuilder()
             .withContent('!help')
             .build();
 
-        const expectedHelp = new RichEmbed()
-            .setTitle('Commands')
-            .addField('!tasks', 
-                '*!tasks list* - lists your tasks.\n' +
-                '*!tasks list for @user* - lists tasks for mentioned user.\n' +
-                '*!tasks due* - lists tasks due this week for current channel\'s project\n' +
-                '*!tasks create <task name>* - creates a task for current channel\'s project\n' +
-                '*!tasks in <list>* - lists tasks in task list for current channel\'s project\n'
-            );
-
         client.emit('message', message);
 
-        expect(message.channel.send).toHaveBeenCalledWith(expectedHelp);
+        expect(fullHelpMock).toHaveBeenCalledTimes(1);
     });
 
-    it('should send list of commands when command is !commands', () => {
+    it('should call all help function when command is !commands', () => {
         const client = setupClient();
+        const fullHelpMock = jest.fn(() => new RichEmbed());
+        const helpControllerMock = new HelpControllerMockBuilder()
+            .withFullHelp(fullHelpMock)
+            .build();
 
         const discordController = new DiscordControllerBuilder()
             .withClient(client)
+            .withHelpController(helpControllerMock)
             .build();
 
         const message = new MessageBuilder()
             .withContent('!commands')
             .build();
 
-        const expectedHelp = new RichEmbed()
-            .setTitle('Commands')
-            .addField('!tasks', 
-                '*!tasks list* - lists your tasks.\n' +
-                '*!tasks list for @user* - lists tasks for mentioned user.\n' +
-                '*!tasks due* - lists tasks due this week for current channel\'s project\n' +
-                '*!tasks create <task name>* - creates a task for current channel\'s project\n' +
-                '*!tasks in <list>* - lists tasks in task list for current channel\'s project\n'
-        );
-
         client.emit('message', message);
 
-        expect(message.channel.send).toHaveBeenCalledWith(expectedHelp);
+        expect(fullHelpMock).toHaveBeenCalledTimes(1);
     });
 
     it(`should do nothing when message doesn't start with prefix or message sent with bot`, () => {
