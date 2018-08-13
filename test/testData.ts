@@ -7,9 +7,10 @@ import { Project } from '../src/models/project';
 import { Comment } from '../src/models/comment';
 import { Event } from '../src/models/event';
 import { Report } from '../src/models/report';
+import { BulkTimeRecord } from '../src/models/timeRecords';
 
 export function getRawNewTask(): Event<Task> {
-    const payload:Task = {
+    const payload: Task = {
         "id": 288,
         "class": "Task",
         "url_path": "\/projects\/2\/tasks\/288",
@@ -59,7 +60,7 @@ export function getRawNewTask(): Event<Task> {
 };
 
 export function getRawTaskCompleted(): Event<Task> {
-    const payload:Task = {
+    const payload: Task = {
         "id": 312,
         "class": "Task",
         "url_path": "\/projects\/22\/tasks\/312",
@@ -71,10 +72,10 @@ export function getRawTaskCompleted(): Event<Task> {
         "is_completed": true,
         "comments_count": 0,
         "attachments": [
-        
+
         ],
         "labels": [
-        
+
         ],
         "is_trashed": false,
         "trashed_on": null,
@@ -113,7 +114,7 @@ export function getRawTaskCompleted(): Event<Task> {
 }
 
 export function getRawTaskListChangedTask(): Event<Task> {
-    const payload:Task = {
+    const payload: Task = {
         "id": 312,
         "class": "Task",
         "url_path": "\/projects\/22\/tasks\/312",
@@ -125,10 +126,10 @@ export function getRawTaskListChangedTask(): Event<Task> {
         "is_completed": false,
         "comments_count": 0,
         "attachments": [
-            
+
         ],
         "labels": [
-            
+
         ],
         "is_trashed": false,
         "trashed_on": null,
@@ -167,7 +168,7 @@ export function getRawTaskListChangedTask(): Event<Task> {
 }
 
 export function getRawUpdatedTask(): Event<Task> {
-    const payload:Task = {
+    const payload: Task = {
         "id": 288,
         "class": "Task",
         "url_path": "\/projects\/2\/tasks\/288",
@@ -303,3 +304,12 @@ export function getEmptyReport(): Report {
         }
     };
 };
+
+export function getEmptyBulkTimeRecord(): BulkTimeRecord {
+    return {
+        all: {
+            label: 'All Records',
+            records: {}
+        }
+    };
+}

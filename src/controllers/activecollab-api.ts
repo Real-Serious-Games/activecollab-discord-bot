@@ -1,4 +1,3 @@
-import { Report, Assignment } from '../models/report';
 import * as _ from 'lodash';
 import { Option, some, none } from 'fp-ts/lib/Option';
 
@@ -6,6 +5,8 @@ import { TaskList } from '../models/taskList';
 import { IActiveCollabRestClient } from './activecollab-rest';
 import { Task } from '../models/taskEvent';
 import { Project } from '../models/project';
+import { BulkTimeRecord, TimeRecord } from '../models/timeRecords';
+import { Report, Assignment } from '../models/report';
 
 interface TaskResponse {
     tasks: Array<Task>;
@@ -57,6 +58,11 @@ export interface IActiveCollabAPI {
      * Add a task to a project.
      */
     createTask: (projectId: number, name: string) => Promise<void>;
+
+    getAllAssignmentTasksDateRange: (
+        startDate: string,
+        endDate: string
+    ) => Promise<TimeRecord[]>;
 }
 
 /**
@@ -114,7 +120,7 @@ async function getTaskListNameById(
     const response = await restClient.get(`/projects/${projectId}/task-lists`);
 
     if (!Array.isArray(response)) {
-        throw new Error('Invalid response received trying to GET /projects/1/tasks-lists: ' 
+        throw new Error('Invalid response received trying to GET /projects/1/tasks-lists: '
             + JSON.stringify(response, undefined, 4));
     }
 
@@ -158,7 +164,7 @@ async function getAssignmentTasksByUserId(
             .value();
 
     } catch (e) {
-        throw new Error('Invalid response trying to get tasks: ' 
+        throw new Error('Invalid response trying to get tasks: '
             + JSON.stringify(e, undefined, 4));
     }
 }
@@ -175,7 +181,7 @@ async function getAllAssignmentTasksLazy(
     }) as Report;
 
     if (!res.all || !res.all.assignments) {
-        throw new Error('Invalid response trying to get report: ' 
+        throw new Error('Invalid response trying to get report: '
             + JSON.stringify(res, undefined, 4));
     }
 
@@ -193,12 +199,12 @@ async function getAllProjectsLazy(
     const response = await restClient.get('/projects');
 
     if (!Array.isArray(response)) {
-        throw new Error('Invalid response received trying to get projects: ' 
+        throw new Error('Invalid response received trying to get projects: '
             + JSON.stringify(response, undefined, 4));
     }
 
     return _(response)
-        .values(); 
+        .values();
 }
 
 /**
@@ -214,23 +220,56 @@ async function findProjectForTaskId(
     return task ? some(task.project_id) : none;
 }
 
+/**
+ * Get all tasks across all projects since date
+ */
+async function getAllAssignmentTasksDateRange(
+    startDate: string,
+    endDate: string,
+    restClient: IActiveCollabRestClient
+): Promise<_.LoDashImplicitWrapper<TimeRecord[]>> {
+    const res = await restClient.get('/reports/run', {
+        type: 'TrackingFilter',
+        include_subtasks: false,
+        tracked_on_filter: 'selected_range_' + startDate + ':' + endDate,
+        include_tracking_data: true
+    }) as BulkTimeRecord;
+
+    if (!res.all) {
+        return _([]);
+    }
+
+    return _(res.all.records)
+        .values()
+        .filter(a => a.type === 'TimeRecord');
+}
+
 export function createActiveCollabAPI(restClient: IActiveCollabRestClient): IActiveCollabAPI {
     return {
-        taskIdToName: (projectId, taskId) => 
+        taskIdToName: (projectId, taskId) =>
             taskIdToName(restClient, projectId, taskId),
-        getTaskListNameById: (projectId, taskId) => 
+        getTaskListNameById: (projectId, taskId) =>
             getTaskListNameById(restClient, projectId, taskId),
-        getProjectById: projectId => 
+        getProjectById: projectId =>
             getProjectById(restClient, projectId),
-        getAssignmentTasksByUserId: projectId => 
+        getAssignmentTasksByUserId: projectId =>
             getAssignmentTasksByUserId(restClient, projectId),
-        getAllAssignmentTasks: () => 
+        getAllAssignmentTasks: () =>
             getAllAssignmentTasksLazy(restClient).then(a => a.value()),
-        getAllProjects: () => 
+        getAllProjects: () =>
             getAllProjectsLazy(restClient).then(a => a.value()),
-        findProjectForTask: task => 
+        findProjectForTask: task =>
             findProjectForTaskId(restClient, task),
-        createTask: (projectId, taskName) => 
-            createTask(restClient, projectId, taskName)
+        createTask: (projectId, taskName) =>
+            createTask(restClient, projectId, taskName),
+        getAllAssignmentTasksDateRange: (
+            startDate: string,
+            endDate: string
+        ) =>
+            getAllAssignmentTasksDateRange(
+                startDate,
+                endDate,
+                restClient
+            ).then(a => a.value())
     };
 }
