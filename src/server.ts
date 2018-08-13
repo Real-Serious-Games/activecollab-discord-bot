@@ -68,15 +68,20 @@ async function createServer() {
             eventController
         );
 
-        setupApp(app, apiController);
+        const server = setupApp(app, apiController);
 
-        return app.listen(app.get('port'), () => {
-            logger.info('  App is running at http://localhost:{port} in {env} mode',
-                app.get('port'), app.get('env')
-            );
+        if (server) {
+            return server;
+        }
+        else {
+            return app.listen(app.get('port'), () => {
+                logger.info('  App is running at http://localhost:{port} in {env} mode',
+                    app.get('port'), app.get('env')
+                );
 
-            logger.info('  Press CTRL-C to stop\n');
-        });
+                logger.info('  Press CTRL-C to stop\n');
+            });
+        }
     } catch (e) {
         logger.fatal('Unable to setup server: {e}', e);
         throw e;

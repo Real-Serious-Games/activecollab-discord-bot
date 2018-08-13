@@ -11,7 +11,7 @@ import { IApiController } from './controllers/api';
 export function setupApp(
     express: express.Express,
     apiController: IApiController
-): void {
+): https.Server | undefined {
     // Express configuration
     express.set('port', config.get('port') || 8080);
     express.use(logger('dev'));
@@ -22,6 +22,9 @@ export function setupApp(
 
     express.post('/api/webhook', postActiveCollabWebhook);
     express.post('/api/cwebhook', postCommandWebhook);
+    express.get('/', (req, res) => {
+        return res.end('Test');
+    });
     express.disable('x-powered-by');
 
     // https configuration
@@ -31,7 +34,8 @@ export function setupApp(
     };
 
     if (options.key.length > 0 && options.cert.length > 0) {
-        https.createServer(options, express).listen(8443);
-        console.log('listening on port 8443');
+        console.log('listening on port 443');
+        return https.createServer(options, express).listen(443);
     }
+    return undefined;
 }
