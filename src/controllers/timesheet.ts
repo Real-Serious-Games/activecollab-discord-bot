@@ -10,22 +10,27 @@ import { ICommandController } from './command';
 const dayToNumber = (day?: string): number => {
     if (day) {
         switch (day.toLowerCase()) {
+            case 'm':
             case 'mon':
             case 'monday':
                 return 1;
+            case 't':
             case 'tue':
             case 'tues':
             case 'tuesday':
                 return 2;
+            case 'w':
             case 'wed':
             case 'wednes':
             case 'wednesday':
                 return 3;
+            case 't':
             case 'thu':
             case 'thur':
             case 'thurs':
             case 'thursday':
                 return 4;
+            case 'f':
             case 'fri':
             case 'friday':
                 return 5;
