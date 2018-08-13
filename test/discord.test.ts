@@ -261,20 +261,7 @@ describe('calling getUserId', () => {
     it('should throw error when username invalid', () => {
         const invalidUsername = undefined;
 
-        const guildsMock: Partial<Collection<string, Guild>> = {
-            find: jest.fn().mockReturnValue({
-                members: {
-                    find: jest.fn().mockReturnValue(undefined)
-                }
-            })
-        };
-
-        const clientMock = new DiscordClientMockBuilder()
-            .withGuilds(guildsMock)
-            .build();
-
         const discordController = new DiscordControllerBuilder()
-            .withClient(clientMock)
             .build();
 
         expect(() => discordController.getUserId(invalidUsername))
