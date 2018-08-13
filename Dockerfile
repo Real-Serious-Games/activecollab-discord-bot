@@ -1,5 +1,5 @@
 # To Build: docker build -t <your username>/activecollab-discord-bot .
-# To Run: docker run -p 80:8080 -d <your username>/activecollab-discord-bot
+# To Run: docker run -p 443:8443 -d <your username>/activecollab-discord-bot
 # To Stop: docker stop <container id>
 # To go inside: docker exec -it <container id> /bin/bash
 
@@ -14,7 +14,7 @@ WORKDIR /usr/src/app
 COPY package*.json ./
 
 # Set the port for prod, this will override the default set in app.ts
-ENV port 80
+ENV port 443
 
 RUN npm install
 # If you are building your code for production
@@ -23,6 +23,6 @@ RUN npm install
 # Bundle app source
 COPY . .
 
-EXPOSE 80
+EXPOSE 443
 
 CMD [ "npm", "start" ]
