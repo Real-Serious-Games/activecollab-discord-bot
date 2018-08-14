@@ -25,10 +25,10 @@ async function postActiveCollabWebhook(
     req: Request,
     res: Response
 ): Promise<void> {
-    logger.info(`A post request hit the ActiveCollab webhook on port: ${req.connection.localPort}`);
+    logger.debug(`A post request hit the ActiveCollab webhook on port: ${req.connection.localPort}`);
 
     if (req.header('X-Angie-WebhookSecret') != webhookSecret) {
-        logger.info('post request to ActiveCollabWebhook had invalid header secret');
+        logger.warn('post request to ActiveCollabWebhook had invalid header secret');
         res.sendStatus(403);
         return;
     }
@@ -60,10 +60,10 @@ async function postCommandWebhook(
     req: Request,
     res: Response
 ): Promise<void> {
-    logger.info(`A post request hit the Command webhook on port: ${req.connection.localPort}`);
+    logger.debug(`A post request hit the Command webhook on port: ${req.connection.localPort}`);
 
     if (req.header('X-Angie-WebhookSecret') != webhookSecret) {
-        logger.info('post request to CommandWebhook had invalid header secret');
+        logger.warn('post request to CommandWebhook had invalid header secret');
         res.sendStatus(403);
         return;
     }

@@ -392,21 +392,27 @@ export class DiscordController implements IDiscordController {
         const users = e.address.split(',');
         users.forEach(u => u.trim());
 
-        // If addressing all users, get all users from Internal channel and perform command
-        if (users.length === 1 && users[0] === '*') {
-            this.logger.error('Wildcard User address not yet implemented');
-        }
+        // An array to hold validated users
+        let filteredUsers: discord.User[] = [];
 
-        const filteredUsers: discord.User[] = [];
-        for (let i = 0; i < users.length; i++) {
-            const tempUser = this.client.users.filter(u => u.tag === users[i]).first();
-            if (tempUser) {
-                filteredUsers.push(tempUser);
-            }
-            else {
-                this.logger.error(
-                    `Failed to find User with tag: ${users[i]}!`
-                );
+        // If addressing all users, get all users from ActiveCollab channel and perform command
+        if (users.length === 1 && users[0] === '*') {
+            this.logger.warn('Wildcard User is dangerous, use with caution\n Currently set to development-internal to prevent excessive spam whilst testing');
+            console.log('[WARNING] Wildcard User is dangerous, use with caution\n Currently set to development-internal to prevent excessive spam whilst testing');
+
+            const internalChannel = this.client.channels.get('418238801048240128') as discord.TextChannel; // Set to development-internal channel for testing
+            filteredUsers = (internalChannel.members.map(gm => gm.user).filter(u => !u.bot));
+        } else {
+            for (let i = 0; i < users.length; i++) {
+                const tempUser = this.client.users.filter(u => u.tag === users[i]).first();
+                if (tempUser) {
+                    filteredUsers.push(tempUser);
+                }
+                else {
+                    this.logger.error(
+                        `Failed to find User with tag: ${users[i]}!`
+                    );
+                }
             }
         }
 
@@ -438,6 +444,11 @@ export class DiscordController implements IDiscordController {
                     this.sendLogMessage(filteredUsers[i]);
                     break;
                 case 'msg':
+                    if (e.parameters[0].length === 0) {
+                        console.log('Blank message sent to user, cancelling.');
+                        return 400;
+                    }
+
                     filteredUsers[i].send(e.parameters[0]);
 
                     if (i === filteredUsers.length - 1) {
