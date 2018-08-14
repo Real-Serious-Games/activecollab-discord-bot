@@ -6,15 +6,23 @@ import * as moment from 'moment';
 
 export class FileSink implements Sink {
     private appendFileSync: (filename: string, contents: string) => void;
+    private getDate: () => string;
+    private getTime: () => string;
     constructor(
         appendFileSync: (filename: string, contents: string)
-            => void = fs.appendFileSync
+            => void = fs.appendFileSync,
+        date: () => string = getDate,
+        time: () => string = getTime,
+        fileExists: (file: string) => boolean = fs.existsSync,
+        fileMkDir: (file: string) => void = fs.mkdirSync
     ) {
         // Create Logs/ folder if it doesn't exist
-        if (!fs.existsSync('Logs/')) {
-            fs.mkdirSync('Logs/');
+        if (!fileExists('Logs/')) {
+            fileMkDir('Logs/');
         }
         this.appendFileSync = appendFileSync;
+        this.getDate = date;
+        this.getTime = time;
     }
 
     /**
@@ -67,10 +75,11 @@ export class FileSink implements Sink {
 
     private writeToFile(prefix: string, e: LogEvent) {
         // output = time [prefix] | message to write to file
-        const output = `${getTime()} [${prefix}] | ${e.messageTemplate.render(e.properties)}`;
+        const output = this.getTime() + ' [' + prefix + '] | ' +
+            e.messageTemplate.render(e.properties);
 
         // filename = Logs/<current-date>.txt
-        const filename: string = 'Logs/' + getDate() + '.txt';
+        const filename: string = 'Logs/' + this.getDate() + '.txt';
         // Write lines to file
         this.appendFileSync(filename, '\n' + output);
     }
