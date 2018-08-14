@@ -13,7 +13,7 @@ export function setupApp(
     apiController: IApiController
 ): https.Server | undefined {
     // Express configuration
-    express.set('port', config.get('port') || 8080);
+    express.set('port', 80 || 8080);
     express.use(logger('dev'));
     express.use(bodyParser.json());
 

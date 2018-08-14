@@ -70,20 +70,20 @@ async function createServer() {
 
         const server = setupApp(app, apiController);
 
-        if (server) {
-            console.log('Running HTTPS server');
-            return server;
-        }
-        else {
-            console.log('Running HTTP server');
-            return app.listen(app.get('port'), () => {
-                logger.info('  App is running at http://localhost:{port} in {env} mode',
-                    app.get('port'), app.get('env')
-                );
+        // if (server) {
+        console.log('Running HTTPS server');
+        //     return server;
+        // }
+        // else {
+        console.log('Running HTTP server');
+        return app.listen(app.get('port'), () => {
+            logger.info('  App is running at http://localhost:{port} in {env} mode',
+                app.get('port'), app.get('env')
+            );
 
-                logger.info('  Press CTRL-C to stop\n');
-            });
-        }
+            logger.info('  Press CTRL-C to stop\n');
+        });
+        // }
     } catch (e) {
         logger.fatal('Unable to setup server: {e}', e);
         throw e;
