@@ -2,17 +2,20 @@ import { RichEmbed, User } from 'discord.js';
 import * as fs from 'fs';
 import { getDate } from './FileSink';
 
-const logsFolder = 'Logs/';
-
-const getLogsFile = (date: string): string => {
-    if (fs.existsSync(logsFolder + getDate() + '.txt')) {
-        return logsFolder + getDate() + '.txt';
+export const getLogsFile = (
+    fileName: string,
+    fileExists: (file: string) => boolean = fs.existsSync,
+    logsFolder: string = 'Logs/'
+): string => {
+    if (fileExists(logsFolder + fileName + '.txt')) {
+        return logsFolder + fileName + '.txt';
     }
     return '';
 };
 
 // Split log message into fields with no more than 1000 characters in each (1024 max)
-const splitLogMessage = (fileContents: Buffer | string, embed: RichEmbed) => {
+export const splitLogMessage = (fileContents: Buffer | string) => {
+    const embed = new RichEmbed();
     const messageArray = fileContents.toString().split('\n');
     let charCount = 0;
     let fieldContents = '';
@@ -49,12 +52,16 @@ const splitLogMessage = (fileContents: Buffer | string, embed: RichEmbed) => {
                 console.log(
                     'Log file too large to send in its entirety, consider implementing the sending of multiple messages!'
                 );
-                return embed;
+                return new RichEmbed()
+                    .setTitle('Log file too large to send in its entirety');
             }
         }
     }
 
     if (embed.fields) {
+        if (embed.fields.length < 25 && fieldContents.length !== 0) {
+            embed.addField('Output', fieldContents);
+        }
         for (let i = 0; i < embed.fields.length; i++) {
             if (embed.fields[i].value.length > 1024) {
                 console.log(
@@ -64,7 +71,7 @@ const splitLogMessage = (fileContents: Buffer | string, embed: RichEmbed) => {
                     embed.addField(
                         'Error',
                         'A log message exceeded maximum length, sent maximum slice. Field: ' +
-                            (i + 1).toString()
+                        (i + 1).toString()
                     );
                 }
                 const newVal = embed.fields[i].value.slice(0, 1023);
@@ -72,13 +79,21 @@ const splitLogMessage = (fileContents: Buffer | string, embed: RichEmbed) => {
             }
         }
     }
+    else if (fieldContents.length !== 0) {
+        embed.addField('Output', fieldContents);
+    }
+
     return embed;
 };
 
-export async function logsSendFile(eventColor: any): Promise<RichEmbed> {
+export async function logsSendFile(
+    eventColor: any,
+    date: () => string = getDate,
+    getFile: (file: string) => string = getLogsFile
+): Promise<RichEmbed> {
     const embed = new RichEmbed();
-    const fileDate = getDate();
-    const file = getLogsFile(fileDate);
+    const fileDate = date();
+    const file = getFile(fileDate);
 
     if (file !== '') {
         embed
@@ -95,14 +110,15 @@ export async function logsSendFile(eventColor: any): Promise<RichEmbed> {
 
 export async function logsSendMessage(
     eventColor: any,
-    discordUser: User
+    discordUser: User,
+    date: () => string = getDate,
+    getFile: (file: string) => string = getLogsFile,
+    readFile: (file: string) => Buffer = fs.readFileSync
 ): Promise<void> {
-    let embed = new RichEmbed();
-    const fileDate = getDate();
-    const file = getLogsFile(fileDate);
-    const fileContents = fs.readFileSync(file);
-
-    console.log(fileContents.toString());
+    const embed = new RichEmbed();
+    const fileDate = date();
+    const file = getFile(fileDate);
+    const fileContents = readFile(file);
 
     if (file !== '') {
         if (fileContents.length > 0) {
@@ -111,7 +127,7 @@ export async function logsSendMessage(
             if (fileContents.length < 1024) {
                 embed.addField('Output', fileContents);
             } else {
-                embed = splitLogMessage(fileContents, embed);
+                embed.fields = splitLogMessage(fileContents).fields;
             }
         } else {
             embed
