@@ -382,34 +382,80 @@ export class DiscordController implements IDiscordController {
     }
 
     public runUserCommand(e: CommandEvent): number {
-        const user = this.client.users.filter(u => u.tag === e.address).first();
-        if (!user) {
+        if (!e.address) {
             this.logger.error(
-                'Failed to find User! Tag may have changed or the Address value was invalid!'
+                'Failed to find any valid Users! Tags may have changed or the Address value was invalid!'
             );
             return 400;
         }
 
+        const users = e.address.split(',');
+        users.forEach(u => u.trim());
+
+        // If addressing all users, get all users from Internal channel and perform command
+        if (users.length === 1 && users[0] === '*') {
+            this.logger.error('Wildcard User address not yet implemented');
+        }
+
+        const filteredUsers: discord.User[] = [];
+        for (let i = 0; i < users.length; i++) {
+            const tempUser = this.client.users.filter(u => u.tag === users[i]).first();
+            if (tempUser) {
+                filteredUsers.push(tempUser);
+            }
+            else {
+                this.logger.error(
+                    `Failed to find User with tag: ${users[i]}!`
+                );
+            }
+        }
+
+        if (filteredUsers.length === 0) {
+            this.logger.error(
+                'Failed to find any valid Users! Tags may have changed or the Address value was invalid!'
+            );
+            return 400;
+        }
+
+        console.log(users);
+        console.log(filteredUsers);
+
         const command = e.command ? e.command.toLowerCase() : '';
 
-        switch (command) {
-            case 'msg':
-                user.send(e.parameters[0]);
-                return 200;
-            case 'log':
-                // this.commandController.logsSendMessage(user);
-                this.sendLogMessage(user);
-                break;
-            case 'dailyreport':
-                dailyReportCommand(user, this.commandController, this.logger);
-                return 200;
-            case 'spreadsheet':
-                break;
-            default:
-                this.logger.error(
-                    'Failed to process CommandEvent: Invalid CommandType or type not supported!'
-                );
-                return 400;
+        for (let i = 0; i < filteredUsers.length; i++) {
+            switch (command) {
+                case 'dailyreport':
+                    dailyReportCommand(filteredUsers[i], this.commandController, this.logger);
+
+                    if (i === filteredUsers.length - 1) {
+                        return 200;
+                    }
+                    else {
+                        continue;
+                    }
+                case 'log':
+                    // this.commandController.logsSendMessage(user);
+                    this.sendLogMessage(filteredUsers[i]);
+                    break;
+                case 'msg':
+                    filteredUsers[i].send(e.parameters[0]);
+
+                    if (i === filteredUsers.length - 1) {
+                        return 200;
+                    }
+                    else {
+                        continue;
+                    }
+                case 'spreadsheet':
+                    break;
+                case 'time':
+                    break;
+                default:
+                    this.logger.error(
+                        'Failed to process CommandEvent: Invalid CommandType or type not supported!'
+                    );
+                    return 400;
+            }
         }
         return 501;
     }
