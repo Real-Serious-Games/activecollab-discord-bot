@@ -25,7 +25,10 @@ async function postActiveCollabWebhook(
     req: Request,
     res: Response
 ): Promise<void> {
+    logger.info('A post request hit the ActiveCollab webhook');
+
     if (req.header('X-Angie-WebhookSecret') != webhookSecret) {
+        logger.info('post request to ActiveCollabWebhook had invalid header secret');
         res.sendStatus(403);
         return;
     }
@@ -57,7 +60,10 @@ async function postCommandWebhook(
     req: Request,
     res: Response
 ): Promise<void> {
+    logger.info('A post request hit the Command webhook');
+
     if (req.header('X-Angie-WebhookSecret') != webhookSecret) {
+        logger.info('post request to CommandWebhook had invalid header secret');
         res.sendStatus(403);
         return;
     }
