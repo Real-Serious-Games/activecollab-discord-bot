@@ -37,7 +37,7 @@ export class DiscordController implements IDiscordController {
 
         // The ready event is vital, it means that your bot will only start 
         // reacting to information from Discord _after_ ready is emitted
-        this.client.on('ready', () => {});
+        this.client.on('ready', () => { });
 
         this.client.login(token)
             .catch(console.error);
@@ -76,19 +76,33 @@ export class DiscordController implements IDiscordController {
                     const taskName = args.join(' ');
                     this.createTaskCommand(message, taskName);
                 } else {
-                    message.channel.send(`Unknown command, *${message.content}*, ` 
+                    message.channel.send(`Unknown command, *${message.content}*, `
                         + `use *!tasks help* or *!tasks commands* for list of commands.`);
+                }
+            }
+            else if (command === 'logs') {
+                if (firstArgument === 'sendfile') {
+                    this.logsSendFileCommand(message, args);
+                } else if (firstArgument === 'message') {
+                    this.logsSendMessageCommand(message, args);
+                } else {
+                    message.channel.send(`Unknown command, *${message.content}*, `
+                        + `use *!logs help* or *!logs commands* for list of commands.`);
                 }
             }
             else if (command === 'help' || command === 'commands') {
                 message.channel.send(new discord.RichEmbed()
                     .setTitle('Commands')
-                    .addField('!tasks', 
+                    .addField('!tasks',
                         '*!tasks list* - lists your tasks.\n' +
                         '*!tasks list for @user* - lists tasks for mentioned user.\n' +
                         '*!tasks due* - lists tasks due this week for current channel\'s project\n' +
                         '*!tasks create <task name>* - creates a task for current channel\'s project\n' +
                         '*!tasks in <list>* - lists tasks in task list for current channel\'s project\n'
+                    )
+                    .addField('!logs',
+                        '*!logs sendfile* - sends the logfile.\n' +
+                        '*!logs message* - sends the logfile as text in a private message.\n'
                     )
                 );
             } else {
@@ -100,9 +114,9 @@ export class DiscordController implements IDiscordController {
 
     public determineChannels(projectId: number): Array<discord.TextChannel> {
         assert(projectId, `Project ID not valid: ${projectId}`);
-        
+
         const channelMaps = this.mappingController.getChannels(projectId);
-        
+
         assert(channelMaps, `Channels not found for project ID: ${projectId}`);
 
         // Get all channels that match the channel maps
@@ -112,8 +126,8 @@ export class DiscordController implements IDiscordController {
             .findAll('type', 'text')
             .map(channel => channel as discord.TextChannel)
             .filter(textChannel => channelMaps
-                .some(channelMap => 
-                    channelMap.channelName === textChannel.name && 
+                .some(channelMap =>
+                    channelMap.channelName === textChannel.name &&
                     this.guildNames[channelMap.guildIndex] === textChannel.guild.name
                 )
             );
@@ -139,7 +153,7 @@ export class DiscordController implements IDiscordController {
 
     public getUserId(username: string): string {
         assert(username, `Username not valid: ${username}`);
-        
+
         const guilds = this.guildNames
             .map(guildName => this.client.guilds.find(guild => guild.name === guildName));
 
@@ -207,6 +221,41 @@ export class DiscordController implements IDiscordController {
     /**
      * Lists all tasks for first user specified in discord message mentions
      */
+    private async logsSendFileCommand(
+        message: discord.Message,
+        args: Array<string>
+    ): Promise<void> {
+        message
+            .channel
+            .send('Getting log file...');
+
+        message
+            .channel
+            .startTyping();
+
+        message
+            .channel
+            .send(await this.commandController
+                .logsSendFile());
+    }
+
+    /**
+     * Lists all tasks for first user specified in discord message mentions
+     */
+    private async logsSendMessageCommand(
+        message: discord.Message,
+        args: Array<string>
+    ): Promise<void> {
+        message
+            .channel
+            .send('Sending full log to ' + message.author);
+
+        await this.commandController.logsSendMessage(message.author);
+    }
+
+    /**
+     * Lists all tasks for first user specified in discord message mentions
+     */
     private async listCommand(
         message: discord.Message,
         args: Array<string>
@@ -239,7 +288,7 @@ export class DiscordController implements IDiscordController {
      * in specified task list
      */
     private async inListCommand(
-        message: discord.Message, 
+        message: discord.Message,
         list: string
     ): Promise<void> {
         if (message.channel.type !== 'text') {
@@ -268,7 +317,7 @@ export class DiscordController implements IDiscordController {
                     list,
                     projectId
                 )
-            );
+                );
         } catch (e) {
             message
                 .channel
@@ -283,7 +332,7 @@ export class DiscordController implements IDiscordController {
      */
     private async dueCommand(message: discord.Message): Promise<void> {
         if (message.channel.type !== 'text') {
-            message.channel.send('!tasks due command must be called' 
+            message.channel.send('!tasks due command must be called'
                 + ' from a text channel associated with a project');
             return;
         }
@@ -310,7 +359,7 @@ export class DiscordController implements IDiscordController {
         } catch (e) {
             message
                 .channel
-                .send('Unable to find ActiveCollab' 
+                .send('Unable to find ActiveCollab'
                     + ' project for channel ' + channelName
                 );
             this.logger.warn('Error getting tasks due for week: ' + e);
