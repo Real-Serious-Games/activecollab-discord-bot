@@ -800,6 +800,10 @@ describe('client receiving message', () => {
                 '*!tasks due* - lists tasks due this week for current channel\'s project\n' +
                 '*!tasks create <task name>* - creates a task for current channel\'s project\n' +
                 '*!tasks in <list>* - lists tasks in task list for current channel\'s project\n'
+            )
+            .addField('!logs',
+                '*!logs sendfile* - sends the logfile.\n' +
+                '*!logs message* - sends the logfile as text in a private message.\n'
             );
 
         client.emit('message', message);
@@ -826,6 +830,10 @@ describe('client receiving message', () => {
                 '*!tasks due* - lists tasks due this week for current channel\'s project\n' +
                 '*!tasks create <task name>* - creates a task for current channel\'s project\n' +
                 '*!tasks in <list>* - lists tasks in task list for current channel\'s project\n'
+            )
+            .addField('!logs',
+                '*!logs sendfile* - sends the logfile.\n' +
+                '*!logs message* - sends the logfile as text in a private message.\n'
             );
 
         client.emit('message', message);
