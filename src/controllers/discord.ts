@@ -400,7 +400,9 @@ export class DiscordController implements IDiscordController {
             this.logger.warn('Wildcard User is dangerous, use with caution\n Currently set to development-internal to prevent excessive spam whilst testing');
             console.log('[WARNING] Wildcard User is dangerous, use with caution\n Currently set to development-internal to prevent excessive spam whilst testing');
 
-            const internalChannel = this.client.channels.get('418238801048240128') as discord.TextChannel; // Set to development-internal channel for testing
+            // Gets all users from the specified channel (Set to Dev-Internal to test on a small group of people)
+            // TODO: Change to RSG-Internal-Chat when ready 
+            const internalChannel = this.client.channels.get('418238801048240128') as discord.TextChannel;
             filteredUsers = (internalChannel.members.map(gm => gm.user).filter(u => !u.bot));
         } else {
             for (let i = 0; i < users.length; i++) {
@@ -459,7 +461,9 @@ export class DiscordController implements IDiscordController {
                     }
                 case 'spreadsheet':
                     break;
-                case 'time':
+                case 'timereport':
+                    break;
+                case 'timereminder':
                     break;
                 default:
                     this.logger.error(
@@ -474,7 +478,16 @@ export class DiscordController implements IDiscordController {
     public runChannelCommand(e: CommandEvent): number {
         if (!e.address) {
             this.logger.error(
-                'Failed to find Address! Tag may have changed or the value was invalid!'
+                'Failed to find Address! Value was undefined!'
+            );
+            return 400;
+        }
+
+        const channel = this.client.channels.filter(ch => ch.id === e.address).first() as TextChannel;
+
+        if (!channel) {
+            this.logger.error(
+                'Failed to find Channel for specified Address!'
             );
             return 400;
         }
@@ -483,13 +496,25 @@ export class DiscordController implements IDiscordController {
 
         switch (command) {
             case 'msg':
+                if (e.parameters[0].length === 0) {
+                    console.log('Blank message sent to channel, cancelling.');
+                    return 400;
+                }
+
+                channel.send(e.parameters[0]);
                 break;
             case 'log':
                 break;
-            case 'dailyreport':
-                // Not to be implemented, log warning
-                break;
+            // case 'dailyreport':
+            //     // Not to be implemented, will default and log an error
+            //     break;
             case 'spreadsheet':
+                break;
+            case 'timereminder':
+                // Internal chat channel
+                channel.send('Timesheet Reminder!\n<Insert cool image here>');
+                break;
+            case 'wallofshame':
                 break;
             default:
                 this.logger.error(
