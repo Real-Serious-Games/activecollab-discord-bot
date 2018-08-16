@@ -1,22 +1,23 @@
 import { Response, Request } from 'express';
-import { WebhookClient } from 'discord.js';
+import { WebhookClient, RichEmbed } from 'discord.js';
 import { Logger } from 'structured-log';
 
-import { IDiscordController, DiscordController } from '../controllers/discord';
+import { IDiscordController, DiscordController } from './discord';
 import { IEventController } from './event';
+import { CommandEvent } from '../models/commandEvent';
 
 type Route = (req: Request, res: Response) => void;
 
-export type PostActiveCollabWebhook = (
-    req: Request,
-    res: Response
-) => void;
+export type PostActiveCollabWebhook = (req: Request, res: Response) => void;
+
+export type PostCommandWebhook = (req: Request, res: Response) => void;
 
 export interface IApiController {
     postActiveCollabWebhook: PostActiveCollabWebhook;
+    postCommandWebhook: PostCommandWebhook;
 }
 
-async function postActiveCollabWebhook (
+async function postActiveCollabWebhook(
     discordController: IDiscordController,
     webhookSecret: string,
     logger: Logger,
@@ -24,7 +25,10 @@ async function postActiveCollabWebhook (
     req: Request,
     res: Response
 ): Promise<void> {
+    logger.info(`A post request hit the ActiveCollab webhook on port: ${req.connection.localPort}`);
+
     if (req.header('X-Angie-WebhookSecret') != webhookSecret) {
+        logger.warn('post request to ActiveCollabWebhook had invalid header secret');
         res.sendStatus(403);
         return;
     }
@@ -32,24 +36,56 @@ async function postActiveCollabWebhook (
 
     await processed.map(async p => {
         try {
-            const channels = await discordController.determineChannels(p.projectId);
+            const channels = await discordController.determineChannels(
+                p.projectId
+            );
 
             channels.forEach(channel => {
-                discordController.sendMessageToChannel(
-                    p.body,
-                    channel
-                );
+                discordController.sendMessageToChannel(p.body, channel);
             });
         } catch (e) {
             logger.warn('Issue processing event: {value}', e);
         }
     });
 
-    processed.mapLeft(e => 
-        logger.warn('Issue processing event: {value}', e)
-    );
+    processed.mapLeft(e => logger.warn('Issue processing event: {value}', e));
 
     res.sendStatus(200);
+}
+
+async function postCommandWebhook(
+    discordController: IDiscordController,
+    webhookSecret: string,
+    logger: Logger,
+    req: Request,
+    res: Response
+): Promise<void> {
+    logger.info(`A post request hit the Command webhook on port: ${req.connection.localPort}`);
+
+    if (req.header('X-Angie-WebhookSecret') != webhookSecret) {
+        logger.warn('post request to CommandWebhook had invalid header secret');
+        res.sendStatus(403);
+        return;
+    }
+
+    const commandEvent = <CommandEvent>req.body;
+
+    const addressType = commandEvent.addressType ? commandEvent.addressType.toLowerCase() : '';
+
+    switch (addressType) {
+        case 'user':
+            res.sendStatus(discordController.runUserCommand(commandEvent));
+            return;
+        case 'channel':
+            res.sendStatus(discordController.runChannelCommand(commandEvent));
+            return;
+        default:
+            logger.error(
+                'Failed to process CommandEvent: Invalid AddressType or type not supported!'
+            );
+            res.sendStatus(400);
+            return;
+    }
 }
 
 export function createApiController(
@@ -64,6 +100,13 @@ export function createApiController(
             discordController,
             webhookSecret,
             logger,
-            eventController)
+            eventController
+        ),
+        postCommandWebhook: postCommandWebhook.bind(
+            undefined,
+            discordController,
+            webhookSecret,
+            logger
+        )
     };
 }

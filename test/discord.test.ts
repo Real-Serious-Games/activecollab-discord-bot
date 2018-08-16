@@ -5,6 +5,7 @@ import { MappingControllerMockBuilder } from './builders/mappingControllerMockBu
 import { DiscordClientMockBuilder } from './builders/discordClientMockBuilder';
 import { LoggerMockBuilder } from './builders/loggerMockBuilder';
 import { CommandControllerMockBuilder } from './builders/commandControllerMockBuilder';
+import { CommandEvent } from '../src/models/commandEvent';
 import * as Moment from '../node_modules/moment';
 
 describe('calling sendMessageToChannel', () => {
@@ -989,6 +990,32 @@ describe('client receiving message', () => {
         client.emit('message', message);
 
         expect(commandControllerMock.tasksForUser).toHaveBeenCalledTimes(0);
+    });
+});
+
+describe('runUserCommand', () => {
+    it('should return 400 when \'address\' is invalid', () => {
+        const discordController = new DiscordControllerBuilder().build();
+        const cEvent: CommandEvent = {
+            command: 'msg',
+            addressType: 'user',
+            address: '',
+            parameters: ['']
+        };
+        expect(discordController.runUserCommand(cEvent)).toBe(400);
+    });
+});
+
+describe('runChannelCommand', () => {
+    it('should return 400 when \'address\' is invalid', () => {
+        const discordController = new DiscordControllerBuilder().build();
+        const cEvent: CommandEvent = {
+            command: 'msg',
+            addressType: 'channel',
+            address: '',
+            parameters: ['']
+        };
+        expect(discordController.runChannelCommand(cEvent)).toBe(400);
     });
 });
 

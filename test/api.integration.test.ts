@@ -17,18 +17,18 @@ describe('POST /api/webhook', () => {
             .build();
 
         setupApp(app, apiController);
-        
+
         return request(app)
             .post('/api/webhook')
             .set('X-Angie-WebhookSecret', webhookSecret)
             .send(testData.getRawNewComment())
-            .end(function(err, res) {
+            .end(function (err, res) {
                 expect(res.status).toEqual(200);
                 done();
-        });
+            });
     });
 
-   it('should return status 403 when missing webhook secret', (done) => {
+    it('should return status 403 when missing webhook secret', (done) => {
         const webhookSecret = 'secret';
 
         const app = express();
@@ -38,13 +38,13 @@ describe('POST /api/webhook', () => {
             .build();
 
         setupApp(app, apiController);
-        
+
         return request(app)
             .post('/api/webhook')
             .send(testData.getRawNewTask())
-            .end(function(err, res) {
+            .end(function (err, res) {
                 expect(res.status).toEqual(403);
                 done();
-        });
+            });
     });
 });

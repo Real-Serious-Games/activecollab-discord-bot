@@ -5,8 +5,8 @@ import * as moment from 'moment';
 import { Message, RichEmbed, User, RichEmbedOptions } from 'discord.js';
 import { Assignment } from '../models/report';
 import { Project } from '../models/project';
-import { IActiveCollabAPI } from '../controllers/activecollab-api';
-import { IMappingController } from '../controllers/mapping';
+import { IActiveCollabAPI } from './activecollab-api';
+import { IMappingController } from './mapping';
 import { parse } from 'url';
 import * as spreadsheetCommand from './spreadsheetCommand';
 import { writeToCsv } from './csvHandle';
@@ -51,14 +51,15 @@ async function tasksForUser(
     logger: Logger,
     discordUser: User
 ): Promise<RichEmbed> {
-
     let user: number;
 
     try {
         user = mappingController.getActiveCollabUser(discordUser.tag);
     } catch (e) {
-        logger.error(`Error getting ActiveCollab user for Discord user `
-            + ` ${discordUser.tag}: ${e}`);
+        logger.error(
+            `Error getting ActiveCollab user for Discord user ` +
+            ` ${discordUser.tag}: ${e}`
+        );
         return new RichEmbed()
             .setTitle(`Unable to find user: <@${discordUser.id}>`)
             .setColor(eventColor);
@@ -73,7 +74,9 @@ async function tasksForUser(
     } catch (e) {
         logger.error(`Error getting tasks and projects: ${e}`);
         return new RichEmbed()
-            .setTitle(`There was an error getting tasks for <@${discordUser.id}>`)
+            .setTitle(
+                `There was an error getting tasks for <@${discordUser.id}>`
+            )
             .setColor(eventColor);
     }
 
@@ -93,26 +96,24 @@ async function tasksForUser(
         .setTitle(`Tasks for ${discordUser.username}`)
         .setColor(eventColor);
 
-    tasks
-        .groupBy(t => t.project_id)
-        .forEach(taskGroup => {
-            const projectId = taskGroup[0].project_id;
-            const project = projects.find(p => p.id === projectId);
-            if (!project) {
-                return;
-            }
+    tasks.groupBy(t => t.project_id).forEach(taskGroup => {
+        const projectId = taskGroup[0].project_id;
+        const project = projects.find(p => p.id === projectId);
+        if (!project) {
+            return;
+        }
 
-            const currentChars = 0;
+        const currentChars = 0;
 
-            determineFormattedFields(
-                taskGroup,
-                formattedTasks,
-                currentChars,
-                project.name,
-                t => (`• [${t.name}](${t.permalink})\n`),
-                t => ((t + project.name).length)
-            );
-        });
+        determineFormattedFields(
+            taskGroup,
+            formattedTasks,
+            currentChars,
+            project.name,
+            t => `• [${t.name}](${t.permalink})\n`,
+            t => (t + project.name).length
+        );
+    });
 
     return formattedTasks;
 }
@@ -122,7 +123,6 @@ async function tasksDueThisWeekForProject(
     logger: Logger,
     projectId: number
 ): Promise<RichEmbed> {
-
     let tasks: _.LoDashImplicitArrayWrapper<Assignment>;
 
     try {
@@ -130,13 +130,15 @@ async function tasksDueThisWeekForProject(
             .filter(t => t.due_on !== null)
             .filter(t => t.project_id === projectId)
             .filter(t =>
-                moment.unix(t.due_on)
+                moment
+                    .unix(t.due_on)
                     .isBetween(
                         moment().startOf('week'),
                         moment().endOf('week'),
                         'day',
                         '[]'
-                    ));
+                    )
+            );
     } catch (e) {
         logger.error(`Error getting tasks: ${e}`);
         return new RichEmbed()
@@ -154,21 +156,20 @@ async function tasksDueThisWeekForProject(
         .setTitle(`Tasks due this week`)
         .setColor(eventColor);
 
-    tasks
-        .groupBy(t => t.task_list)
-        .forEach(taskGroup => {
-            const currentChars = 0;
+    tasks.groupBy(t => t.task_list).forEach(taskGroup => {
+        const currentChars = 0;
 
-            determineFormattedFields(
-                taskGroup,
-                formattedTasks,
-                currentChars,
-                taskGroup[0].task_list,
-                t => (`• [${t.name}](${t.permalink})`
-                    + ` - ${moment.unix(t.due_on).format('ddd Do')}\n`),
-                t => ((t + taskGroup[0].task_list).length)
-            );
-        });
+        determineFormattedFields(
+            taskGroup,
+            formattedTasks,
+            currentChars,
+            taskGroup[0].task_list,
+            t =>
+                `• [${t.name}](${t.permalink})` +
+                ` - ${moment.unix(t.due_on).format('ddd Do')}\n`,
+            t => (t + taskGroup[0].task_list).length
+        );
+    });
 
     return formattedTasks;
 }
@@ -179,14 +180,12 @@ async function tasksInListForProject(
     list: string,
     projectId: number
 ): Promise<RichEmbed> {
-
     let tasks: _.LoDashImplicitArrayWrapper<Assignment>;
 
     try {
         tasks = _(await activeCollabApi.getAllAssignmentTasks())
             .filter(t => t.project_id === projectId)
             .filter(t => t.task_list.toLowerCase() === list.toLowerCase());
-
     } catch (e) {
         logger.error(`Error getting tasks: ${e}`);
         return new RichEmbed()
@@ -202,23 +201,20 @@ async function tasksInListForProject(
 
     const headTask = tasks.head() as Assignment;
 
-    const formattedTasks = new RichEmbed()
-        .setColor(eventColor);
+    const formattedTasks = new RichEmbed().setColor(eventColor);
 
-    tasks
-        .groupBy(t => t.task_list)
-        .forEach(taskGroup => {
-            const currentChars = 0;
+    tasks.groupBy(t => t.task_list).forEach(taskGroup => {
+        const currentChars = 0;
 
-            determineFormattedFields(
-                taskGroup,
-                formattedTasks,
-                currentChars,
-                `${taskGroup[0].task_list} Tasks`,
-                t => (`• [${t.name}](${t.permalink})\n`),
-                t => ((t + taskGroup[0].task_list).length)
-            );
-        });
+        determineFormattedFields(
+            taskGroup,
+            formattedTasks,
+            currentChars,
+            `${taskGroup[0].task_list} Tasks`,
+            t => `• [${t.name}](${t.permalink})\n`,
+            t => (t + taskGroup[0].task_list).length
+        );
+    });
 
     return formattedTasks;
 }
@@ -229,20 +225,23 @@ function determineFormattedFields(
     currentChars: number,
     title: string,
     formatTask: (t: Assignment) => string,
-    calculateChars: (t: string) => number,
+    calculateChars: (t: string) => number
 ) {
     taskGroup.forEach(t => {
         const task = formatTask(t);
         const newLength = currentChars + task.length;
 
-        if (formattedTasks.fields !== undefined
-            && formattedTasks.fields.length > 0
-            && currentChars !== 0 // If characters is 0 we're doing a new task list
-            && newLength <= maxFieldLength
+        if (
+            formattedTasks.fields !== undefined &&
+            formattedTasks.fields.length > 0 &&
+            currentChars !== 0 && // If characters is 0 we're doing a new task list
+            newLength <= maxFieldLength
         ) {
             currentChars = newLength;
 
-            formattedTasks.fields[formattedTasks.fields.length - 1].value += task;
+            formattedTasks.fields[
+                formattedTasks.fields.length - 1
+            ].value += task;
         } else {
             currentChars = calculateChars(task);
             formattedTasks.addField(title, task);
