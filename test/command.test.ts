@@ -180,7 +180,7 @@ describe('tasksInListForProject', () => {
         expect.assertions(2);
 
         const error = 'error';
-        const expectedReturn = `There was an error getting tasks.`;
+        const expectedReturn = `There was an error getting tasks for this project.`;
 
         const logger = new LoggerMockBuilder().build();
 

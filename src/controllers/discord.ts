@@ -6,6 +6,8 @@ import * as moment from 'moment';
 import { IMappingController } from '../controllers/mapping';
 import { ICommandController } from '../controllers/command';
 import { spreadsheetParseCommand } from '../controllers/spreadsheetCommand';
+import { dailyReportParseCommand } from './dailyReportCommand';
+import { userConfigParseCommand } from './userController';
 
 export interface IDiscordController {
     sendMessageToChannel: (
@@ -101,6 +103,44 @@ export class DiscordController implements IDiscordController {
                     message.channel.send(`Eg: !spreadsheet ` + moment().format('DD-MM-YYYY'));
                 }
             }
+            else if (command === 'listprojects') {
+                const channels = mappingController.getAllChannels();
+                let messageField: string = '';
+                channels.forEach(channel => {
+                    messageField += (
+                        '```ini\n'
+                        + '[' + channel.channelName + '] '
+                        + 'ID: ' + channel.projectId + '\n'
+                        + '```'
+                    );
+                });
+
+                const projectsMessage = new discord.RichEmbed()
+                    .addField('Projects:', messageField);
+                message.channel.send(projectsMessage);
+            }
+            else if (command === 'dailyreport') {
+                dailyReportParseCommand(
+                    args,
+                    commandController,
+                    mappingController,
+                    logger,
+                    message
+                );
+            }
+            else if (command === 'users') {
+                userConfigParseCommand(args, logger, message);
+            }
+            else if (command === 'logs') {
+                if (firstArgument === 'sendfile') {
+                    this.logsSendFileCommand(message, args);
+                } else if (firstArgument === 'message') {
+                    this.logsSendMessageCommand(message, args);
+                } else {
+                    message.channel.send(`Unknown command, *${message.content}*, `
+                        + `use *!logs help* or *!logs commands* for list of commands.`);
+                }
+            }
             else if (command === 'help' || command === 'commands') {
                 message.channel.send(new discord.RichEmbed()
                     .setTitle('Commands')
@@ -121,6 +161,18 @@ export class DiscordController implements IDiscordController {
                         '**projects=<ID>** - This will only show times from the project with the ID <ID>\n' +
                         'Note: project ID can be found by looking in the URL in active collab\n' +
                         '**projects=<ID>,<ID>** - Filters are separated by commas\n'
+                    )
+                    .addField('!listProjects',
+                        '*!listProjects* - lists all the known projects and thier IDs'
+                    )
+                    .addField('!dailyReport',
+                        '*!dailyReport* - sends the daily report manually\n' +
+                        '*!dailyReport subscribe <Project ID>* - subscribes to a daily report of that project\n' +
+                        '*!dailyReport unsubscribe <Project ID>* - unsubscribes from a project project'
+                    )
+                    .addField('!logs',
+                        '*!logs sendfile* - sends the logfile.\n' +
+                        '*!logs message* - sends the logfile as text in a private message.\n'
                     )
                 );
             } else {
@@ -234,6 +286,41 @@ export class DiscordController implements IDiscordController {
                 .send('There was an error creating task for ' + channelName);
             this.logger.error(`Error creating task: ` + e.message);
         }
+    }
+
+    /**
+     * Lists all tasks for first user specified in discord message mentions
+     */
+    private async logsSendFileCommand(
+        message: discord.Message,
+        args: Array<string>
+    ): Promise<void> {
+        message
+            .channel
+            .send('Getting log file...');
+
+        message
+            .channel
+            .startTyping();
+
+        message
+            .channel
+            .send(await this.commandController
+                .logsSendFile());
+    }
+
+    /**
+     * Lists all tasks for first user specified in discord message mentions
+     */
+    private async logsSendMessageCommand(
+        message: discord.Message,
+        args: Array<string>
+    ): Promise<void> {
+        message
+            .channel
+            .send('Sending full log to ' + message.author);
+
+        await this.commandController.logsSendMessage(message.author);
     }
 
     /**

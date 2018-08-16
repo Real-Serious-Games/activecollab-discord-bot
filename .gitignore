@@ -13,7 +13,11 @@ config.json
 
 # Spreadsheets
 Spreadsheets
-*.xlsx
+*.csv
+
+# User Config
+Config
+UserConfig.json
 
 # Runtime data
 pids

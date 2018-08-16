@@ -754,7 +754,7 @@ describe('client receiving message', () => {
                 .build();
 
             const message = new MessageBuilder()
-                .withContent('!spreadsheet ' + Moment().format('YYYY-MM-DD'))
+                .withContent('!spreadsheet ' + Moment().format('DD-MM-YYYY'))
                 .build();
 
             client.emit('message', message);
@@ -780,7 +780,7 @@ describe('client receiving message', () => {
             client.emit('message', message);
 
             expect(message.channel.send)
-                .toBeCalledWith('Eg: !spreadsheet ' + Moment().format('YYYY-MM-DD'));
+                .toBeCalledWith('Eg: !spreadsheet ' + Moment().format('DD-MM-YYYY'));
             expect(message.channel.send)
                 .toBeCalledWith('Wrong syntax. Please enter at least one date');
         });
@@ -855,6 +855,18 @@ describe('client receiving message', () => {
                 '**projects=<ID>** - This will only show times from the project with the ID <ID>\n' +
                 'Note: project ID can be found by looking in the URL in active collab\n' +
                 '**projects=<ID>,<ID>** - Filters are separated by commas\n'
+            )
+            .addField('!listProjects',
+                '*!listProjects* - lists all the known projects and thier IDs'
+            )
+            .addField('!dailyReport',
+                '*!dailyReport* - sends the daily report manually\n' +
+                '*!dailyReport subscribe <Project ID>* - subscribes to a daily report of that project\n' +
+                '*!dailyReport unsubscribe <Project ID>* - unsubscribes from a project project'
+            )
+            .addField('!logs',
+                '*!logs sendfile* - sends the logfile.\n' +
+                '*!logs message* - sends the logfile as text in a private message.\n'
             );
 
         client.emit('message', message);
@@ -892,6 +904,18 @@ describe('client receiving message', () => {
                 '**projects=<ID>** - This will only show times from the project with the ID <ID>\n' +
                 'Note: project ID can be found by looking in the URL in active collab\n' +
                 '**projects=<ID>,<ID>** - Filters are separated by commas\n'
+            )
+            .addField('!listProjects',
+                '*!listProjects* - lists all the known projects and thier IDs'
+            )
+            .addField('!dailyReport',
+                '*!dailyReport* - sends the daily report manually\n' +
+                '*!dailyReport subscribe <Project ID>* - subscribes to a daily report of that project\n' +
+                '*!dailyReport unsubscribe <Project ID>* - unsubscribes from a project project'
+            )
+            .addField('!logs',
+                '*!logs sendfile* - sends the logfile.\n' +
+                '*!logs message* - sends the logfile as text in a private message.\n'
             );
 
         client.emit('message', message);

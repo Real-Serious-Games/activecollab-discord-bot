@@ -7,7 +7,7 @@ export interface Report {
 export interface ReportData {
     label: string;
     assignments: {
-        [id: number]: Assignment
+        [id: string]: Assignment
     };
 }
 
