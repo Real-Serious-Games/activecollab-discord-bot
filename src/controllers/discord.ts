@@ -86,7 +86,7 @@ export class DiscordController implements IDiscordController {
                     args,
                     this.commandController,
                     this.logger,
-                    message
+                    message.channel
                 );
             }
             else if (command === 'help' || command === 'commands') {

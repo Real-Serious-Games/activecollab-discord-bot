@@ -8,7 +8,7 @@ import { Project } from '../models/project';
 import { IActiveCollabAPI } from '../controllers/activecollab-api';
 import { IMappingController } from '../controllers/mapping';
 import { parse } from 'url';
-import { userTimes } from './timesheet';
+import { userTimes, userWeekTimes, wallOfShame } from './timesheet';
 
 export interface ICommandController {
     tasksForUser: (user: User) => Promise<RichEmbed>;
