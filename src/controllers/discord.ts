@@ -96,7 +96,6 @@ export class DiscordController implements IDiscordController {
 
                 const projectsMessage = new discord.RichEmbed()
                     .addField('Projects:', messageField);
-
                 message.channel.send(projectsMessage);
             }
             else if (command === 'dailyreport') {
@@ -110,6 +109,15 @@ export class DiscordController implements IDiscordController {
             }
             else if (command === 'users') {
                 userConfigParseCommand(args, logger, message);
+            else if (command === 'logs') {
+                if (firstArgument === 'sendfile') {
+                    this.logsSendFileCommand(message, args);
+                } else if (firstArgument === 'message') {
+                    this.logsSendMessageCommand(message, args);
+                } else {
+                    message.channel.send(`Unknown command, *${message.content}*, `
+                        + `use *!logs help* or *!logs commands* for list of commands.`);
+                }
             }
             else if (command === 'help' || command === 'commands') {
                 message.channel.send(new discord.RichEmbed()
@@ -128,6 +136,9 @@ export class DiscordController implements IDiscordController {
                         '*!dailyReport* - sends the daily report manually\n' +
                         '*!dailyReport subscribe <Project ID>* - subscribes to a daily report of that project\n' +
                         '*!dailyReport unsubscribe <Project ID>* - unsubscribes from a project project'
+                    .addField('!logs',
+                        '*!logs sendfile* - sends the logfile.\n' +
+                        '*!logs message* - sends the logfile as text in a private message.\n'
                     )
                 );
             } else {
@@ -241,6 +252,41 @@ export class DiscordController implements IDiscordController {
                 .send('There was an error creating task for ' + channelName);
             this.logger.error(`Error creating task: ` + e.message);
         }
+    }
+
+    /**
+     * Lists all tasks for first user specified in discord message mentions
+     */
+    private async logsSendFileCommand(
+        message: discord.Message,
+        args: Array<string>
+    ): Promise<void> {
+        message
+            .channel
+            .send('Getting log file...');
+
+        message
+            .channel
+            .startTyping();
+
+        message
+            .channel
+            .send(await this.commandController
+                .logsSendFile());
+    }
+
+    /**
+     * Lists all tasks for first user specified in discord message mentions
+     */
+    private async logsSendMessageCommand(
+        message: discord.Message,
+        args: Array<string>
+    ): Promise<void> {
+        message
+            .channel
+            .send('Sending full log to ' + message.author);
+
+        await this.commandController.logsSendMessage(message.author);
     }
 
     /**
