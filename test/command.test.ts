@@ -1,22 +1,14 @@
-import { Message, RichEmbed, User } from 'discord.js';
-import { Logger } from 'structured-log';
+import { RichEmbed, User } from 'discord.js';
 import * as moment from 'moment';
 import * as mockDate from 'mockdate';
-import { map } from 'fp-ts/lib/Option';
-import { disconnect } from 'cluster';
-import { access } from 'fs';
-import { Option, some, none } from 'fp-ts/lib/Option';
 
-import { createCommandController } from '../src/controllers/command';
 import { IActiveCollabAPI } from '../src/controllers/activecollab-api';
 import { IMappingController } from '../src/controllers/mapping';
 import { Assignment } from '../src/models/report';
 import { Project } from '../src/models/project';
-import { IApiController } from '../src/controllers/api';
 import { CommandControllerBuilder } from './builders/commandControllerBuilder';
 import { ActiveCollabApiMockBuilder } from './builders/activeCollabApiMockBuilder';
 import { LoggerMockBuilder } from './builders/loggerMockBuilder';
-import { MappingControllerMockBuilder } from './builders/mappingControllerMockBuilder';
 
 const eventColor = '#449DF5';
 const discordUser: Partial<User> = {
@@ -734,3 +726,82 @@ describe('tasksForUser', () => {
             .toEqual(expectedReturn);
     });
 });
+
+// describe('filteredTasks', () => {
+//     it('should return spreadsheet file', async () => {
+
+//         const writeToFileMock = (workbook: Excel.Workbook,
+//             filename: string,
+//             logger: Logger) => Promise.resolve(() => jest.fn());
+
+//         const tasksToReturn: Array<TimeRecord> = [
+//             {
+//                 id: 1,
+//                 type: 'type',
+//                 parent_type: 'parent_type',
+//                 parent_id: 1,
+//                 group_id: 1,
+//                 record_date: 1,
+//                 user_id: 1,
+//                 user_name: 'user_name',
+//                 user_email: 'user_email',
+//                 summary: 'summary',
+//                 value: 1,
+//                 billable_status: 1,
+//                 project_id: 1,
+//                 project_name: 'project_name',
+//                 project_url: 'project_url',
+//                 client_id: 1,
+//                 client_name: 'client_name',
+//                 currency_id: 1,
+//                 custom_hourly_rate: 1,
+//                 parent_name: 'parent_name',
+//                 parent_url: 'parent_url',
+//                 group_name: 'group_name',
+//                 billable_name: 'billable_name'
+//             },
+//             {
+//                 id: 2,
+//                 type: 'type',
+//                 parent_type: 'parent_type',
+//                 parent_id: 2,
+//                 group_id: 2,
+//                 record_date: 2,
+//                 user_id: 2,
+//                 user_name: 'user_name',
+//                 user_email: 'user_email',
+//                 summary: 'summary',
+//                 value: 2,
+//                 billable_status: 2,
+//                 project_id: 2,
+//                 project_name: 'project_name',
+//                 project_url: 'project_url',
+//                 client_id: 2,
+//                 client_name: 'client_name',
+//                 currency_id: 2,
+//                 custom_hourly_rate: 2,
+//                 parent_name: 'parent_name',
+//                 parent_url: 'parent_url',
+//                 group_name: 'group_name',
+//                 billable_name: 'billable_name'
+//             }
+//         ];
+
+//         const expectedReturn = new RichEmbed()
+//             .setTitle('Success')
+//             .setColor(eventColor);
+
+//         const activeCollabApiMock = new ActiveCollabApiMockBuilder()
+//             .withGetAllAssignmentTasksDateRange(jest.fn(() => Promise.resolve(tasksToReturn)))
+//             .build();
+
+//         const commandController = new CommandControllerBuilder()
+//             .withActiveCollabApi(activeCollabApiMock as IActiveCollabAPI)
+//             .build();
+
+//         expect(await commandController.filteredTasks([], [], '', '')
+//             .then(embed => embed.title)
+//         )
+//             .toEqual(expectedReturn.title);
+//     });
+// });

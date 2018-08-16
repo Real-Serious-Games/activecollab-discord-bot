@@ -1,6 +1,7 @@
 import { Assignment } from '../../src/models/report';
 import { Project } from '../../src/models/project';
 import { IActiveCollabAPI } from '../../src/controllers/activecollab-api';
+import { TimeRecord } from '../../src/models/timeRecords';
 import { TasksData } from '../../src/models/projectTasks';
 
 export class ActiveCollabApiMockBuilder {
@@ -18,6 +19,59 @@ export class ActiveCollabApiMockBuilder {
         assignee_id: 0,
         permalink: 'url'
     }];
+
+    private timesToReturn: Array<Partial<TimeRecord>> = [
+        {
+            id: 1,
+            type: 'type',
+            parent_type: 'parent_type',
+            parent_id: 1,
+            group_id: 1,
+            record_date: 1,
+            user_id: 1,
+            user_name: 'user_name',
+            user_email: 'user_email',
+            summary: 'summary',
+            value: 1,
+            billable_status: 1,
+            project_id: 1,
+            project_name: 'project_name',
+            project_url: 'project_url',
+            client_id: 1,
+            client_name: 'client_name',
+            currency_id: 1,
+            custom_hourly_rate: 1,
+            parent_name: 'parent_name',
+            parent_url: 'parent_url',
+            group_name: 'group_name',
+            billable_name: 'billable_name'
+        },
+        {
+            id: 2,
+            type: 'type',
+            parent_type: 'parent_type',
+            parent_id: 2,
+            group_id: 2,
+            record_date: 2,
+            user_id: 2,
+            user_name: 'user_name',
+            user_email: 'user_email',
+            summary: 'summary',
+            value: 2,
+            billable_status: 2,
+            project_id: 2,
+            project_name: 'project_name',
+            project_url: 'project_url',
+            client_id: 2,
+            client_name: 'client_name',
+            currency_id: 2,
+            custom_hourly_rate: 2,
+            parent_name: 'parent_name',
+            parent_url: 'parent_url',
+            group_name: 'group_name',
+            billable_name: 'billable_name'
+        }
+    ];
 
     private projectsToReturn: Array<Partial<Project>> = [{
         id: 0,
@@ -104,6 +158,7 @@ export class ActiveCollabApiMockBuilder {
     private getTaskListNameById = jest.fn().mockReturnValue('Completed');
     private getAllAssignmentTasks = jest.fn(() => Promise.resolve(this.tasksToReturn));
     private createTask = jest.fn(() => Promise.resolve());
+    private getAllAssignmentTasksDateRange = jest.fn(() => Promise.resolve(this.timesToReturn));
     private getAssignmentTasksByProject = jest.fn(() => Promise.resolve(this.taskDataToReturn));
 
     public withGetAssignmentTasksByUserId(mock: jest.Mock<Promise<Partial<Assignment>[]>>) {
@@ -131,6 +186,11 @@ export class ActiveCollabApiMockBuilder {
         return this;
     }
 
+    public withGetAllAssignmentTasksDateRange(mock: jest.Mock<Promise<Partial<Assignment>[]>>) {
+        this.getAllAssignmentTasksDateRange = mock;
+        return this;
+    }
+
     public withGetAssignmentTasksByProject(mock: jest.Mock<Promise<Partial<TasksData>>>) {
         this.getAssignmentTasksByProject = mock;
         return this;
@@ -143,6 +203,7 @@ export class ActiveCollabApiMockBuilder {
             getTaskListNameById: this.getTaskListNameById,
             getAllAssignmentTasks: this.getAllAssignmentTasks,
             createTask: this.createTask,
+            getAllAssignmentTasksDateRange: this.getAllAssignmentTasksDateRange,
             getAssignmentTasksByProject: this.getAssignmentTasksByProject
         } as Partial<IActiveCollabAPI>;
     }

@@ -8,8 +8,9 @@ import { Project } from '../models/project';
 import { IActiveCollabAPI } from '../controllers/activecollab-api';
 import { IMappingController } from '../controllers/mapping';
 import { parse } from 'url';
-import * as dailyReportCommand from '../controllers/dailyReportCommand';
+import * as spreadsheetCommand from './spreadsheetCommand';
 import { writeToCsv } from './csvHandle';
+import * as dailyReportCommand from '../controllers/dailyReportCommand';
 
 import * as logsCommand from './logsCommand';
 
@@ -23,6 +24,12 @@ export interface ICommandController {
     ) => Promise<RichEmbed>;
     tasksDueThisWeekForProject: (projectId: number) => Promise<RichEmbed>;
     createTask: (projectId: number, taskName: string) => Promise<void>;
+    filteredTasks: (
+        nameFilters: string[],
+        projectFilters: string[],
+        startDate: string,
+        endDate: string
+    ) => Promise<RichEmbed>;
     dailyReport: (projects: string[]) => Promise<Array<RichEmbed>>;
 }
 
@@ -262,6 +269,22 @@ export function createCommandController(
             tasksInListForProject(activeCollabApi, logger, list, projectId),
         createTask: (projectId: number, taskName: string) =>
             createTask(activeCollabApi, logger, projectId, taskName),
+        filteredTasks: (
+            nameFilters: string[],
+            projectFilters: string[],
+            startDate: string,
+            endDate: string
+        ) =>
+            spreadsheetCommand.filteredTasks(
+                nameFilters,
+                projectFilters,
+                startDate,
+                endDate,
+                eventColor,
+                activeCollabApi,
+                logger,
+                writeToCsv
+            ),
         dailyReport: (projects: string[]) =>
             dailyReportCommand.dailyReport(
                 projects,

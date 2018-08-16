@@ -7,6 +7,7 @@ import { Project } from '../src/models/project';
 import { Comment } from '../src/models/comment';
 import { Event } from '../src/models/event';
 import { Report } from '../src/models/report';
+import { BulkTimeRecord } from '../src/models/timeRecords';
 import { TasksData } from '../src/models/projectTasks';
 
 export function getRawNewTask(): Event<Task> {
@@ -304,6 +305,15 @@ export function getEmptyReport(): Report {
         }
     };
 };
+
+export function getEmptyBulkTimeRecord(): BulkTimeRecord {
+    return {
+        all: {
+            label: 'All Records',
+            records: {}
+        }
+    };
+}
 
 export function getEmptyTaskData(): TasksData {
     return {
