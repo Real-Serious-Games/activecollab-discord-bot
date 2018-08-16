@@ -378,7 +378,7 @@ export class DiscordController implements IDiscordController {
     }
 
     private async sendLogMessage(user: discord.User) {
-        return; // await this.commandController.logsSendMessage(user);
+        return; // await this.commandController.logsSendMessage(user); // Placeholder until merged with LogMessaging feature branch
     }
 
     public runUserCommand(e: CommandEvent): number {

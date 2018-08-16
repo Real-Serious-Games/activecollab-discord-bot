@@ -135,7 +135,7 @@ describe('postActiveCollabWebhook', () => {
 
     it(
         'should call sendMessageToChannel to determined channels' +
-            ' when known request body',
+        ' when known request body',
         async () => {
             expect.assertions(2);
 
@@ -290,7 +290,7 @@ describe('postCommandWebhook', () => {
 
             const req: Partial<
                 Request
-            > = new RequestBuilder().withWebhookSecret(webhookSecret).build();
+                > = new RequestBuilder().withWebhookSecret(webhookSecret).build();
 
             req.body = commandEvent;
 
@@ -300,42 +300,6 @@ describe('postCommandWebhook', () => {
             );
 
             expect(discordControllerMock.runChannelCommand).toHaveBeenCalled();
-        });
-        it('should call sendMessageToChannel if all data is valid', async () => {
-            const webhookSecret = 'secret';
-            const discordControllerMock = new DiscordControllerMockBuilder().build();
-            const loggerMock = new LoggerMockBuilder().build();
-
-            const apiController = new ApiControllerBuilder()
-                .withWebhookSecret(webhookSecret)
-                .withDiscordController(
-                    discordControllerMock as IDiscordController
-                )
-                .build();
-
-            const commandEvent: CommandEvent = {
-                command: 'log',
-                addressType: 'channel',
-                address: 'string',
-                parameters: []
-            };
-
-            const req: Partial<
-                Request
-            > = new RequestBuilder().withWebhookSecret(webhookSecret).build();
-
-            req.body = commandEvent;
-
-            const res = createResponse();
-
-            await apiController.postCommandWebhook(
-                req as Request,
-                res as Response
-            );
-            expect(discordControllerMock.runChannelCommand).toHaveBeenCalled();
-            expect(
-                discordControllerMock.sendMessageToChannel
-            ).toHaveBeenCalled();
         });
     });
     describe('When the CommandAddressType is "user"', () => {
@@ -360,7 +324,7 @@ describe('postCommandWebhook', () => {
 
             const req: Partial<
                 Request
-            > = new RequestBuilder().withWebhookSecret(webhookSecret).build();
+                > = new RequestBuilder().withWebhookSecret(webhookSecret).build();
 
             req.body = commandEvent;
 
