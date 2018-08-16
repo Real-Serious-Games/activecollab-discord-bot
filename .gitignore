@@ -10,7 +10,6 @@ config.json
 
 # Spreadsheets
 Spreadsheets
-*.xlsx
 *.csv
 
 # User Config

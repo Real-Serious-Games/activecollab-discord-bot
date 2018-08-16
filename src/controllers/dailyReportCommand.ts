@@ -29,11 +29,12 @@ export async function dailyReport(
         } catch (e) {
             const errorMsg = `Error getting tasks for project[${projectID}]`;
             logger.error(errorMsg + `: ${e}`);
-            return [
+            messages.push(
                 new discord.RichEmbed()
                     .setTitle(errorMsg)
                     .setColor(eventColor)
-            ];
+            );
+            continue;
         }
         const tasks = taskData.tasks;
         const taskLists = taskData.task_lists.sort((a, b) => {
@@ -145,7 +146,7 @@ export async function reportSubscribeCommand(
         message
             .channel
             .send('There was an error subscribing to the project');
-        logger.error(`Error subscribing from the project ` + e);
+        logger.error(`Error subscribing to the project ` + e);
     }
     message.channel.stopTyping();
 }
