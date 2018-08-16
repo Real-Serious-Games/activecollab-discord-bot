@@ -119,7 +119,7 @@ export async function userWeekTimes(
 
     if (times.length === 0) {
         return new discord.RichEmbed()
-            .setTitle(`No tasks logged for that day`)
+            .setTitle(`No hours logged for this week`)
             .setColor(eventColor);
     }
 
@@ -170,7 +170,8 @@ export async function wallOfShame(
 
     if (times.size() === 0) {
         return new discord.RichEmbed()
-            .setTitle(`No tasks logged for that day`)
+            .setTitle(`No times logged by anyone this week?\n`
+                + 'Probably an error...')
             .setColor(eventColor);
     }
 

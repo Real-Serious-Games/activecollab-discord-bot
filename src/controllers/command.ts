@@ -26,6 +26,8 @@ export interface ICommandController {
     tasksDueThisWeekForProject: (projectId: number) => Promise<RichEmbed>;
     createTask: (projectId: number, taskName: string) => Promise<void>;
     userTimes: (userId: number, day?: string) => Promise<RichEmbed>;
+    userWeekTimes: (userId: number) => Promise<RichEmbed>;
+    wallOfShame: () => Promise<RichEmbed>;
     filteredTasks: (
         nameFilters: string[],
         projectFilters: string[],
@@ -274,6 +276,10 @@ export function createCommandController(
             createTask(activeCollabApi, logger, projectId, taskName),
         userTimes: (userId: number, day?: string) =>
             userTimes(userId, eventColor, activeCollabApi, logger, day),
+        userWeekTimes: (userId: number) =>
+            userWeekTimes(userId, eventColor, activeCollabApi, logger),
+        wallOfShame: () =>
+            wallOfShame(eventColor, activeCollabApi, logger),
         filteredTasks: (
             nameFilters: string[],
             projectFilters: string[],

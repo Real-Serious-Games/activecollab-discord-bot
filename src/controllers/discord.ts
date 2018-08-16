@@ -459,10 +459,6 @@ export class DiscordController implements IDiscordController {
         }
     }
 
-    private async sendLogMessage(user: discord.User) {
-        return; // await this.commandController.logsSendMessage(user); // Placeholder until merged with LogMessaging feature branch
-    }
-
     public runUserCommand(e: CommandEvent): number {
         if (!e.address) {
             this.logger.error(
@@ -470,6 +466,10 @@ export class DiscordController implements IDiscordController {
             );
             return 400;
         }
+
+        const immuneUsers: string[] = [
+            'realseriousandrew#8738'
+        ];
 
         const users = e.address.split(',');
         users.forEach(u => u.trim());
@@ -507,9 +507,6 @@ export class DiscordController implements IDiscordController {
             return 400;
         }
 
-        console.log(users);
-        console.log(filteredUsers);
-
         const command = e.command ? e.command.toLowerCase() : '';
 
         for (let i = 0; i < filteredUsers.length; i++) {
@@ -524,9 +521,14 @@ export class DiscordController implements IDiscordController {
                         continue;
                     }
                 case 'log':
-                    // this.commandController.logsSendMessage(user);
-                    this.sendLogMessage(filteredUsers[i]);
-                    break;
+                    this.commandController.logsSendMessage(filteredUsers[i]);
+
+                    if (i === filteredUsers.length - 1) {
+                        return 200;
+                    }
+                    else {
+                        continue;
+                    }
                 case 'msg':
                     if (e.parameters[0].length === 0) {
                         console.log('Blank message sent to user, cancelling.');
@@ -544,9 +546,56 @@ export class DiscordController implements IDiscordController {
                 case 'spreadsheet':
                     break;
                 case 'timereport':
-                    break;
+                    if (immuneUsers.find(immuneUser => immuneUser === filteredUsers[i].tag)) {
+                        if (i === filteredUsers.length - 1) {
+                            return 200;
+                        }
+                        else {
+                            continue;
+                        }
+                    }
+
+                    try {
+                        const activeCollabID = this.mappingController.getActiveCollabUser(filteredUsers[i].tag);
+
+                        this.commandController.userWeekTimes(activeCollabID)
+                            .then((embed) => {
+                                filteredUsers[i].send(embed);
+                            })
+                            .catch(error => this.logger.error(
+                                `Failed to send TimeReport: ${error}`
+                            ));
+                    } catch (error) {
+                        this.logger.error(
+                            `Failed to send TimeReport: ${error}`
+                        );
+                    } finally {
+                        if (i === filteredUsers.length - 1) {
+                            return 200;
+                        }
+                        else {
+                            continue;
+                        }
+                    }
+
                 case 'timereminder':
-                    break;
+                    if (immuneUsers.find(immuneUser => immuneUser === filteredUsers[i].tag)) {
+                        if (i === filteredUsers.length - 1) {
+                            return 418;
+                        }
+                        else {
+                            continue;
+                        }
+                    }
+
+                    filteredUsers[i].send(new discord.RichEmbed().setTitle('Timesheet Reminder!').addField('<Cool image coming soon>', 'In the meantime, make sure your timesheet is filled out!'));
+
+                    if (i === filteredUsers.length - 1) {
+                        return 418;
+                    }
+                    else {
+                        continue;
+                    }
                 default:
                     this.logger.error(
                         'Failed to process CommandEvent: Invalid CommandType or type not supported!'
@@ -594,10 +643,14 @@ export class DiscordController implements IDiscordController {
                 break;
             case 'timereminder':
                 // Internal chat channel
-                channel.send('Timesheet Reminder!\n<Insert cool image here>');
-                break;
+                channel.send(new discord.RichEmbed().setTitle('Timesheet Reminder!').addField('<Cool image coming soon>', 'In the meantime, make sure your timesheet is filled out!'));
+                return 418;
             case 'wallofshame':
-                break;
+                this.commandController.wallOfShame().then(embed => {
+                    if (embed.fields && embed.fields[0].value.length > 0)
+                        channel.send(embed);
+                });
+                return 418;
             default:
                 this.logger.error(
                     'Failed to process CommandEvent: Invalid CommandType or type not supported!'
