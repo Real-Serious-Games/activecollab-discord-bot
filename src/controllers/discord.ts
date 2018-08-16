@@ -1,6 +1,7 @@
 import * as discord from 'discord.js';
 import { assert } from 'console';
 import { Logger } from 'structured-log';
+import * as moment from 'moment';
 
 import { IMappingController } from '../controllers/mapping';
 import { ICommandController } from '../controllers/command';
@@ -8,6 +9,7 @@ import {
     dailyReportParseCommand,
     dailyReportCommand
 } from './dailyReportCommand';
+import { spreadsheetParseCommand } from '../controllers/spreadsheetCommand';
 import { userConfigParseCommand } from './userController';
 import { CommandEvent } from '../models/commandEvent';
 import { TextChannel } from 'discord.js';
@@ -62,7 +64,10 @@ export class DiscordController implements IDiscordController {
             const args = message.content
                 .slice(commandPrefix.length)
                 .trim()
-                .split(/ +/g);
+                .match(/(?:[^\s"]+|"[^"]*")+/g) as string[];
+            if (args.length <= 0) {
+                return;
+            }
             let command = args.shift();
 
             if (!command) {
@@ -96,7 +101,21 @@ export class DiscordController implements IDiscordController {
                         `use *!tasks help* or *!tasks commands* for list of commands.`
                     );
                 }
-            } else if (command === 'listprojects') {
+            }
+            else if (command === 'spreadsheet') {
+                if (firstArgument) {
+                    spreadsheetParseCommand(
+                        args,
+                        this.commandController,
+                        this.logger,
+                        message
+                    );
+                } else {
+                    message.channel.send(`Wrong syntax. Please enter at least one date`);
+                    message.channel.send(`Eg: !spreadsheet ` + moment().format('DD-MM-YYYY'));
+                }
+            }
+            else if (command === 'listprojects') {
                 const channels = mappingController.getAllChannels();
                 let messageField: string = '';
                 channels.forEach(channel => {
@@ -111,11 +130,8 @@ export class DiscordController implements IDiscordController {
                         '```';
                 });
 
-                const projectsMessage = new discord.RichEmbed().addField(
-                    'Projects:',
-                    messageField
-                );
-
+                const projectsMessage = new discord.RichEmbed()
+                    .addField('Projects:', messageField);
                 message.channel.send(projectsMessage);
             } else if (command === 'dailyreport') {
                 dailyReportParseCommand(
@@ -127,28 +143,50 @@ export class DiscordController implements IDiscordController {
                 );
             } else if (command === 'users') {
                 userConfigParseCommand(args, logger, message);
-            } else if (command === 'help' || command === 'commands') {
-                message.channel.send(
-                    new discord.RichEmbed()
-                        .setTitle('Commands')
-                        .addField(
-                            '!tasks',
-                            '*!tasks list* - lists your tasks.\n' +
-                            '*!tasks list for @user* - lists tasks for mentioned user.\n' +
-                            "*!tasks due* - lists tasks due this week for current channel's project\n" +
-                            "*!tasks create <task name>* - creates a task for current channel's project\n" +
-                            "*!tasks in <list>* - lists tasks in task list for current channel's project\n"
-                        )
-                        .addField(
-                            '!listProjects',
-                            '*!listProjects* - lists all the known projects and thier IDs'
-                        )
-                        .addField(
-                            '!dailyReport',
-                            '*!dailyReport* - sends the daily report manually\n' +
-                            '*!dailyReport subscribe <Project ID>* - subscribes to a daily report of that project\n' +
-                            '*!dailyReport unsubscribe <Project ID>* - unsubscribes from a project project'
-                        )
+            }
+            else if (command === 'logs') {
+                if (firstArgument === 'sendfile') {
+                    this.logsSendFileCommand(message, args);
+                } else if (firstArgument === 'message') {
+                    this.logsSendMessageCommand(message, args);
+                } else {
+                    message.channel.send(`Unknown command, *${message.content}*, `
+                        + `use *!logs help* or *!logs commands* for list of commands.`);
+                }
+            }
+            else if (command === 'help' || command === 'commands') {
+                message.channel.send(new discord.RichEmbed()
+                    .setTitle('Commands')
+                    .addField('!tasks',
+                        '**!tasks list** - lists your tasks.\n' +
+                        '**!tasks list for @user** - lists tasks for mentioned user.\n' +
+                        '**!tasks due** - lists tasks due this week for current channel\'s project\n' +
+                        '**!tasks create <task name>** - creates a task for current channel\'s project\n' +
+                        '**!tasks in <list>** - lists tasks in task list for current channel\'s project\n'
+                    )
+                    .addField('!spreadsheet',
+                        '**!spreadsheet <date>** - All time records since <date>.\n' +
+                        '**!spreadsheet <startdate> <enddate>** - All time records between <startdate> and <enddate>.\n' +
+                        'You can also add optional filters in the command:\n' +
+                        '**names=<name>** - This will only show times with <name> in thier task name\n' +
+                        '**names=<name>,<name>** - Filters are separated by commas\n' +
+                        '**names="<Name with spaces>"** - If your filter has spaces, wrap it in quotes\n' +
+                        '**projects=<ID>** - This will only show times from the project with the ID <ID>\n' +
+                        'Note: project ID can be found by looking in the URL in active collab\n' +
+                        '**projects=<ID>,<ID>** - Filters are separated by commas\n'
+                    )
+                    .addField('!listProjects',
+                        '*!listProjects* - lists all the known projects and thier IDs'
+                    )
+                    .addField('!dailyReport',
+                        '*!dailyReport* - sends the daily report manually\n' +
+                        '*!dailyReport subscribe <Project ID>* - subscribes to a daily report of that project\n' +
+                        '*!dailyReport unsubscribe <Project ID>* - unsubscribes from a project project'
+                    )
+                    .addField('!logs',
+                        '*!logs sendfile* - sends the logfile.\n' +
+                        '*!logs message* - sends the logfile as text in a private message.\n'
+                    )
                 );
             } else {
                 message.channel.send(
@@ -269,6 +307,41 @@ export class DiscordController implements IDiscordController {
             );
             this.logger.error(`Error creating task: ` + e.message);
         }
+    }
+
+    /**
+     * Lists all tasks for first user specified in discord message mentions
+     */
+    private async logsSendFileCommand(
+        message: discord.Message,
+        args: Array<string>
+    ): Promise<void> {
+        message
+            .channel
+            .send('Getting log file...');
+
+        message
+            .channel
+            .startTyping();
+
+        message
+            .channel
+            .send(await this.commandController
+                .logsSendFile());
+    }
+
+    /**
+     * Lists all tasks for first user specified in discord message mentions
+     */
+    private async logsSendMessageCommand(
+        message: discord.Message,
+        args: Array<string>
+    ): Promise<void> {
+        message
+            .channel
+            .send('Sending full log to ' + message.author);
+
+        await this.commandController.logsSendMessage(message.author);
     }
 
     /**

@@ -6,6 +6,7 @@
     "test": "jest --forceExit --coverage --verbose",
     "watch-test": "jest --forceExit --coverage --verbose --watch",
     "start": "npm run build && npm run serve",
+    "start-nobuild": "npm run serve",
     "build": "npm run build-ts && npm run tslint",
     "serve": "node dist/server.js",
     "watch": "concurrently -k -p \"[{name}]\" -n \"TypeScript,Node\" -c \"cyan.bold,green.bold\" \"npm run watch-ts\" \"npm run watch-node\"",

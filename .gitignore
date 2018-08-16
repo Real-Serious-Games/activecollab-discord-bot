@@ -8,9 +8,11 @@ yarn-error.log*
 # config file
 config.json
 
+# Exclude Files
+*EXCLUDE.*
+
 # Spreadsheets
 Spreadsheets
-*.xlsx
 *.csv
 
 # User Config

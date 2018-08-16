@@ -29,9 +29,12 @@ export async function dailyReport(
         } catch (e) {
             const errorMsg = `Error getting tasks for project[${projectID}]`;
             logger.error(errorMsg + `: ${e}`);
-            return [
-                new discord.RichEmbed().setTitle(errorMsg).setColor(eventColor)
-            ];
+            messages.push(
+                new discord.RichEmbed()
+                    .setTitle(errorMsg)
+                    .setColor(eventColor)
+            );
+            continue;
         }
         const tasks = taskData.tasks;
         const taskLists = taskData.task_lists.sort((a, b) => {
@@ -137,8 +140,10 @@ export async function reportSubscribeCommand(
     try {
         await userController.addSubscription(message.author, projectID);
     } catch (e) {
-        message.channel.send('There was an error subscribing to the project');
-        logger.error(`Error subscribing from the project ` + e);
+        message
+            .channel
+            .send('There was an error subscribing to the project');
+        logger.error(`Error subscribing to the project ` + e);
     }
     message.channel.stopTyping();
 }

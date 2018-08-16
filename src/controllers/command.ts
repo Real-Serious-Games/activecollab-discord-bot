@@ -8,10 +8,15 @@ import { Project } from '../models/project';
 import { IActiveCollabAPI } from './activecollab-api';
 import { IMappingController } from './mapping';
 import { parse } from 'url';
-import * as dailyReportCommand from '../controllers/dailyReportCommand';
+import * as spreadsheetCommand from './spreadsheetCommand';
 import { writeToCsv } from './csvHandle';
+import * as dailyReportCommand from '../controllers/dailyReportCommand';
+
+import * as logsCommand from './logsCommand';
 
 export interface ICommandController {
+    logsSendFile: () => Promise<RichEmbed>;
+    logsSendMessage: (user: User) => Promise<void>;
     tasksForUser: (user: User) => Promise<RichEmbed>;
     tasksInListForProject: (
         column: string,
@@ -19,6 +24,12 @@ export interface ICommandController {
     ) => Promise<RichEmbed>;
     tasksDueThisWeekForProject: (projectId: number) => Promise<RichEmbed>;
     createTask: (projectId: number, taskName: string) => Promise<void>;
+    filteredTasks: (
+        nameFilters: string[],
+        projectFilters: string[],
+        startDate: string,
+        endDate: string
+    ) => Promise<RichEmbed>;
     dailyReport: (projects: string[]) => Promise<Array<RichEmbed>>;
 }
 
@@ -178,7 +189,7 @@ async function tasksInListForProject(
     } catch (e) {
         logger.error(`Error getting tasks: ${e}`);
         return new RichEmbed()
-            .setTitle(`There was an error getting tasks.`)
+            .setTitle(`There was an error getting tasks for this project.`)
             .setColor(eventColor);
     }
 
@@ -244,6 +255,11 @@ export function createCommandController(
     logger: Logger
 ) {
     return {
+        logsSendFile: () =>
+            logsCommand.logsSendFile(eventColor),
+        logsSendMessage: (u: User) =>
+            logsCommand.logsSendMessage(eventColor, u),
+
         tasksForUser: (u: User) =>
             tasksForUser(activeCollabApi, mappingController, logger, u),
         tasksDueThisWeekForProject: (projectId: number) =>
@@ -252,6 +268,22 @@ export function createCommandController(
             tasksInListForProject(activeCollabApi, logger, list, projectId),
         createTask: (projectId: number, taskName: string) =>
             createTask(activeCollabApi, logger, projectId, taskName),
+        filteredTasks: (
+            nameFilters: string[],
+            projectFilters: string[],
+            startDate: string,
+            endDate: string
+        ) =>
+            spreadsheetCommand.filteredTasks(
+                nameFilters,
+                projectFilters,
+                startDate,
+                endDate,
+                eventColor,
+                activeCollabApi,
+                logger,
+                writeToCsv
+            ),
         dailyReport: (projects: string[]) =>
             dailyReportCommand.dailyReport(
                 projects,

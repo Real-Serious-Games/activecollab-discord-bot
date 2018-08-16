@@ -1,4 +1,3 @@
-import { Report, Assignment, ReportData } from '../models/report';
 import * as _ from 'lodash';
 import { Option, some, none } from 'fp-ts/lib/Option';
 
@@ -6,6 +5,8 @@ import { TaskList } from '../models/taskList';
 import { IActiveCollabRestClient } from './activecollab-rest';
 import { Task } from '../models/taskEvent';
 import { Project } from '../models/project';
+import { BulkTimeRecord, TimeRecord } from '../models/timeRecords';
+import { Report, Assignment } from '../models/report';
 import * as ProjectTasks from '../models/projectTasks';
 
 interface TaskResponse {
@@ -59,6 +60,10 @@ export interface IActiveCollabAPI {
      */
     createTask: (projectId: number, name: string) => Promise<void>;
 
+    getAllAssignmentTasksDateRange: (
+        startDate: string,
+        endDate: string
+    ) => Promise<TimeRecord[]>;
     getAssignmentTasksByProject: (project: string) => Promise<ProjectTasks.TasksData>;
 }
 
@@ -218,6 +223,29 @@ async function findProjectForTaskId(
 }
 
 /**
+ * Get all tasks across all projects since date
+ */
+async function getAllAssignmentTasksDateRange(
+    startDate: string,
+    endDate: string,
+    restClient: IActiveCollabRestClient
+): Promise<_.LoDashImplicitWrapper<TimeRecord[]>> {
+    const res = await restClient.get('/reports/run', {
+        type: 'TrackingFilter',
+        include_subtasks: false,
+        tracked_on_filter: 'selected_range_' + startDate + ':' + endDate,
+        include_tracking_data: true
+    }) as BulkTimeRecord;
+
+    if (!res.all) {
+        return _([]);
+    }
+
+    return _(res.all.records)
+        .values()
+        .filter(a => a.type === 'TimeRecord');
+}
+/** 
  * Get all tasks across all projects
  */
 async function getAssignmentTasksByProject(
@@ -253,6 +281,15 @@ export function createActiveCollabAPI(restClient: IActiveCollabRestClient): IAct
             findProjectForTaskId(restClient, task),
         createTask: (projectId, taskName) =>
             createTask(restClient, projectId, taskName),
+        getAllAssignmentTasksDateRange: (
+            startDate: string,
+            endDate: string
+        ) =>
+            getAllAssignmentTasksDateRange(
+                startDate,
+                endDate,
+                restClient
+            ).then(a => a.value()),
         getAssignmentTasksByProject: (project: string) =>
             getAssignmentTasksByProject(project, restClient)
     };
