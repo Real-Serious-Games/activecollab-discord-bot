@@ -29,9 +29,9 @@ export async function filteredTasks(
 ): Promise<discord.RichEmbed> {
     const message = new discord.RichEmbed();
 
-    let tasks: _.LoDashImplicitArrayWrapper<TimeRecord>;
+    let tasks: TimeRecord[];
     try {
-        tasks = _(await activeCollabApi.getAllAssignmentTasksDateRange(startDate, endDate));
+        tasks = await activeCollabApi.getAllAssignmentTasksDateRange(startDate, endDate);
     } catch (e) {
         logger.error(`Error getting tasks: ${e}`);
         return new discord.RichEmbed()
@@ -39,7 +39,7 @@ export async function filteredTasks(
             .setColor(eventColor);
     }
 
-    if (tasks.size() === 0) {
+    if (tasks.length === 0) {
         return new discord.RichEmbed()
             .setTitle(`There were no tasks in that specified command.`)
             .setColor(eventColor);
