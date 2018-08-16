@@ -225,9 +225,9 @@ export class DiscordController implements IDiscordController {
         message: discord.Message,
         args: Array<string>
     ): Promise<void> {
-        const sentMessage = await message
+        message
             .channel
-            .send('Getting log file...') as discord.Message;
+            .send('Getting log file...');
 
         message
             .channel
@@ -246,9 +246,9 @@ export class DiscordController implements IDiscordController {
         message: discord.Message,
         args: Array<string>
     ): Promise<void> {
-        const sentMessage = await message
+        message
             .channel
-            .send('Sending full log to ' + message.author) as discord.Message;
+            .send('Sending full log to ' + message.author);
 
         await this.commandController.logsSendMessage(message.author);
     }
