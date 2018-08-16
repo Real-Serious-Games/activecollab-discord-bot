@@ -4,6 +4,8 @@ import { Logger } from 'structured-log';
 
 import { IMappingController } from '../controllers/mapping';
 import { ICommandController } from '../controllers/command';
+import { dailyReportParseCommand } from './dailyReportCommand';
+import { userConfigParseCommand } from './userController';
 
 export interface IDiscordController {
     sendMessageToChannel: (
@@ -80,6 +82,33 @@ export class DiscordController implements IDiscordController {
                         + `use *!tasks help* or *!tasks commands* for list of commands.`);
                 }
             }
+            else if (command === 'listprojects') {
+                const channels = mappingController.getAllChannels();
+                let messageField: string = '';
+                channels.forEach(channel => {
+                    messageField += (
+                        '```ini\n'
+                        + '[' + channel.channelName + '] '
+                        + 'ID: ' + channel.projectId + '\n'
+                        + '```'
+                    );
+                });
+
+                const projectsMessage = new discord.RichEmbed()
+                    .addField('Projects:', messageField);
+                message.channel.send(projectsMessage);
+            }
+            else if (command === 'dailyreport') {
+                dailyReportParseCommand(
+                    args,
+                    commandController,
+                    mappingController,
+                    logger,
+                    message
+                );
+            }
+            else if (command === 'users') {
+                userConfigParseCommand(args, logger, message);
             else if (command === 'logs') {
                 if (firstArgument === 'sendfile') {
                     this.logsSendFileCommand(message, args);
@@ -100,6 +129,13 @@ export class DiscordController implements IDiscordController {
                         '*!tasks create <task name>* - creates a task for current channel\'s project\n' +
                         '*!tasks in <list>* - lists tasks in task list for current channel\'s project\n'
                     )
+                    .addField('!listProjects',
+                        '*!listProjects* - lists all the known projects and thier IDs'
+                    )
+                    .addField('!dailyReport',
+                        '*!dailyReport* - sends the daily report manually\n' +
+                        '*!dailyReport subscribe <Project ID>* - subscribes to a daily report of that project\n' +
+                        '*!dailyReport unsubscribe <Project ID>* - unsubscribes from a project project'
                     .addField('!logs',
                         '*!logs sendfile* - sends the logfile.\n' +
                         '*!logs message* - sends the logfile as text in a private message.\n'

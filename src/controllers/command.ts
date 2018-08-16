@@ -8,6 +8,8 @@ import { Project } from '../models/project';
 import { IActiveCollabAPI } from '../controllers/activecollab-api';
 import { IMappingController } from '../controllers/mapping';
 import { parse } from 'url';
+import * as dailyReportCommand from '../controllers/dailyReportCommand';
+import { writeToCsv } from './csvHandle';
 
 import * as logsCommand from './logsCommand';
 
@@ -21,6 +23,7 @@ export interface ICommandController {
     ) => Promise<RichEmbed>;
     tasksDueThisWeekForProject: (projectId: number) => Promise<RichEmbed>;
     createTask: (projectId: number, taskName: string) => Promise<void>;
+    dailyReport: (projects: string[]) => Promise<Array<RichEmbed>>;
 }
 
 const eventColor = '#449DF5';
@@ -250,6 +253,7 @@ export function createCommandController(
             logsCommand.logsSendFile(eventColor),
         logsSendMessage: (u: User) =>
             logsCommand.logsSendMessage(eventColor, u),
+
         tasksForUser: (u: User) =>
             tasksForUser(activeCollabApi, mappingController, logger, u),
         tasksDueThisWeekForProject: (projectId: number) =>
@@ -257,6 +261,14 @@ export function createCommandController(
         tasksInListForProject: (list: string, projectId: number) =>
             tasksInListForProject(activeCollabApi, logger, list, projectId),
         createTask: (projectId: number, taskName: string) =>
-            createTask(activeCollabApi, logger, projectId, taskName)
+            createTask(activeCollabApi, logger, projectId, taskName),
+        dailyReport: (projects: string[]) =>
+            dailyReportCommand.dailyReport(
+                projects,
+                eventColor,
+                activeCollabApi,
+                logger,
+                writeToCsv
+            )
     };
 }

@@ -3,19 +3,19 @@ import { none, some } from 'fp-ts/lib/Option';
 import { RestClientMockBuilder } from './builders/restClientMockBuilder';
 import { createActiveCollabAPI } from '../src/controllers/activecollab-api';
 import { IActiveCollabRestClient, QueryParams } from '../src/controllers/activecollab-rest';
-import { getEmptyReport } from './testData';
+import { getEmptyReport, getEmptyTaskData } from './testData';
 
 describe('ActiveCollab API', () => {
     describe('createTask', () => {
         it('posts task to specified project', async () => {
             expect.assertions(1);
-            
+
             const projectId = 123;
             const taskName = 'name';
-    
+
             const restClientMock = new RestClientMockBuilder()
-                .withPost(jest.fn(async () => { return { 'single': { 'name': taskName }}; }))
-                .build(); 
+                .withPost(jest.fn(async () => { return { 'single': { 'name': taskName } }; }))
+                .build();
 
             const activeCollabApi = createActiveCollabAPI(restClientMock);
 
@@ -32,10 +32,10 @@ describe('ActiveCollab API', () => {
 
         it('throws error when invalid response received', async () => {
             expect.assertions(1);
-            
+
             const projectId = 123;
             const taskName = 'name';
-    
+
             const restClientMock = new RestClientMockBuilder()
                 .withPost(jest.fn().mockReturnValue(Promise.resolve({})))
                 .build();
@@ -56,7 +56,7 @@ describe('ActiveCollab API', () => {
             const projectId = 123;
             const taskId = 0;
 
-            const mockGet = jest.fn().mockReturnValue(Promise.resolve({ 
+            const mockGet = jest.fn().mockReturnValue(Promise.resolve({
                 'tasks': [{
                     id: taskId,
                     name: 'Test task',
@@ -81,7 +81,7 @@ describe('ActiveCollab API', () => {
             const taskId = 3445;
             const expectedName = 'Test task';
 
-            const mockGet = jest.fn().mockReturnValue(Promise.resolve({ 
+            const mockGet = jest.fn().mockReturnValue(Promise.resolve({
                 'tasks': [{
                     id: taskId,
                     name: expectedName,
@@ -107,7 +107,7 @@ describe('ActiveCollab API', () => {
             const projectId = 123;
 
             const restClientMock = new RestClientMockBuilder()
-                .withGet(jest.fn().mockReturnValue(Promise.resolve({'tasks': []})))
+                .withGet(jest.fn().mockReturnValue(Promise.resolve({ 'tasks': [] })))
                 .build();
 
             const api = createActiveCollabAPI(restClientMock);
@@ -512,6 +512,45 @@ describe('ActiveCollab API', () => {
             const projectId = await api.findProjectForTask(0);
 
             expect(projectId).toEqual(none);
+        });
+    });
+
+    describe('getAssignmentTasksByProject', () => {
+        it('requests project tasks', async () => {
+            expect.assertions(1);
+
+            const restClientMock = new RestClientMockBuilder()
+                .withGet(jest.fn().mockReturnValue(getEmptyTaskData()))
+                .build();
+
+            const api = createActiveCollabAPI(restClientMock);
+
+            await api.getAssignmentTasksByProject('0');
+
+            const expectedQuery: QueryParams = {
+            };
+
+            expect(restClientMock.get).toBeCalledWith(
+                '/projects/0/tasks',
+                expectedQuery
+            );
+        });
+
+        it('throws error if response invalid', async () => {
+            expect.assertions(1);
+
+            const restClientMock = new RestClientMockBuilder()
+                .withGet(jest.fn().mockReturnValue({}))
+                .build();
+
+            const api = createActiveCollabAPI(restClientMock);
+
+            const expectedError = new Error(
+                'Invalid response trying to get tasks: {}'
+            );
+            await expect(
+                api.getAssignmentTasksByProject('0')
+            ).rejects.toMatchObject(expectedError);
         });
     });
 });
