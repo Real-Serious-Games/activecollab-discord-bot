@@ -43,7 +43,7 @@ async function createServer() {
             mappingController,
             logger
         );
-    
+
         const discordController = new DiscordController(
             getConfigValue('discordBotToken'),
             new discord.Client(),
@@ -68,8 +68,14 @@ async function createServer() {
             eventController
         );
 
-        setupApp(app, apiController);
+        const server = setupApp(app, apiController);
 
+        // if (server) {
+        console.log('Running HTTPS server');
+        //     return server;
+        // }
+        // else {
+        console.log('Running HTTP server');
         return app.listen(app.get('port'), () => {
             logger.info('  App is running at http://localhost:{port} in {env} mode',
                 app.get('port'), app.get('env')
@@ -77,6 +83,7 @@ async function createServer() {
 
             logger.info('  Press CTRL-C to stop\n');
         });
+        // }
     } catch (e) {
         logger.fatal('Unable to setup server: {e}', e);
         throw e;
@@ -96,5 +103,5 @@ function getConfigValue(key: string): any {
 
 export = createServer()
     .catch(e => {
-        console.log(  `Server Error: ${e}`);
-     });
+        console.log(`Server Error: ${e}`);
+    });

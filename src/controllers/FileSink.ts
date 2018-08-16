@@ -1,14 +1,28 @@
 import { LogEventLevel } from 'structured-log';
 import { LogEvent } from 'structured-log/logEvent';
 import { Sink } from 'structured-log/sink';
-import fs = require('fs');
+import * as fs from 'fs';
+import * as moment from 'moment';
 
 export class FileSink implements Sink {
-    constructor() {
+    private appendFileSync: (filename: string, contents: string) => void;
+    private getDate: () => string;
+    private getTime: () => string;
+    constructor(
+        appendFileSync: (filename: string, contents: string)
+            => void = fs.appendFileSync,
+        date: () => string = getDate,
+        time: () => string = getTime,
+        fileExists: (file: string) => boolean = fs.existsSync,
+        fileMkDir: (file: string) => void = fs.mkdirSync
+    ) {
         // Create Logs/ folder if it doesn't exist
-        if (!fs.existsSync('Logs/')) {
-            fs.mkdirSync('Logs/');
+        if (!fileExists('Logs/')) {
+            fileMkDir('Logs/');
         }
+        this.appendFileSync = appendFileSync;
+        this.getDate = date;
+        this.getTime = time;
     }
 
     /**
@@ -61,41 +75,39 @@ export class FileSink implements Sink {
 
     private writeToFile(prefix: string, e: LogEvent) {
         // output = time [prefix] | message to write to file
-        const output = `${getTime()} [${prefix}] | ${e.messageTemplate.render(e.properties)}`;
+        const output = this.getTime() + ' [' + prefix + '] | ' +
+            e.messageTemplate.render(e.properties);
 
         // filename = Logs/<current-date>.txt
-        const filename: string = 'Logs/' + getDate() + '.txt';
+        const filename: string = 'Logs/' + this.getDate() + '.txt';
         // Write lines to file
-        fs.appendFileSync(filename, '\n' + output);
+        this.appendFileSync(filename, '\n' + output);
     }
 }
 
 /**
+ * Return a new date in the given timezone
+ * @param timezone UTC Timezone eg: brisbane: UTC+10 = '+10:00'
+ */
+export const getDateInTimezone = (date: Date, timezone: string): moment.Moment => {
+    return moment(date).utcOffset(timezone);
+};
+
+/**
  * Get the current date for logfile name
  */
-const getDate = () => {
-    const date = new Date();
-
-    const year = date.getFullYear();
-    const month = date.getMonth() + 1;
-    const smonth = (month < 10 ? '0' : '') + month;
-    const day = date.getDate();
-    const sday = (day < 10 ? '0' : '') + day;
-
-    return sday + '-' + smonth + '-' + year;
+export const getDate = (
+    localDate: Date = new Date(),
+    timezone: string = '+10:00'
+) => {
+    return getDateInTimezone(localDate, timezone).format('DD-MM-YYYY');
 };
 /**
  * Get the current time for the events in the log file
  */
-const getTime = () => {
-    const date = new Date();
-
-    const hour = date.getHours();
-    const shour = (hour < 10 ? '0' : '') + hour;
-    const min = date.getMinutes();
-    const smin = (min < 10 ? '0' : '') + min;
-    const sec = date.getSeconds();
-    const ssec = (sec < 10 ? '0' : '') + sec;
-
-    return shour + ':' + smin + ':' + ssec;
+export const getTime = (
+    localDate: Date = new Date(),
+    timezone: string = '+10:00'
+) => {
+    return getDateInTimezone(localDate, timezone).format('HH:mm:ss');
 };

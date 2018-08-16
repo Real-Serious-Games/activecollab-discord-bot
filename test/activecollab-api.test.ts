@@ -3,7 +3,7 @@ import { none, some } from 'fp-ts/lib/Option';
 import { RestClientMockBuilder } from './builders/restClientMockBuilder';
 import { createActiveCollabAPI } from '../src/controllers/activecollab-api';
 import { IActiveCollabRestClient, QueryParams } from '../src/controllers/activecollab-rest';
-import { getEmptyReport, getEmptyBulkTimeRecord } from './testData';
+import { getEmptyReport, getEmptyTaskData, getEmptyBulkTimeRecord } from './testData';
 
 describe('ActiveCollab API', () => {
     describe('createTask', () => {
@@ -622,6 +622,47 @@ describe('ActiveCollab API', () => {
 
             expect(tasks).toContain(testTask);
             expect(tasks).toHaveLength(2);
+        });
+    });
+
+    describe('getAssignmentTasksByProject', () => {
+        it('requests project tasks', async () => {
+            expect.assertions(1);
+
+            const restClientMock = new RestClientMockBuilder()
+                .withGet(jest.fn().mockReturnValue(getEmptyTaskData()))
+                .build();
+
+            const api = createActiveCollabAPI(restClientMock);
+
+
+            await api.getAssignmentTasksByProject('0');
+
+            const expectedQuery: QueryParams = {
+            };
+
+            expect(restClientMock.get).toBeCalledWith(
+                '/projects/0/tasks',
+                expectedQuery
+            );
+        });
+
+        it('throws error if response invalid', async () => {
+            expect.assertions(1);
+
+            const restClientMock = new RestClientMockBuilder()
+                .withGet(jest.fn().mockReturnValue({}))
+                .build();
+
+            const api = createActiveCollabAPI(restClientMock);
+
+
+            const expectedError = new Error(
+                'Invalid response trying to get tasks: {}'
+            );
+            await expect(
+                api.getAssignmentTasksByProject('0')
+            ).rejects.toMatchObject(expectedError);
         });
     });
 });

@@ -7,6 +7,7 @@ import { Task } from '../models/taskEvent';
 import { Project } from '../models/project';
 import { BulkTimeRecord, TimeRecord } from '../models/timeRecords';
 import { Report, Assignment } from '../models/report';
+import * as ProjectTasks from '../models/projectTasks';
 
 interface TaskResponse {
     tasks: Array<Task>;
@@ -63,6 +64,7 @@ export interface IActiveCollabAPI {
         startDate: string,
         endDate: string
     ) => Promise<TimeRecord[]>;
+    getAssignmentTasksByProject: (project: string) => Promise<ProjectTasks.TasksData>;
 }
 
 /**
@@ -243,6 +245,23 @@ async function getAllAssignmentTasksDateRange(
         .values()
         .filter(a => a.type === 'TimeRecord');
 }
+/** 
+ * Get all tasks across all projects
+ */
+async function getAssignmentTasksByProject(
+    projectID: string,
+    restClient: IActiveCollabRestClient
+): Promise<ProjectTasks.TasksData> {
+    const res = await restClient.get('/projects/' + projectID + '/tasks', {
+    }) as ProjectTasks.TasksData;
+
+    if (!res.tasks || !res.task_lists) {
+        throw new Error('Invalid response trying to get tasks: '
+            + JSON.stringify(res, undefined, 4));
+    }
+
+    return res;
+}
 
 export function createActiveCollabAPI(restClient: IActiveCollabRestClient): IActiveCollabAPI {
     return {
@@ -270,6 +289,8 @@ export function createActiveCollabAPI(restClient: IActiveCollabRestClient): IAct
                 startDate,
                 endDate,
                 restClient
-            ).then(a => a.value())
+            ).then(a => a.value()),
+        getAssignmentTasksByProject: (project: string) =>
+            getAssignmentTasksByProject(project, restClient)
     };
 }
