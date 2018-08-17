@@ -1,5 +1,5 @@
 import * as discord from 'discord.js';
-import { assert } from 'console';
+import * as assert from 'assert';
 import { Logger } from 'structured-log';
 import * as moment from 'moment';
 
