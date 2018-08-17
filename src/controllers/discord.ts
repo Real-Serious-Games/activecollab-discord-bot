@@ -5,7 +5,7 @@ import * as moment from 'moment';
 
 import { IMappingController } from '../controllers/mapping';
 import { ICommandController } from '../controllers/command';
-import { timesheetParseCommand } from './timesheet';
+import { timesheetParseCommand, wallOfShameCommand, timeReportCommand } from './timesheet';
 import {
     dailyReportParseCommand,
     dailyReportCommand
@@ -156,12 +156,35 @@ export class DiscordController implements IDiscordController {
                 }
             }
             else if (command === 'times') {
-                timesheetParseCommand(
-                    args,
-                    this.commandController,
-                    this.logger,
-                    message.channel
-                );
+                try {
+                    const activeCollabID = this.mappingController.getActiveCollabUser(message.author.tag);
+
+                    timesheetParseCommand(
+                        activeCollabID.toString(),
+                        args[0],
+                        this.commandController,
+                        this.logger,
+                        message.channel
+                    );
+                } catch (error) {
+                    message.channel.send('ActiveCollabID not found for your Discord tag.\n'
+                        + 'Please contact an administrator for assistance.');
+                    logger.error(error);
+                }
+            }
+            else if (command === 'timereport') {
+                try {
+                    const activeCollabID = this.mappingController.getActiveCollabUser(message.author.tag);
+
+                    timeReportCommand(this.commandController, this.logger, message.channel, activeCollabID.toString());
+                } catch (error) {
+                    message.channel.send('ActiveCollabID not found for your Discord tag.\n'
+                        + 'Please contact an administrator for assistance.');
+                    logger.error(error);
+                }
+            }
+            else if (command === 'wallofshame') {
+                wallOfShameCommand(this.commandController, this.logger, message.channel);
             }
             else if (command === 'help' || command === 'commands') {
                 message.channel.send(new discord.RichEmbed()
@@ -484,7 +507,7 @@ export class DiscordController implements IDiscordController {
 
             // Gets all users from the specified channel (Set to Dev-Internal to test on a small group of people)
             // TODO: Change to RSG-Internal-Chat when ready 
-            const internalChannel = this.client.channels.get('418238801048240128') as discord.TextChannel;
+            const internalChannel = this.client.channels.get('383420835605512192') as discord.TextChannel;
             filteredUsers = (internalChannel.members.map(gm => gm.user).filter(u => !u.bot));
         } else {
             for (let i = 0; i < users.length; i++) {
@@ -646,10 +669,7 @@ export class DiscordController implements IDiscordController {
                 channel.send(new discord.RichEmbed().setTitle('Timesheet Reminder!').addField('<Cool image coming soon>', 'In the meantime, make sure your timesheet is filled out!'));
                 return 418;
             case 'wallofshame':
-                this.commandController.wallOfShame().then(embed => {
-                    if (embed.fields && embed.fields[0].value.length > 0)
-                        channel.send(embed);
-                });
+                wallOfShameCommand(this.commandController, this.logger, channel);
                 return 418;
             default:
                 this.logger.error(

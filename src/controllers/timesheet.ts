@@ -11,26 +11,30 @@ const dayToNumber = (day?: string): number => {
     if (day) {
         switch (day.toLowerCase()) {
             case 'm':
+            case 'mo':
             case 'mon':
             case 'monday':
                 return 1;
             case 't':
+            case 'tu':
             case 'tue':
             case 'tues':
             case 'tuesday':
                 return 2;
             case 'w':
+            case 'we':
             case 'wed':
             case 'wednes':
             case 'wednesday':
                 return 3;
-            case 't':
+            case 'th':
             case 'thu':
             case 'thur':
             case 'thurs':
             case 'thursday':
                 return 4;
             case 'f':
+            case 'fr':
             case 'fri':
             case 'friday':
                 return 5;
@@ -43,7 +47,10 @@ const dayToNumber = (day?: string): number => {
 };
 
 const humanizeTime = (time: number): string => {
-    return moment.utc(time * 3600 * 1000).format('HH:mm');
+    if (time < 0) {
+        return '-' + moment.utc(-time * 3600 * 1000).format('H:mm');
+    }
+    return moment.utc(time * 3600 * 1000).format('H:mm');
 };
 
 const getAllTimes = async (
@@ -88,13 +95,11 @@ export async function userTimes(
     });
 
     message
-        .addField(`Hours for ${dayDate}`,
+        .addField(`Hours for ${dayDate.format('dddd')}`,
             humanizeTime(time)
             + ' - logged\n' +
             humanizeTime(7.6 - time)
             + ' - remaining');
-
-    console.log(userTasks);
 
     return message;
 }
@@ -146,7 +151,7 @@ export async function userWeekTimes(
 
     message.addField(
         'Total Hours',
-        'Total: ' + humanizeTime(totalHours)
+        'Total: ' + Math.floor(totalHours) + ':' + Math.round((totalHours - Math.floor(totalHours)) * 60)
     );
 
     return message;
@@ -192,6 +197,12 @@ export async function wallOfShame(
             }
         });
 
+
+    if (shamedUsers.length === 0) {
+        shamedUsers = 'The Wall of Shame is empty for this week!\n'
+            + 'Congratulations everyone!';
+    }
+
     message
         .addField('Wall of Shame!', shamedUsers);
 
@@ -219,13 +230,57 @@ export async function timesheetCommand(
             );
     } catch (e) {
         channel
-            .send('There was an error creating the spreadsheet');
-        logger.error(`Error getting tasks for spreadsheet ` + e);
+            .send('There was an error creating the timesheet');
+        logger.error(`Error getting tasks for timesheet ` + e);
+    }
+}
+
+export async function wallOfShameCommand(
+    commandController: ICommandController,
+    logger: Logger,
+    channel: discord.TextChannel | discord.DMChannel | discord.GroupDMChannel
+): Promise<void> {
+    channel
+        .send(`Getting tasks... (This may take a while)`);
+
+    try {
+        channel
+            .startTyping();
+
+        channel
+            .send(await commandController.wallOfShame());
+    } catch (e) {
+        channel
+            .send('There was an error calling the Wall of Shame!');
+        logger.error(`Error calling the Wall of Shame: ` + e);
+    }
+}
+
+export async function timeReportCommand(
+    commandController: ICommandController,
+    logger: Logger,
+    channel: discord.TextChannel | discord.DMChannel | discord.GroupDMChannel,
+    userId: string
+): Promise<void> {
+    channel
+        .send(`Getting tasks... (This may take a while)`);
+
+    try {
+        channel
+            .startTyping();
+
+        channel
+            .send(await commandController.userWeekTimes(parseInt(userId)));
+    } catch (e) {
+        channel
+            .send('There was an error sending the user\'s week timesheet!');
+        logger.error(`Error sending the user\'s week timesheet: ` + e);
     }
 }
 
 export const timesheetParseCommand = (
-    args: string[],
+    activeCollabID: string,
+    day: string,
     commandController: ICommandController,
     logger: Logger,
     channel: discord.TextChannel | discord.DMChannel | discord.GroupDMChannel
@@ -234,7 +289,7 @@ export const timesheetParseCommand = (
         commandController,
         logger,
         channel,
-        args[0],
-        args[1]
+        activeCollabID,
+        day
     );
 };
