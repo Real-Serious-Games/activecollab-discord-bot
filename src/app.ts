@@ -22,9 +22,6 @@ export function setupApp(
 
     express.post('/api/webhook', postActiveCollabWebhook);
     express.post('/api/cwebhook', postCommandWebhook);
-    express.get('/', (req, res) => {
-        return res.end('Test');
-    });
     express.disable('x-powered-by');
 
     // https configuration

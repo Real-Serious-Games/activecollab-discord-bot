@@ -5,6 +5,7 @@ import * as moment from 'moment';
 
 import { IMappingController } from '../controllers/mapping';
 import { ICommandController } from '../controllers/command';
+import { timesheetParseCommand, wallOfShameCommand, timeReportCommand } from './timesheet';
 import {
     dailyReportParseCommand,
     dailyReportCommand
@@ -154,6 +155,37 @@ export class DiscordController implements IDiscordController {
                         + `use *!logs help* or *!logs commands* for list of commands.`);
                 }
             }
+            else if (command === 'times') {
+                try {
+                    const activeCollabID = this.mappingController.getActiveCollabUser(message.author.tag);
+
+                    timesheetParseCommand(
+                        activeCollabID.toString(),
+                        args[0],
+                        this.commandController,
+                        this.logger,
+                        message.channel
+                    );
+                } catch (error) {
+                    message.channel.send('ActiveCollabID not found for your Discord tag.\n'
+                        + 'Please contact an administrator for assistance.');
+                    logger.error(error);
+                }
+            }
+            else if (command === 'timereport') {
+                try {
+                    const activeCollabID = this.mappingController.getActiveCollabUser(message.author.tag);
+
+                    timeReportCommand(this.commandController, this.logger, message.channel, activeCollabID.toString());
+                } catch (error) {
+                    message.channel.send('ActiveCollabID not found for your Discord tag.\n'
+                        + 'Please contact an administrator for assistance.');
+                    logger.error(error);
+                }
+            }
+            else if (command === 'wallofshame') {
+                wallOfShameCommand(this.commandController, this.logger, message.channel);
+            }
             else if (command === 'help' || command === 'commands') {
                 message.channel.send(new discord.RichEmbed()
                     .setTitle('Commands')
@@ -186,6 +218,17 @@ export class DiscordController implements IDiscordController {
                     .addField('!logs',
                         '*!logs sendfile* - sends the logfile.\n' +
                         '*!logs message* - sends the logfile as text in a private message.\n'
+                    )
+                    .addField('!times',
+                        '*!times* - sends the current hours you have logged for today.\n' +
+                        '*!times <day>* - sends the hours you have logged for <day>.\n' +
+                        'eg: !times monday\n'
+                    )
+                    .addField('!timeReport',
+                        '*!timeReport* - sends the times logged for each day of the week.\n'
+                    )
+                    .addField('!wallOfShame',
+                        '*!wallOfShame* - sends a list of the people who have not completed enough hours for the week.\n'
                     )
                 );
             } else {
@@ -307,6 +350,8 @@ export class DiscordController implements IDiscordController {
             );
             this.logger.error(`Error creating task: ` + e.message);
         }
+
+        message.channel.stopTyping();
     }
 
     /**
@@ -320,14 +365,14 @@ export class DiscordController implements IDiscordController {
             .channel
             .send('Getting log file...');
 
-        message
-            .channel
-            .startTyping();
+        message.channel.startTyping();
 
         message
             .channel
             .send(await this.commandController
                 .logsSendFile());
+
+        message.channel.stopTyping();
     }
 
     /**
@@ -370,6 +415,8 @@ export class DiscordController implements IDiscordController {
                 await this.commandController.tasksForUser(message.author)
             );
         }
+
+        message.channel.stopTyping();
     }
 
     /**
@@ -409,6 +456,8 @@ export class DiscordController implements IDiscordController {
             );
             this.logger.error(`Error getting tasks in ${list}: ` + e);
         }
+
+        message.channel.stopTyping();
     }
 
     /**
@@ -448,10 +497,8 @@ export class DiscordController implements IDiscordController {
             );
             this.logger.warn('Error getting tasks due for week: ' + e);
         }
-    }
 
-    private async sendLogMessage(user: discord.User) {
-        return; // await this.commandController.logsSendMessage(user); // Placeholder until merged with LogMessaging feature branch
+        message.channel.stopTyping();
     }
 
     public runUserCommand(e: CommandEvent): number {
@@ -461,6 +508,10 @@ export class DiscordController implements IDiscordController {
             );
             return 400;
         }
+
+        const immuneUsers: string[] = [
+            'realseriousandrew#8738'
+        ];
 
         const users = e.address.split(',');
         users.forEach(u => u.trim());
@@ -475,7 +526,7 @@ export class DiscordController implements IDiscordController {
 
             // Gets all users from the specified channel (Set to Dev-Internal to test on a small group of people)
             // TODO: Change to RSG-Internal-Chat when ready 
-            const internalChannel = this.client.channels.get('418238801048240128') as discord.TextChannel;
+            const internalChannel = this.client.channels.get('383420835605512192') as discord.TextChannel;
             filteredUsers = (internalChannel.members.map(gm => gm.user).filter(u => !u.bot));
         } else {
             for (let i = 0; i < users.length; i++) {
@@ -498,9 +549,6 @@ export class DiscordController implements IDiscordController {
             return 400;
         }
 
-        console.log(users);
-        console.log(filteredUsers);
-
         const command = e.command ? e.command.toLowerCase() : '';
 
         for (let i = 0; i < filteredUsers.length; i++) {
@@ -515,9 +563,14 @@ export class DiscordController implements IDiscordController {
                         continue;
                     }
                 case 'log':
-                    // this.commandController.logsSendMessage(user);
-                    this.sendLogMessage(filteredUsers[i]);
-                    break;
+                    this.commandController.logsSendMessage(filteredUsers[i]);
+
+                    if (i === filteredUsers.length - 1) {
+                        return 200;
+                    }
+                    else {
+                        continue;
+                    }
                 case 'msg':
                     if (e.parameters[0].length === 0) {
                         console.log('Blank message sent to user, cancelling.');
@@ -535,9 +588,56 @@ export class DiscordController implements IDiscordController {
                 case 'spreadsheet':
                     break;
                 case 'timereport':
-                    break;
+                    if (immuneUsers.find(immuneUser => immuneUser === filteredUsers[i].tag)) {
+                        if (i === filteredUsers.length - 1) {
+                            return 200;
+                        }
+                        else {
+                            continue;
+                        }
+                    }
+
+                    try {
+                        const activeCollabID = this.mappingController.getActiveCollabUser(filteredUsers[i].tag);
+
+                        this.commandController.userWeekTimes(activeCollabID)
+                            .then((embed) => {
+                                filteredUsers[i].send(embed);
+                            })
+                            .catch(error => this.logger.error(
+                                `Failed to send TimeReport: ${error}`
+                            ));
+                    } catch (error) {
+                        this.logger.error(
+                            `Failed to send TimeReport: ${error}`
+                        );
+                    } finally {
+                        if (i === filteredUsers.length - 1) {
+                            return 200;
+                        }
+                        else {
+                            continue;
+                        }
+                    }
+
                 case 'timereminder':
-                    break;
+                    if (immuneUsers.find(immuneUser => immuneUser === filteredUsers[i].tag)) {
+                        if (i === filteredUsers.length - 1) {
+                            return 418;
+                        }
+                        else {
+                            continue;
+                        }
+                    }
+
+                    filteredUsers[i].send(new discord.RichEmbed().setTitle('Timesheet Reminder!').addField('<Cool image coming soon>', 'In the meantime, make sure your timesheet is filled out!'));
+
+                    if (i === filteredUsers.length - 1) {
+                        return 418;
+                    }
+                    else {
+                        continue;
+                    }
                 default:
                     this.logger.error(
                         'Failed to process CommandEvent: Invalid CommandType or type not supported!'
@@ -585,10 +685,11 @@ export class DiscordController implements IDiscordController {
                 break;
             case 'timereminder':
                 // Internal chat channel
-                channel.send('Timesheet Reminder!\n<Insert cool image here>');
-                break;
+                channel.send(new discord.RichEmbed().setTitle('Timesheet Reminder!').addField('<Cool image coming soon>', 'In the meantime, make sure your timesheet is filled out!'));
+                return 418;
             case 'wallofshame':
-                break;
+                wallOfShameCommand(this.commandController, this.logger, channel);
+                return 418;
             default:
                 this.logger.error(
                     'Failed to process CommandEvent: Invalid CommandType or type not supported!'

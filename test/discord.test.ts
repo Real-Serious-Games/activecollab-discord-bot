@@ -868,6 +868,17 @@ describe('client receiving message', () => {
             .addField('!logs',
                 '*!logs sendfile* - sends the logfile.\n' +
                 '*!logs message* - sends the logfile as text in a private message.\n'
+            )
+            .addField('!times',
+                '*!times* - sends the current hours you have logged for today.\n' +
+                '*!times <day>* - sends the hours you have logged for <day>.\n' +
+                'eg: !times monday\n'
+            )
+            .addField('!timeReport',
+                '*!timeReport* - sends the times logged for each day of the week.\n'
+            )
+            .addField('!wallOfShame',
+                '*!wallOfShame* - sends a list of the people who have not completed enough hours for the week.\n'
             );
 
         client.emit('message', message);
@@ -917,6 +928,17 @@ describe('client receiving message', () => {
             .addField('!logs',
                 '*!logs sendfile* - sends the logfile.\n' +
                 '*!logs message* - sends the logfile as text in a private message.\n'
+            )
+            .addField('!times',
+                '*!times* - sends the current hours you have logged for today.\n' +
+                '*!times <day>* - sends the hours you have logged for <day>.\n' +
+                'eg: !times monday\n'
+            )
+            .addField('!timeReport',
+                '*!timeReport* - sends the times logged for each day of the week.\n'
+            )
+            .addField('!wallOfShame',
+                '*!wallOfShame* - sends a list of the people who have not completed enough hours for the week.\n'
             );
 
         client.emit('message', message);

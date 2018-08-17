@@ -179,9 +179,7 @@ export async function spreadsheetRangeCommand(
         .send(`Getting tasks... (This may take a while)`);
 
     try {
-        message
-            .channel
-            .startTyping();
+        message.channel.startTyping();
 
         message
             .channel
@@ -197,6 +195,8 @@ export async function spreadsheetRangeCommand(
             .send('There was an error creating the spreadsheet');
         logger.error(`Error getting tasks for spreadsheet ` + e);
     }
+
+    message.channel.stopTyping();
 }
 
 export const spreadsheetParseCommand = (

@@ -2,12 +2,13 @@ import { Logger } from 'structured-log';
 import * as _ from 'lodash';
 import * as moment from 'moment';
 
-import { Message, RichEmbed, User, RichEmbedOptions } from 'discord.js';
+import { Message, RichEmbed, User, RichEmbedOptions, ClientUserGuildSettings } from 'discord.js';
 import { Assignment } from '../models/report';
 import { Project } from '../models/project';
 import { IActiveCollabAPI } from './activecollab-api';
 import { IMappingController } from './mapping';
 import { parse } from 'url';
+import { userTimes, userWeekTimes, wallOfShame } from './timesheet';
 import * as spreadsheetCommand from './spreadsheetCommand';
 import { writeToCsv } from './csvHandle';
 import * as dailyReportCommand from '../controllers/dailyReportCommand';
@@ -24,6 +25,9 @@ export interface ICommandController {
     ) => Promise<RichEmbed>;
     tasksDueThisWeekForProject: (projectId: number) => Promise<RichEmbed>;
     createTask: (projectId: number, taskName: string) => Promise<void>;
+    userTimes: (userId: number, day?: string) => Promise<RichEmbed>;
+    userWeekTimes: (userId: number) => Promise<RichEmbed>;
+    wallOfShame: () => Promise<RichEmbed>;
     filteredTasks: (
         nameFilters: string[],
         projectFilters: string[],
@@ -156,20 +160,22 @@ async function tasksDueThisWeekForProject(
         .setTitle(`Tasks due this week`)
         .setColor(eventColor);
 
-    tasks.groupBy(t => t.task_list).forEach(taskGroup => {
-        const currentChars = 0;
+    tasks
+        .groupBy(t => t.task_list)
+        .forEach(taskGroup => {
+            const currentChars = 0;
 
-        determineFormattedFields(
-            taskGroup,
-            formattedTasks,
-            currentChars,
-            taskGroup[0].task_list,
-            t =>
-                `• [${t.name}](${t.permalink})` +
-                ` - ${moment.unix(t.due_on).format('ddd Do')}\n`,
-            t => (t + taskGroup[0].task_list).length
-        );
-    });
+            determineFormattedFields(
+                taskGroup,
+                formattedTasks,
+                currentChars,
+                taskGroup[0].task_list,
+                t =>
+                    `• [${t.name}](${t.permalink})` +
+                    ` - ${moment.unix(t.due_on).format('ddd Do')}\n`,
+                t => (t + taskGroup[0].task_list).length
+            );
+        });
 
     return formattedTasks;
 }
@@ -232,10 +238,10 @@ function determineFormattedFields(
         const newLength = currentChars + task.length;
 
         if (
-            formattedTasks.fields !== undefined &&
-            formattedTasks.fields.length > 0 &&
-            currentChars !== 0 && // If characters is 0 we're doing a new task list
-            newLength <= maxFieldLength
+            formattedTasks.fields !== undefined
+            && formattedTasks.fields.length > 0
+            && currentChars !== 0 // If characters is 0 we're doing a new task list
+            && newLength <= maxFieldLength
         ) {
             currentChars = newLength;
 
@@ -268,6 +274,12 @@ export function createCommandController(
             tasksInListForProject(activeCollabApi, logger, list, projectId),
         createTask: (projectId: number, taskName: string) =>
             createTask(activeCollabApi, logger, projectId, taskName),
+        userTimes: (userId: number, day?: string) =>
+            userTimes(userId, eventColor, activeCollabApi, logger, day),
+        userWeekTimes: (userId: number) =>
+            userWeekTimes(userId, eventColor, activeCollabApi, logger),
+        wallOfShame: () =>
+            wallOfShame(eventColor, activeCollabApi, logger),
         filteredTasks: (
             nameFilters: string[],
             projectFilters: string[],
