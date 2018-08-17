@@ -8,7 +8,9 @@ import { IApiController } from './controllers/api';
 
 export function setupApp(
     express: express.Express,
-    apiController: IApiController
+    apiController: IApiController,
+    spoofKey?: Buffer,
+    spoofCert?: Buffer
 ): https.Server | undefined {
     // Express configuration
     express.set('port', 80 || 8080);
@@ -41,6 +43,23 @@ export function setupApp(
         }
     }
     else {
+        // Allows for spoofing the certificate in tests
+        if (spoofKey && spoofCert) {
+            // https configuration
+            const options = {
+                key: spoofKey,
+                cert: spoofCert
+            };
+
+            if (options.key.length > 0 && options.cert.length > 0) {
+                console.log('SSL key and certificate found, creating server...');
+                return https.createServer(options, express);
+            }
+            else {
+                throw new Error('SSL Certificate or Key is empty!');
+            }
+        }
+
         throw new Error('SSL Certificate and/or Key do not exist!\n'
             + 'Place \'key.pem\' & \'cert.pem\' into a \'keys\' directory (./keys/<name>.pem)');
     }
