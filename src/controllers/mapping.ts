@@ -2,6 +2,12 @@
  * Map ActiveCollab and Discord channels and users
  */
 export interface IMappingController {
+
+    /**
+     * Map Discord channel name to ActiveCollab project ID
+     */
+    getProjectId: (channelName: string) => number;
+
     /**
      * Take an ActiveCollab project ID and return the Discord channel name for it
      */
@@ -13,9 +19,9 @@ export interface IMappingController {
     getAllChannels: () => Array<ChannelMap>;
 
     /**
-     * Map Discord channel name to ActiveCollab project ID
+     * Returns all users in the config
      */
-    getProjectId: (channelName: string) => number;
+    getAllUsers: () => Array<UserMap>;
 
     /**
      * Map Discord user to ActiveCollab user ID
@@ -37,6 +43,24 @@ export interface ChannelMap {
 export interface UserMap {
     discordUser: string;
     activeCollabUser: number;
+}
+
+function getProjectId(
+    channelsMap: () => Array<ChannelMap>,
+    channelName: string
+): number {
+    if (!channelName) {
+        throw Error(`Invalid channel: ${channelName}`);
+    }
+
+    const channelMap = channelsMap()
+        .find(channelMap => channelMap.channelName === channelName);
+
+    if (!channelMap) {
+        throw Error(`Project ID not found with channel name: ${channelName}`);
+    }
+
+    return channelMap.projectId;
 }
 
 function getChannels(
@@ -68,22 +92,16 @@ function getAllChannels(
     return channelMap;
 }
 
-function getProjectId(
-    channelsMap: () => Array<ChannelMap>,
-    channelName: string
-): number {
-    if (!channelName) {
-        throw Error(`Invalid channel: ${channelName}`);
+function getAllUsers(
+    userMaps: () => Array<UserMap>
+): Array<UserMap> {
+    const userMap = userMaps();
+
+    if (!userMap || userMap.length < 1) {
+        throw Error(`No channels found`);
     }
 
-    const channelMap = channelsMap()
-        .find(channelMap => channelMap.channelName === channelName);
-
-    if (!channelMap) {
-        throw Error(`Project ID not found with channel name: ${channelName}`);
-    }
-
-    return channelMap.projectId;
+    return userMap;
 }
 
 function getDiscordUser(
@@ -127,9 +145,10 @@ export function createMappingController(
     usersMap: () => Array<UserMap>
 ): IMappingController {
     return {
+        getProjectId: getProjectId.bind(undefined, channelsMap),
         getChannels: getChannels.bind(undefined, channelsMap),
         getAllChannels: getAllChannels.bind(undefined, channelsMap),
-        getProjectId: getProjectId.bind(undefined, channelsMap),
+        getAllUsers: getAllUsers.bind(undefined, usersMap),
         getDiscordUser: getDiscordUser.bind(undefined, usersMap),
         getActiveCollabUser: getActiveCollabUser.bind(undefined, usersMap)
     };

@@ -6,6 +6,7 @@ import { TimeRecord } from '../models/timeRecords';
 import { IActiveCollabAPI } from './activecollab-api';
 import * as moment from '../../node_modules/moment';
 import { ICommandController } from './command';
+import { IMappingController } from './mapping';
 
 const dayToNumber = (day?: string): number => {
     if (day) {
@@ -165,6 +166,7 @@ export async function userWeekTimes(
 }
 
 export async function wallOfShame(
+    mappingController: IMappingController,
     eventColor: any,
     activeCollabApi: IActiveCollabAPI,
     logger: Logger
@@ -189,20 +191,43 @@ export async function wallOfShame(
 
     let shamedUsers: string = '';
 
-    times
-        .groupBy(t => t.user_id)
-        .forEach(timeGroup => {
+    mappingController.getAllUsers()
+        .forEach(user => {
             let userTotalTimes: number = 0;
-            timeGroup.forEach(t => {
-                userTotalTimes += t.value;
-            });
+            times.filter(t => t.user_id === user.activeCollabUser)
+                .forEach(t => {
+                    userTotalTimes += t.value;
+                });
 
             if (userTotalTimes < 38) {
-                shamedUsers += timeGroup[0].user_name
-                    + ' is missing ' + humanizeTime(38 - userTotalTimes)
+                const totalDuration = 38 - userTotalTimes;
+                const totalHours = Math.floor(totalDuration);
+                const totalHoursStr =
+                    totalHours >= 10 ? totalHours.toString() : '0' + totalHours;
+                const totalMins = Math.round((totalDuration - totalHours) * 60);
+                const totalMinsStr =
+                    totalMins >= 10 ? totalMins.toString() : '0' + totalMins;
+
+                shamedUsers += '**' + user.discordUser.split('#')[0]
+                    + '** is missing ' + totalHoursStr + ':' + totalMinsStr
                     + '\n';
             }
         });
+
+    // times
+    //     .groupBy(t => t.user_id)
+    //     .forEach(timeGroup => {
+    //         let userTotalTimes: number = 0;
+    //         timeGroup.forEach(t => {
+    //             userTotalTimes += t.value;
+    //         });
+
+    //         if (userTotalTimes < 38) {
+    //             shamedUsers += timeGroup[0].user_name
+    //                 + ' is missing ' + humanizeTime(38 - userTotalTimes)
+    //                 + '\n';
+    //         }
+    //     });
 
 
     if (shamedUsers.length === 0) {
