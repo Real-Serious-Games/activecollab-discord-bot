@@ -279,7 +279,7 @@ export function createCommandController(
         userWeekTimes: (userId: number) =>
             userWeekTimes(userId, eventColor, activeCollabApi, logger),
         wallOfShame: () =>
-            wallOfShame(eventColor, activeCollabApi, logger),
+            wallOfShame(mappingController, eventColor, activeCollabApi, logger),
         filteredTasks: (
             nameFilters: string[],
             projectFilters: string[],
