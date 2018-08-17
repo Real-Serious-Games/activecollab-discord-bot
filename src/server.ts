@@ -70,11 +70,10 @@ async function createServer() {
 
         const server = setupApp(app, apiController);
 
-        // if (server) {
-        console.log('Running HTTPS server');
-        //     return server;
-        // }
-        // else {
+        if (server) {
+            console.log('Running HTTPS server on port 443');
+            server.listen(443);
+        }
         console.log('Running HTTP server');
         return app.listen(app.get('port'), () => {
             logger.info('  App is running at http://localhost:{port} in {env} mode',
@@ -83,7 +82,6 @@ async function createServer() {
 
             logger.info('  Press CTRL-C to stop\n');
         });
-        // }
     } catch (e) {
         logger.fatal('Unable to setup server: {e}', e);
         throw e;
