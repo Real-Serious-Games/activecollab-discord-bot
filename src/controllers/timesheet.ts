@@ -129,7 +129,7 @@ export async function userWeekTimes(
     }
 
     const userTasks = times.filter(t => t.user_id === userId);
-    let totalHours: number = 0;
+    let totalDuration: number = 0;
 
     for (let weekday = 1; weekday <= 5; weekday++) {
         const date = moment().day(weekday);
@@ -146,12 +146,19 @@ export async function userWeekTimes(
             + humanizeTime(dayTotalTimes)
         );
 
-        totalHours += dayTotalTimes;
+        totalDuration += dayTotalTimes;
     }
+
+    const totalHours = Math.floor(totalDuration);
+    const totalHoursStr =
+        totalHours >= 10 ? totalHours.toString() : '0' + totalHours;
+    const totalMins = Math.round((totalDuration - totalHours) * 60);
+    const totalMinsStr =
+        totalMins >= 10 ? totalMins.toString() : '0' + totalMins;
 
     message.addField(
         'Total Hours',
-        'Total: ' + Math.floor(totalHours) + ':' + Math.round((totalHours - Math.floor(totalHours)) * 60)
+        'Total: ' + totalHoursStr + ':' + totalMinsStr
     );
 
     return message;
