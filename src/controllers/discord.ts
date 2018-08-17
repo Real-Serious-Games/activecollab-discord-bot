@@ -339,6 +339,8 @@ export class DiscordController implements IDiscordController {
             );
             this.logger.error(`Error creating task: ` + e.message);
         }
+
+        message.channel.stopTyping();
     }
 
     /**
@@ -352,14 +354,14 @@ export class DiscordController implements IDiscordController {
             .channel
             .send('Getting log file...');
 
-        message
-            .channel
-            .startTyping();
+        message.channel.startTyping();
 
         message
             .channel
             .send(await this.commandController
                 .logsSendFile());
+
+        message.channel.stopTyping();
     }
 
     /**
@@ -402,6 +404,8 @@ export class DiscordController implements IDiscordController {
                 await this.commandController.tasksForUser(message.author)
             );
         }
+
+        message.channel.stopTyping();
     }
 
     /**
@@ -441,6 +445,8 @@ export class DiscordController implements IDiscordController {
             );
             this.logger.error(`Error getting tasks in ${list}: ` + e);
         }
+
+        message.channel.stopTyping();
     }
 
     /**
@@ -480,6 +486,8 @@ export class DiscordController implements IDiscordController {
             );
             this.logger.warn('Error getting tasks due for week: ' + e);
         }
+
+        message.channel.stopTyping();
     }
 
     public runUserCommand(e: CommandEvent): number {

@@ -227,8 +227,7 @@ export async function timesheetCommand(
         .send(`Getting tasks... (This may take a while)`);
 
     try {
-        channel
-            .startTyping();
+        channel.startTyping();
 
         channel
             .send(await commandController.userTimes(
@@ -240,6 +239,8 @@ export async function timesheetCommand(
             .send('There was an error creating the timesheet');
         logger.error(`Error getting tasks for timesheet ` + e);
     }
+
+    channel.stopTyping();
 }
 
 export async function wallOfShameCommand(
@@ -251,8 +252,7 @@ export async function wallOfShameCommand(
         .send(`Getting tasks... (This may take a while)`);
 
     try {
-        channel
-            .startTyping();
+        channel.startTyping();
 
         channel
             .send(await commandController.wallOfShame());
@@ -261,6 +261,8 @@ export async function wallOfShameCommand(
             .send('There was an error calling the Wall of Shame!');
         logger.error(`Error calling the Wall of Shame: ` + e);
     }
+
+    channel.stopTyping();
 }
 
 export async function timeReportCommand(
@@ -273,8 +275,7 @@ export async function timeReportCommand(
         .send(`Getting tasks... (This may take a while)`);
 
     try {
-        channel
-            .startTyping();
+        channel.startTyping();
 
         channel
             .send(await commandController.userWeekTimes(parseInt(userId)));
@@ -283,6 +284,8 @@ export async function timeReportCommand(
             .send('There was an error sending the user\'s week timesheet!');
         logger.error(`Error sending the user\'s week timesheet: ` + e);
     }
+
+    channel.stopTyping();
 }
 
 export const timesheetParseCommand = (
