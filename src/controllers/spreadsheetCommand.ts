@@ -81,6 +81,7 @@ export async function filteredTasks(
         'Module',
         'Work type',
         'Task',
+        'Description',
         'Date',
         'Time',
         'Billable'
@@ -96,6 +97,7 @@ export async function filteredTasks(
             '',
             task.group_name,
             task.parent_name,
+            task.summary,
             moment.unix(task.record_date).format('DD/MM/YYYY'),
             task.value.toString(),
             task.billable_status > 0 ? 'yes' : ''
