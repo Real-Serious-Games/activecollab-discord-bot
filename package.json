@@ -66,8 +66,11 @@
     "fp-ts": "^0.6.8",
     "lodash": "^4.17.10",
     "moment": "^2.22.1",
+    "mongoose": "^5.2.9",
     "morgan": "^1.9.0",
+    "reflect-metadata": "^0.1.12",
     "request-promise-native": "^1.0.5",
-    "structured-log": "^0.2.0"
+    "structured-log": "^0.2.0",
+    "typegoose": "^5.2.1"
   }
 }

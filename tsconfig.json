@@ -5,6 +5,8 @@
         "strict": true,
         "alwaysStrict": true,
         "noImplicitReturns": true,
+        "experimentalDecorators": true,
+        "emitDecoratorMetadata": true,
         "moduleResolution": "node",
         "sourceMap": true,
         "outDir": "dist",
