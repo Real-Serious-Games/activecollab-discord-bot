@@ -26,5 +26,5 @@ export class ImageSchema extends Typegoose {
     @prop({ required: true })
     fileName!: string;
     @prop({ required: true })
-    data!: Buffer;
+    data!: string;
 }

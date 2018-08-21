@@ -186,6 +186,36 @@ export class DiscordController implements IDiscordController {
             else if (command === 'wallofshame') {
                 wallOfShameCommand(this.commandController, this.logger, message.channel);
             }
+            else if (command === 'image') {
+                if (args.length < 2) {
+                    message.channel.send('Invalid number of parameters');
+                    return;
+                }
+
+                switch (args[0]) {
+                case 'a':
+                case 'add':
+                logger.info('add image');
+                const image = message.attachments.forEach( a => {
+                    logger.info('filename: ' + a.filename + ', url: ' + a.url);
+                    this.commandController.databaseAddImage(args[1], a.filename, a.url);
+                });
+                    break;
+                case 'g':
+                case 'get':
+                console.log('get image');
+                this.commandController.databaseGetImage(args[1]);
+                    break;
+                case 'r':
+                case 'rm':
+                case 'remove':
+                console.log('remove image');
+                this.commandController.databaseRemoveImage(args[1]);
+                    break;
+                default:
+                console.log('default');
+                    break;
+                }            }
             else if (command === 'help' || command === 'commands') {
                 message.channel.send(new discord.RichEmbed()
                     .setTitle('Commands')

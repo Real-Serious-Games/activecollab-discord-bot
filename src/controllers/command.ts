@@ -12,6 +12,7 @@ import { userTimes, userWeekTimes, wallOfShame } from './timesheet';
 import * as spreadsheetCommand from './spreadsheetCommand';
 import { writeToCsv } from './csvHandle';
 import * as dailyReportCommand from '../controllers/dailyReportCommand';
+import { IDatabaseController } from './database';
 
 import * as logsCommand from './logsCommand';
 
@@ -35,6 +36,9 @@ export interface ICommandController {
         endDate: string
     ) => Promise<RichEmbed>;
     dailyReport: (projects: string[]) => Promise<Array<RichEmbed>>;
+    databaseAddImage: (type: string, filename: string, imageUrl: string) => void;
+    databaseGetImage: (type: string) => Promise<string>;
+    databaseRemoveImage: (id: string) => void;
 }
 
 const eventColor = '#449DF5';
@@ -258,6 +262,7 @@ function determineFormattedFields(
 export function createCommandController(
     activeCollabApi: IActiveCollabAPI,
     mappingController: IMappingController,
+    databaseController: IDatabaseController,
     logger: Logger
 ) {
     return {
@@ -303,6 +308,10 @@ export function createCommandController(
                 activeCollabApi,
                 logger,
                 writeToCsv
-            )
+            ),
+        databaseAddImage: (type: string, filename: string, imageUrl: string) => databaseController.AddImage(type, filename, imageUrl),
+        databaseGetImage: (type: string) => databaseController.GetImage(type),
+        databaseRemoveImage: (id: string) => databaseController.RemoveImage(id)
+
     };
 }

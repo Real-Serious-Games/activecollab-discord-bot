@@ -1,6 +1,7 @@
 import * as config from 'confucious';
 import * as discord from 'discord.js';
 import * as express from 'express';
+import * as mongoose from 'mongoose';
 import * as request from 'request-promise-native';
 
 import { setupApp } from './app';
@@ -12,6 +13,7 @@ import { createActiveCollabAPI } from './controllers/activecollab-api';
 import { createActiveCollabRestClient } from './controllers/activecollab-rest';
 import { createMappingController, ChannelMap, UserMap } from './controllers/mapping';
 import { createCommandController } from './controllers/command';
+import { createDatabaseController } from './controllers/database';
 
 async function createServer() {
     // Setup config
@@ -38,9 +40,14 @@ async function createServer() {
 
         const activeCollabApi = createActiveCollabAPI(activeCollabRestClient);
 
+        mongoose.connect('mongodb://localhost:27017/database');
+
+        const databaseController = createDatabaseController();
+
         const commandController = createCommandController(
             activeCollabApi,
             mappingController,
+            databaseController,
             logger
         );
 
