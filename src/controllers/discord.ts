@@ -293,6 +293,7 @@ export class DiscordController implements IDiscordController {
                     .addField('!image', 
                         '!image add <type> - Adds the attached image to the database.\n' +
                         '!image get <type> - Gets the image for today of the specified type\n' +
+                        '!image getall <type> - Gets all images of the specified type\n' +
                         '!image types - Gets a list of all image types'
                     )
                 );

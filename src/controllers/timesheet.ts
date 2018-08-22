@@ -167,10 +167,10 @@ export async function userWeekTimes(
     try {
         let image;
         if (totalDuration < 38) {
-            image = await databaseController.GetImage('negative');
+            image = await databaseController.getImage('negative');
         }
         else {
-            image = await databaseController.GetImage('positive');
+            image = await databaseController.getImage('positive');
         }
 
         if (image) {

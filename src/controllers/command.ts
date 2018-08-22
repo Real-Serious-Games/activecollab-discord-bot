@@ -309,10 +309,10 @@ export function createCommandController(
                 logger,
                 writeToCsv
             ),
-        databaseAddImage: (type: string, imageUrl: string) => databaseController.AddImage(type, imageUrl),
-        databaseGetImage: (type: string, id?: string) => databaseController.GetImage(type, id),
-        databaseGetAllImages: (type: string) => databaseController.GetAllImages(type),
-        databaseRemoveImage: (id: string) => databaseController.RemoveImage(id)
+        databaseAddImage: (type: string, imageUrl: string) => databaseController.addImage(type, imageUrl),
+        databaseGetImage: (type: string, id?: string) => databaseController.getImage(type, id),
+        databaseGetAllImages: (type: string) => databaseController.getAllImages(type),
+        databaseRemoveImage: (id: string) => databaseController.removeImage(id)
 
     };
 }

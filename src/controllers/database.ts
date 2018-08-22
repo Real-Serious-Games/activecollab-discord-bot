@@ -5,12 +5,12 @@ import * as moment from 'moment';
 import { RichEmbed } from 'discord.js';
 
 export interface IDatabaseController {
-    AddImage: (type: string, imageUrl: string) => Promise<RichEmbed>;
-    GetImage: (type: string, id?: string) => Promise<string>;
-    GetAllImages: (type: string) => Promise<Array<RichEmbed>>;
-    RemoveImage: (id: string) => void;
-    AddUser: () => void;
-    UpdateUser: () => void;
+    addImage: (type: string, imageUrl: string) => Promise<RichEmbed>;
+    getImage: (type: string, id?: string) => Promise<string>;
+    getAllImages: (type: string) => Promise<Array<RichEmbed>>;
+    removeImage: (id: string) => void;
+    addUser: () => void;
+    updateUser: () => void;
 }
 
 const userModel = new UserSchema().getModelForClass(UserSchema);
@@ -36,7 +36,7 @@ async function DownloadImage (url: string) {
     });
 }
 
-async function AddImage(type: string, imageUrl: string) {
+async function addImage(type: string, imageUrl: string) {
     const embed = new RichEmbed();
 
     try {
@@ -61,7 +61,7 @@ async function AddImage(type: string, imageUrl: string) {
  * @param type The type of the image
  * @param id Optional id parameter forces the return of a certain image (not random)
  */
-async function GetImage(type: string, id?: string) {
+async function getImage(type: string, id?: string) {
     const filename = moment().format('YYYY-MM-DD') + '_' + type;
     
     try {
@@ -111,7 +111,7 @@ async function GetImage(type: string, id?: string) {
     }
 }
 
-async function GetAllImages (type: string) {
+async function getAllImages (type: string) {
     const tempFolderPath = 'temp/';
     try {
         if (!fs.existsSync(imageSaveLocation + tempFolderPath)) {
@@ -155,26 +155,26 @@ async function GetAllImages (type: string) {
     }
 }
 
-function RemoveImage(id: string) {
+function removeImage(id: string) {
     // Require manual removal of images until permissions are set up
 
 }
 
-function AddUser() {
+function addUser() {
 
 }
 
-function UpdateUser() {
+function updateUser() {
 
 }
 
 export function createDatabaseController() {
     return {
-        AddImage: (type: string, imageUrl: string) => AddImage(type, imageUrl),
-        GetImage: (type: string, id?: string) => GetImage(type, id),
-        GetAllImages: (type: string) => GetAllImages(type),
-        RemoveImage: (id: string) => RemoveImage(id),
-        AddUser: () => AddUser(),
-        UpdateUser: () => UpdateUser()
+        addImage: (type: string, imageUrl: string) => addImage(type, imageUrl),
+        getImage: (type: string, id?: string) => getImage(type, id),
+        getAllImages: (type: string) => getAllImages(type),
+        removeImage: (id: string) => removeImage(id),
+        addUser: () => addUser(),
+        updateUser: () => updateUser()
     };
 }
