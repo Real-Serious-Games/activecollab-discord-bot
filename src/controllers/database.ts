@@ -5,6 +5,7 @@ import * as moment from 'moment';
 import { RichEmbed } from 'discord.js';
 
 export interface IDatabaseController {
+    downloadImage: (url: string) => Promise<Buffer>;
     addImage: (type: string, imageUrl: string) => Promise<RichEmbed>;
     getImage: (type: string, id?: string) => Promise<string>;
     getAllImages: (type: string) => Promise<Array<RichEmbed>>;
@@ -19,7 +20,7 @@ const imageModel = new ImageSchema().getModelForClass(ImageSchema);
 
 const imageSaveLocation = './Images/';
 
-async function DownloadImage (url: string) {
+async function downloadImage (url: string) {
     return new Promise<Buffer>((resolve, reject) => {
         const data: Buffer[] = [];   
     
@@ -40,7 +41,7 @@ async function addImage(type: string, imageUrl: string) {
     const embed = new RichEmbed();
 
     try {
-        const imageData = await DownloadImage(imageUrl);
+        const imageData = await downloadImage(imageUrl);
         if (imageData.length > 0) {
             const img = new imageModel({ type: type, fileName: imageUrl.split('/').pop(), data: imageData.toString('base64')});
             
@@ -198,6 +199,7 @@ function updateUser() {
 
 export function createDatabaseController() {
     return {
+        downloadImage: (url: string) => downloadImage(url),
         addImage: (type: string, imageUrl: string) => addImage(type, imageUrl),
         getImage: (type: string, id?: string) => getImage(type, id),
         getAllImages: (type: string) => getAllImages(type),

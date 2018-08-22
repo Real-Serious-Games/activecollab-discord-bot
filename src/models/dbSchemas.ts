@@ -9,6 +9,8 @@ export class UserSchema extends Typegoose {
     activeCollabName!: string;
     @prop({ required: true })
     dailyReportSubs!: string[];
+    @prop()
+    permissions?: string[];
 }
 
 export class ChannelSchema extends Typegoose {
