@@ -1,12 +1,11 @@
 import * as request from 'supertest';
-import { Client } from 'discord.js';
 import * as express from 'express';
 
 import { setupApp } from '../src/app';
 import * as testData from './testData';
 import { ApiControllerBuilder } from './builders/apiControllerBuilder';
 
-const spoofKey: Buffer = new Buffer(
+const spoofKey: Buffer = Buffer.from(
     `-----BEGIN RSA PRIVATE KEY-----
     MIIEoQIBAAKCAQEA4fwD8HctmRm/shhTEndAHqiJm0uuRy7CsTRFT9D+GELd8WZC
     ovDqKLJtrOwc1cg2yh+Vi/V5DbaICRGf9cba0zSvuHamW6U69yP6tN/lIjVNi1O1
@@ -33,10 +32,11 @@ const spoofKey: Buffer = new Buffer(
     Ssz0IQJ/dkO0EMEmypdIkuX8t5GWGAIG9WNM6R0dshW/2WkhRt+82lKov1yGcj7w
     anVUyN1XL+zXsQmTOd2WkY0gCP/0ZZ7ouVAVGzPn8Rs9SapjQbMNqpw2umvEKISL
     IfSCJYaUNHcvqQ29gaKSrDfu1397WzRDdCf4E6QNCe4F2Jr/Gw==
-    -----END RSA PRIVATE KEY-----`
+    -----END RSA PRIVATE KEY-----
+    `
 );
 
-const spoofCert: Buffer = new Buffer(
+const spoofCert: Buffer = Buffer.from(
     `-----BEGIN CERTIFICATE-----
     MIIDWzCCAkOgAwIBAgIJAL26ctaLA5UaMA0GCSqGSIb3DQEBBQUAMEQxQjBABgNV
     BAMMOWFjdGl2ZWNvbGxhYi1kaXNjb3JkLWJvdC5hdXN0cmFsaWFlYXN0LmNsb3Vk
@@ -56,7 +56,8 @@ const spoofCert: Buffer = new Buffer(
     p/1KqupuxkNCmHp/kaPmHJzcBOHmoz6uDwc/Z1zIVmxwqE91eerIkQJ599Eifdpq
     z2UVowEWsXcaib0wSBJeaEanOL3KqzBMM1f58mba8XTS8l1Ikek2/bDAJovjT3n3
     Tz07FcLOlCzj0SE9DpOgNd2he9CzzTAm2NL4hhuLUj2FCNTyT+u5eUxK8pq6MxE=
-    -----END CERTIFICATE-----`
+    -----END CERTIFICATE-----
+    `
 );
 
 describe('POST /api/webhook', () => {
