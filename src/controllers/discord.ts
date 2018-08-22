@@ -198,7 +198,7 @@ export class DiscordController implements IDiscordController {
                 logger.info('add image');
                 message.attachments.forEach( a => {
                     logger.info('filename: ' + a.filename + ', url: ' + a.url);
-                    this.commandController.databaseAddImage(args[1], a.filename, a.url);
+                    this.commandController.databaseAddImage(args[1], a.url);
                 });
                     break;
                 case 'g':

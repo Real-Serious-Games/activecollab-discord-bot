@@ -4,7 +4,7 @@ import * as fs from 'fs';
 import * as moment from 'moment';
 
 export interface IDatabaseController {
-    AddImage: (type: string, filename: string, imageUrl: string) => void;
+    AddImage: (type: string, imageUrl: string) => void;
     GetImage: (type: string, id?: string) => Promise<string>;
     RemoveImage: (id: string) => void;
     AddUser: () => void;
@@ -34,10 +34,10 @@ async function DownloadImage (url: string) {
     });
 }
 
-async function AddImage(type: string, filename: string, imageUrl: string) {
+async function AddImage(type: string, imageUrl: string) {
     const imageData = await DownloadImage(imageUrl);
     if (imageData.length > 0) {
-        const img = new imageModel({ type: type, fileName: filename, data: imageData.toString('base64')});
+        const img = new imageModel({ type: type, fileName: imageUrl.split('/').pop(), data: imageData.toString('base64')});
         
         await img.save();
     }
@@ -114,7 +114,7 @@ function UpdateUser() {
 
 export function createDatabaseController() {
     return {
-        AddImage: (type: string, filename: string, imageUrl: string) => AddImage(type, filename, imageUrl),
+        AddImage: (type: string, imageUrl: string) => AddImage(type, imageUrl),
         GetImage: (type: string, id?: string) => GetImage(type, id),
         RemoveImage: (id: string) => RemoveImage(id),
         AddUser: () => AddUser(),
