@@ -6,8 +6,6 @@ import { DatabaseControllerBuilder } from './builders/databaseControllerBuilder'
 describe('DatabaseController', () => {
     describe('addImage', () => {
         it('should pass url to download function', async () => {
-            expect.assertions(2);
-
             const databaseController = new DatabaseControllerBuilder().build();
             
             const imgUrl = './Images/test.jpg';

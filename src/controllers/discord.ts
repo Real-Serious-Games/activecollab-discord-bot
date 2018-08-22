@@ -188,7 +188,8 @@ export class DiscordController implements IDiscordController {
             }
             else if (command === 'image') {
                 if (args.length < 2) {
-                    message.channel.send('Invalid number of parameters');
+                    message.channel.send('Invalid number of parameters\n' 
+                    + 'Use: \'!help\' to view commands.');
                     return;
                 }
 
@@ -246,7 +247,8 @@ export class DiscordController implements IDiscordController {
                     ));
                     break;
                 default:
-                console.log('default');
+                message.channel.send('Invalid image command\n' 
+                    + 'Use: \'!help\' to view commands.');
                     break;
                 }            }
             else if (command === 'help' || command === 'commands') {

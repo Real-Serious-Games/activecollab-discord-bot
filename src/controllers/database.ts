@@ -28,7 +28,7 @@ async function downloadImage (url: string) {
             response.on('data', function(chunk) {  
                 data.push(Buffer.from(chunk));                                                         
             });                                                                         
-      
+            
             response.on('end', function() {                                             
                resolve(Buffer.concat(data)); 
             });                                                                         
