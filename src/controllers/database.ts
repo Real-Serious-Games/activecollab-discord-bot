@@ -5,7 +5,6 @@ import * as moment from 'moment';
 import { RichEmbed } from 'discord.js';
 
 export interface IDatabaseController {
-    downloadImage: (url: string) => Promise<Buffer>;
     addImage: (type: string, imageUrl: string) => Promise<RichEmbed>;
     getImage: (type: string, id?: string) => Promise<string>;
     getAllImages: (type: string) => Promise<Array<RichEmbed>>;
@@ -51,7 +50,7 @@ async function addImage(type: string, imageUrl: string) {
     }   
     catch (error) {
         console.log('Image upload failed, error: ' + error);
-        return embed.addField('Image upload failed', '');
+        return embed.addField('Image upload failed', 'Check logs for more information.');
     }
 
     return embed.addField('Image upload failed', 'Failed to download image from Discord');
@@ -199,7 +198,6 @@ function updateUser() {
 
 export function createDatabaseController() {
     return {
-        downloadImage: (url: string) => downloadImage(url),
         addImage: (type: string, imageUrl: string) => addImage(type, imageUrl),
         getImage: (type: string, id?: string) => getImage(type, id),
         getAllImages: (type: string) => getAllImages(type),
