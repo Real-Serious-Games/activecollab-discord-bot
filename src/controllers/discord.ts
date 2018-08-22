@@ -196,6 +196,7 @@ export class DiscordController implements IDiscordController {
                 case 'a':
                 case 'add':
                 logger.info('add image');
+                message.channel.send('Adding image, please wait...');
                 message.attachments.forEach( a => {
                     logger.info('filename: ' + a.filename + ', url: ' + a.url);
                     this.commandController.databaseAddImage(args[1], a.url)
@@ -206,8 +207,9 @@ export class DiscordController implements IDiscordController {
                     break;
                 case 'g':
                 case 'get':
+                message.channel.send('Getting image, please wait...');
                 try {
-                    this.commandController.databaseGetImage(args[1])
+                    this.commandController.databaseGetImage(args[1], args[2])
                     .then(image => {
                         const attachment = new discord.Attachment(image, image.split('/').pop());
                         message.channel.send(args[1] + ' image:', attachment);
@@ -231,8 +233,9 @@ export class DiscordController implements IDiscordController {
                 case 'r':
                 case 'rm':
                 case 'remove':
-                console.log('remove image');
-                this.commandController.databaseRemoveImage(args[1]);
+                message.channel.send(`Removing image: ${ args[1] }\nPlease wait...`);
+                this.commandController.databaseRemoveImage(args[1])
+                .then(embed => message.channel.send(embed));
                     break;
                 case 'types':
                     message.channel.send(new discord.RichEmbed()
@@ -762,10 +765,10 @@ export class DiscordController implements IDiscordController {
                     channel.send(new discord.RichEmbed().setTitle('Timesheet Reminder!').addField('<Cool image coming soon>', 'In the meantime, make sure your timesheet is filled out!'));
                     this.logger.error('Failed to get image for channel timesheet reminder, sending placeholder instead.');
                 }
-                return 418;
+                return 200;
             case 'wallofshame':
                 wallOfShameCommand(this.commandController, this.logger, channel);
-                return 418;
+                return 200;
             default:
                 this.logger.error(
                     'Failed to process CommandEvent: Invalid CommandType or type not supported!'

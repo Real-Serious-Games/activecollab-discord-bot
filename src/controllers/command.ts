@@ -38,7 +38,7 @@ export interface ICommandController {
     databaseAddImage: (type: string, imageUrl: string) => Promise<RichEmbed>;
     databaseGetImage: (type: string, id?: string) => Promise<string>;
     databaseGetAllImages: (type: string) => Promise<Array<RichEmbed>>;
-    databaseRemoveImage: (id: string) => void;
+    databaseRemoveImage: (id: string) => Promise<RichEmbed>;
 }
 
 const eventColor = '#449DF5';

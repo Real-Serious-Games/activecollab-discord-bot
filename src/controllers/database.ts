@@ -8,7 +8,7 @@ export interface IDatabaseController {
     addImage: (type: string, imageUrl: string) => Promise<RichEmbed>;
     getImage: (type: string, id?: string) => Promise<string>;
     getAllImages: (type: string) => Promise<Array<RichEmbed>>;
-    removeImage: (id: string) => void;
+    removeImage: (id: string) => Promise<RichEmbed>;
     addUser: () => void;
     updateUser: () => void;
 }
@@ -65,29 +65,33 @@ async function getImage(type: string, id?: string) {
     const filename = moment().format('YYYY-MM-DD') + '_' + type;
     
     try {
-        if (!fs.existsSync(imageSaveLocation)) {
-            fs.mkdirSync(imageSaveLocation);
-            console.log('Image directory didn\'t exist\nCreated Image directory');
-        }
-        else {
-            const dirContents = fs.readdirSync(imageSaveLocation);
-            let existingFileName = '';
-            dirContents.forEach(file => {
-                if (file.split('.')[0] === filename) {
-                    existingFileName = file;
-                }
-            });
-            
-            if (existingFileName.length > 0) {
-                return imageSaveLocation + existingFileName;
-            }
-        }
-
         let results;
         if (id) {
-            results = await imageModel.find({ type: type, id: id });
+            if (!fs.existsSync(imageSaveLocation)) {
+                fs.mkdirSync(imageSaveLocation);
+                console.log('Image directory didn\'t exist\nCreated Image directory');
+            }
+
+            results = await imageModel.find({ type: type, _id: id });
         }
         else {
+            if (!fs.existsSync(imageSaveLocation)) {
+                fs.mkdirSync(imageSaveLocation);
+                console.log('Image directory didn\'t exist\nCreated Image directory');
+            }
+            else {
+                const dirContents = fs.readdirSync(imageSaveLocation);
+                let existingFileName = '';
+                dirContents.forEach(file => {
+                    if (file.split('.')[0] === filename) {
+                        existingFileName = file;
+                    }
+                });
+                
+                if (existingFileName.length > 0) {
+                    return imageSaveLocation + existingFileName;
+                }
+            }
             results = await imageModel.find({ type: type });
         }
 
@@ -155,9 +159,33 @@ async function getAllImages (type: string) {
     }
 }
 
-function removeImage(id: string) {
-    // Require manual removal of images until permissions are set up
+async function removeImage(id: string) {
+    const tempFolderPath = 'temp/';
+    const embed = new RichEmbed();
 
+    try {
+        const imageRemoved = await imageModel.findOneAndRemove({ _id: id });
+        if (!imageRemoved) {
+            return embed.addField('Failed to Remove Image', 'Please check that the id provided is valid');
+        }
+        else {
+            embed.addField('Removal from database', 'Complete');
+        }
+
+        if (!fs.existsSync(imageSaveLocation + tempFolderPath)) {
+            fs.mkdirSync(imageSaveLocation + tempFolderPath);
+            console.log('Temp Image directory didn\'t exist\nCreated temp directory');
+        }
+
+        const fileExtension = '.' + imageRemoved.fileName.split('.').pop();
+        fs.writeFileSync(imageSaveLocation + tempFolderPath + imageRemoved._id + fileExtension, imageRemoved.data, { encoding: 'base64' });
+
+        return embed.setTitle(`Successfully Removed Image: ${id}`).attachFile(imageSaveLocation + tempFolderPath + imageRemoved._id + fileExtension);
+    }
+    catch (error) {
+        console.log(error);
+        return embed.addField('Error occurred while removing image', 'Please check that the id provided is valid');
+    }
 }
 
 function addUser() {
