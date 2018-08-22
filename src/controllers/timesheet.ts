@@ -165,8 +165,13 @@ export async function userWeekTimes(
     );
 
     try {
+        const currentDay = moment().day();
+        if (currentDay === 0) {
+            return message;
+        }
+
         let image;
-        if (totalDuration < 38) {
+        if ((currentDay <= 5 && totalDuration / currentDay < 7.6) || (currentDay > 5 && totalDuration < 38)) {
             image = await databaseController.getImage('negative');
         }
         else {
