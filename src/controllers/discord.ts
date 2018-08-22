@@ -198,7 +198,10 @@ export class DiscordController implements IDiscordController {
                 logger.info('add image');
                 message.attachments.forEach( a => {
                     logger.info('filename: ' + a.filename + ', url: ' + a.url);
-                    this.commandController.databaseAddImage(args[1], a.url);
+                    this.commandController.databaseAddImage(args[1], a.url)
+                    .then ( embed => 
+                        message.channel.send(embed)
+                    );
                 });
                     break;
                 case 'g':
@@ -214,6 +217,16 @@ export class DiscordController implements IDiscordController {
                     message.channel.send('An error occurred.\n' 
                     + 'Make sure the type is spelt correctly and that images exist for the specified type.');
                 }
+                    break;
+                case 'getall':
+                    this.commandController.databaseGetAllImages(args[1])
+                    .then( embeds => {
+                        message.channel.send(new discord.RichEmbed()
+                        .setTitle(`Getting all images of type: ${args[1]}\nPlease wait...`));
+                        embeds.forEach(embed => {
+                            message.channel.send(embed);
+                        });
+                    });
                     break;
                 case 'r':
                 case 'rm':

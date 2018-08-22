@@ -35,8 +35,9 @@ export interface ICommandController {
         endDate: string
     ) => Promise<RichEmbed>;
     dailyReport: (projects: string[]) => Promise<Array<RichEmbed>>;
-    databaseAddImage: (type: string, imageUrl: string) => void;
+    databaseAddImage: (type: string, imageUrl: string) => Promise<RichEmbed>;
     databaseGetImage: (type: string, id?: string) => Promise<string>;
+    databaseGetAllImages: (type: string) => Promise<Array<RichEmbed>>;
     databaseRemoveImage: (id: string) => void;
 }
 
@@ -310,6 +311,7 @@ export function createCommandController(
             ),
         databaseAddImage: (type: string, imageUrl: string) => databaseController.AddImage(type, imageUrl),
         databaseGetImage: (type: string, id?: string) => databaseController.GetImage(type, id),
+        databaseGetAllImages: (type: string) => databaseController.GetAllImages(type),
         databaseRemoveImage: (id: string) => databaseController.RemoveImage(id)
 
     };
