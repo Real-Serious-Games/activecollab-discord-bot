@@ -7,13 +7,12 @@ import { Assignment } from '../models/report';
 import { Project } from '../models/project';
 import { IActiveCollabAPI } from './activecollab-api';
 import { IMappingController } from './mapping';
-import { parse } from 'url';
 import { userTimes, userWeekTimes, wallOfShame } from './timesheet';
-import * as spreadsheetCommand from './spreadsheetCommand';
 import { writeToCsv } from './csvHandle';
-import * as dailyReportCommand from '../controllers/dailyReportCommand';
 import { IDatabaseController } from './database';
 
+import * as spreadsheetCommand from './spreadsheetCommand';
+import * as dailyReportCommand from '../controllers/dailyReportCommand';
 import * as logsCommand from './logsCommand';
 
 export interface ICommandController {
@@ -37,7 +36,7 @@ export interface ICommandController {
     ) => Promise<RichEmbed>;
     dailyReport: (projects: string[]) => Promise<Array<RichEmbed>>;
     databaseAddImage: (type: string, filename: string, imageUrl: string) => void;
-    databaseGetImage: (type: string) => Promise<string>;
+    databaseGetImage: (type: string, id?: string) => Promise<string>;
     databaseRemoveImage: (id: string) => void;
 }
 
@@ -282,7 +281,7 @@ export function createCommandController(
         userTimes: (userId: number, day?: string) =>
             userTimes(userId, eventColor, activeCollabApi, logger, day),
         userWeekTimes: (userId: number) =>
-            userWeekTimes(userId, eventColor, activeCollabApi, logger),
+            userWeekTimes(userId, eventColor, activeCollabApi, databaseController, logger),
         wallOfShame: () =>
             wallOfShame(mappingController, eventColor, activeCollabApi, logger),
         filteredTasks: (
@@ -310,7 +309,7 @@ export function createCommandController(
                 writeToCsv
             ),
         databaseAddImage: (type: string, filename: string, imageUrl: string) => databaseController.AddImage(type, filename, imageUrl),
-        databaseGetImage: (type: string) => databaseController.GetImage(type),
+        databaseGetImage: (type: string, id?: string) => databaseController.GetImage(type, id),
         databaseRemoveImage: (id: string) => databaseController.RemoveImage(id)
 
     };

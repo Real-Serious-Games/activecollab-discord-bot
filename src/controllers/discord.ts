@@ -196,21 +196,38 @@ export class DiscordController implements IDiscordController {
                 case 'a':
                 case 'add':
                 logger.info('add image');
-                const image = message.attachments.forEach( a => {
+                message.attachments.forEach( a => {
                     logger.info('filename: ' + a.filename + ', url: ' + a.url);
                     this.commandController.databaseAddImage(args[1], a.filename, a.url);
                 });
                     break;
                 case 'g':
                 case 'get':
-                console.log('get image');
-                this.commandController.databaseGetImage(args[1]);
+                try {
+                    this.commandController.databaseGetImage(args[1])
+                    .then(image => {
+                        const attachment = new discord.Attachment(image, image.split('/').pop());
+                        message.channel.send(args[1] + ' image:', attachment);
+                    });
+                }
+                catch (error) {
+                    message.channel.send('An error occurred.\n' 
+                    + 'Make sure the type is spelt correctly and that images exist for the specified type.');
+                }
                     break;
                 case 'r':
                 case 'rm':
                 case 'remove':
                 console.log('remove image');
                 this.commandController.databaseRemoveImage(args[1]);
+                    break;
+                case 'types':
+                    message.channel.send(new discord.RichEmbed()
+                    .addField('Types:', 
+                    ' - reminder\n' + 
+                    ' - positive\n' +
+                    ' - negative'
+                    ));
                     break;
                 default:
                 console.log('default');
@@ -259,6 +276,11 @@ export class DiscordController implements IDiscordController {
                     )
                     .addField('!wallOfShame',
                         '*!wallOfShame* - sends a list of the people who have not completed enough hours for the week.\n'
+                    )
+                    .addField('!image', 
+                        '!image add <type> - Adds the attached image to the database.\n' +
+                        '!image get <type> - Gets the image for today of the specified type\n' +
+                        '!image types - Gets a list of all image types'
                     )
                 );
             } else {
@@ -715,7 +737,17 @@ export class DiscordController implements IDiscordController {
                 break;
             case 'timereminder':
                 // Internal chat channel
-                channel.send(new discord.RichEmbed().setTitle('Timesheet Reminder!').addField('<Cool image coming soon>', 'In the meantime, make sure your timesheet is filled out!'));
+                try {
+                    this.commandController.databaseGetImage('reminder')
+                    .then(image => {
+                        const attachment = new discord.Attachment(image, image.split('/').pop());
+                        channel.send(new discord.RichEmbed().setTitle('Timesheet Reminder!').attachFile(attachment));
+                    });
+                }
+                catch (error) {
+                    channel.send(new discord.RichEmbed().setTitle('Timesheet Reminder!').addField('<Cool image coming soon>', 'In the meantime, make sure your timesheet is filled out!'));
+                    this.logger.error('Failed to get image for channel timesheet reminder, sending placeholder instead.');
+                }
                 return 418;
             case 'wallofshame':
                 wallOfShameCommand(this.commandController, this.logger, channel);
