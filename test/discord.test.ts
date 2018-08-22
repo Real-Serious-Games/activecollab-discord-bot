@@ -838,48 +838,54 @@ describe('client receiving message', () => {
             .build();
 
         const expectedHelp = new RichEmbed()
-            .setTitle('Commands')
-            .addField('!tasks',
-                '**!tasks list** - lists your tasks.\n' +
-                '**!tasks list for @user** - lists tasks for mentioned user.\n' +
-                '**!tasks due** - lists tasks due this week for current channel\'s project\n' +
-                '**!tasks create <task name>** - creates a task for current channel\'s project\n' +
-                '**!tasks in <list>** - lists tasks in task list for current channel\'s project\n'
-            )
-            .addField('!spreadsheet',
-                '**!spreadsheet <date>** - All time records since <date>.\n' +
-                '**!spreadsheet <startdate> <enddate>** - All time records between <startdate> and <enddate>.\n' +
-                'You can also add optional filters in the command:\n' +
-                '**names=<name>** - This will only show times with <name> in thier task name\n' +
-                '**names=<name>,<name>** - Filters are separated by commas\n' +
-                '**names="<Name with spaces>"** - If your filter has spaces, wrap it in quotes\n' +
-                '**projects=<ID>** - This will only show times from the project with the ID <ID>\n' +
-                'Note: project ID can be found by looking in the URL in active collab\n' +
-                '**projects=<ID>,<ID>** - Filters are separated by commas\n'
-            )
-            .addField('!listProjects',
-                '*!listProjects* - lists all the known projects and thier IDs'
-            )
-            .addField('!dailyReport',
-                '*!dailyReport* - sends the daily report manually\n' +
-                '*!dailyReport subscribe <Project ID>* - subscribes to a daily report of that project\n' +
-                '*!dailyReport unsubscribe <Project ID>* - unsubscribes from a project project'
-            )
-            .addField('!logs',
-                '*!logs sendfile* - sends the logfile.\n' +
-                '*!logs message* - sends the logfile as text in a private message.\n'
-            )
-            .addField('!times',
-                '*!times* - sends the current hours you have logged for today.\n' +
-                '*!times <day>* - sends the hours you have logged for <day>.\n' +
-                'eg: !times monday\n'
-            )
-            .addField('!timeReport',
-                '*!timeReport* - sends the times logged for each day of the week.\n'
-            )
-            .addField('!wallOfShame',
-                '*!wallOfShame* - sends a list of the people who have not completed enough hours for the week.\n'
-            );
+        .setTitle('Commands')
+        .addField('!tasks',
+            '**!tasks list** - lists your tasks.\n' +
+            '**!tasks list for @user** - lists tasks for mentioned user.\n' +
+            '**!tasks due** - lists tasks due this week for current channel\'s project\n' +
+            '**!tasks create <task name>** - creates a task for current channel\'s project\n' +
+            '**!tasks in <list>** - lists tasks in task list for current channel\'s project\n'
+        )
+        .addField('!spreadsheet',
+            '**!spreadsheet <date>** - All time records since <date>.\n' +
+            '**!spreadsheet <startdate> <enddate>** - All time records between <startdate> and <enddate>.\n' +
+            'You can also add optional filters in the command:\n' +
+            '**names=<name>** - This will only show times with <name> in thier task name\n' +
+            '**names=<name>,<name>** - Filters are separated by commas\n' +
+            '**names="<Name with spaces>"** - If your filter has spaces, wrap it in quotes\n' +
+            '**projects=<ID>** - This will only show times from the project with the ID <ID>\n' +
+            'Note: project ID can be found by looking in the URL in active collab\n' +
+            '**projects=<ID>,<ID>** - Filters are separated by commas\n'
+        )
+        .addField('!listProjects',
+            '*!listProjects* - lists all the known projects and thier IDs'
+        )
+        .addField('!dailyReport',
+            '*!dailyReport* - sends the daily report manually\n' +
+            '*!dailyReport subscribe <Project ID>* - subscribes to a daily report of that project\n' +
+            '*!dailyReport unsubscribe <Project ID>* - unsubscribes from a project project'
+        )
+        .addField('!logs',
+            '*!logs sendfile* - sends the logfile.\n' +
+            '*!logs message* - sends the logfile as text in a private message.\n'
+        )
+        .addField('!times',
+            '*!times* - sends the current hours you have logged for today.\n' +
+            '*!times <day>* - sends the hours you have logged for <day>.\n' +
+            'eg: !times monday\n'
+        )
+        .addField('!timeReport',
+            '*!timeReport* - sends the times logged for each day of the week.\n'
+        )
+        .addField('!wallOfShame',
+            '*!wallOfShame* - sends a list of the people who have not completed enough hours for the week.\n'
+        )
+        .addField('!image', 
+            '!image add <type> - Adds the attached image to the database.\n' +
+            '!image get <type> - Gets the image for today of the specified type\n' +
+            '!image getall <type> - Gets all images of the specified type\n' +
+            '!image types - Gets a list of all image types'
+        );
 
         client.emit('message', message);
 
@@ -898,48 +904,54 @@ describe('client receiving message', () => {
             .build();
 
         const expectedHelp = new RichEmbed()
-            .setTitle('Commands')
-            .addField('!tasks',
-                '**!tasks list** - lists your tasks.\n' +
-                '**!tasks list for @user** - lists tasks for mentioned user.\n' +
-                '**!tasks due** - lists tasks due this week for current channel\'s project\n' +
-                '**!tasks create <task name>** - creates a task for current channel\'s project\n' +
-                '**!tasks in <list>** - lists tasks in task list for current channel\'s project\n'
-            )
-            .addField('!spreadsheet',
-                '**!spreadsheet <date>** - All time records since <date>.\n' +
-                '**!spreadsheet <startdate> <enddate>** - All time records between <startdate> and <enddate>.\n' +
-                'You can also add optional filters in the command:\n' +
-                '**names=<name>** - This will only show times with <name> in thier task name\n' +
-                '**names=<name>,<name>** - Filters are separated by commas\n' +
-                '**names="<Name with spaces>"** - If your filter has spaces, wrap it in quotes\n' +
-                '**projects=<ID>** - This will only show times from the project with the ID <ID>\n' +
-                'Note: project ID can be found by looking in the URL in active collab\n' +
-                '**projects=<ID>,<ID>** - Filters are separated by commas\n'
-            )
-            .addField('!listProjects',
-                '*!listProjects* - lists all the known projects and thier IDs'
-            )
-            .addField('!dailyReport',
-                '*!dailyReport* - sends the daily report manually\n' +
-                '*!dailyReport subscribe <Project ID>* - subscribes to a daily report of that project\n' +
-                '*!dailyReport unsubscribe <Project ID>* - unsubscribes from a project project'
-            )
-            .addField('!logs',
-                '*!logs sendfile* - sends the logfile.\n' +
-                '*!logs message* - sends the logfile as text in a private message.\n'
-            )
-            .addField('!times',
-                '*!times* - sends the current hours you have logged for today.\n' +
-                '*!times <day>* - sends the hours you have logged for <day>.\n' +
-                'eg: !times monday\n'
-            )
-            .addField('!timeReport',
-                '*!timeReport* - sends the times logged for each day of the week.\n'
-            )
-            .addField('!wallOfShame',
-                '*!wallOfShame* - sends a list of the people who have not completed enough hours for the week.\n'
-            );
+        .setTitle('Commands')
+        .addField('!tasks',
+            '**!tasks list** - lists your tasks.\n' +
+            '**!tasks list for @user** - lists tasks for mentioned user.\n' +
+            '**!tasks due** - lists tasks due this week for current channel\'s project\n' +
+            '**!tasks create <task name>** - creates a task for current channel\'s project\n' +
+            '**!tasks in <list>** - lists tasks in task list for current channel\'s project\n'
+        )
+        .addField('!spreadsheet',
+            '**!spreadsheet <date>** - All time records since <date>.\n' +
+            '**!spreadsheet <startdate> <enddate>** - All time records between <startdate> and <enddate>.\n' +
+            'You can also add optional filters in the command:\n' +
+            '**names=<name>** - This will only show times with <name> in thier task name\n' +
+            '**names=<name>,<name>** - Filters are separated by commas\n' +
+            '**names="<Name with spaces>"** - If your filter has spaces, wrap it in quotes\n' +
+            '**projects=<ID>** - This will only show times from the project with the ID <ID>\n' +
+            'Note: project ID can be found by looking in the URL in active collab\n' +
+            '**projects=<ID>,<ID>** - Filters are separated by commas\n'
+        )
+        .addField('!listProjects',
+            '*!listProjects* - lists all the known projects and thier IDs'
+        )
+        .addField('!dailyReport',
+            '*!dailyReport* - sends the daily report manually\n' +
+            '*!dailyReport subscribe <Project ID>* - subscribes to a daily report of that project\n' +
+            '*!dailyReport unsubscribe <Project ID>* - unsubscribes from a project project'
+        )
+        .addField('!logs',
+            '*!logs sendfile* - sends the logfile.\n' +
+            '*!logs message* - sends the logfile as text in a private message.\n'
+        )
+        .addField('!times',
+            '*!times* - sends the current hours you have logged for today.\n' +
+            '*!times <day>* - sends the hours you have logged for <day>.\n' +
+            'eg: !times monday\n'
+        )
+        .addField('!timeReport',
+            '*!timeReport* - sends the times logged for each day of the week.\n'
+        )
+        .addField('!wallOfShame',
+            '*!wallOfShame* - sends a list of the people who have not completed enough hours for the week.\n'
+        )
+        .addField('!image', 
+            '!image add <type> - Adds the attached image to the database.\n' +
+            '!image get <type> - Gets the image for today of the specified type\n' +
+            '!image getall <type> - Gets all images of the specified type\n' +
+            '!image types - Gets a list of all image types'
+        );
 
         client.emit('message', message);
 

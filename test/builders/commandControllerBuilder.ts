@@ -5,6 +5,8 @@ import { IMappingController } from '../../src/controllers/mapping';
 import { ActiveCollabApiMockBuilder } from './activeCollabApiMockBuilder';
 import { createCommandController } from '../../src/controllers/command';
 import { MappingControllerMockBuilder } from './mappingControllerMockBuilder';
+import { DatabaseControllerMockBuilder } from './databaseControllerMockBuilder';
+import { IDatabaseController } from '../../src/controllers/database';
 
 export class CommandControllerBuilder {
     private activeCollabApi: Partial<IActiveCollabAPI> =
@@ -12,6 +14,9 @@ export class CommandControllerBuilder {
 
     private mappingController: Partial<IMappingController> =
         new MappingControllerMockBuilder().build();
+
+    private databaseController: Partial<IDatabaseController> =
+        new DatabaseControllerMockBuilder().build();
 
     private logger: Partial<Logger> = {
         warn: jest.fn()
@@ -36,6 +41,7 @@ export class CommandControllerBuilder {
         return createCommandController(
             this.activeCollabApi as IActiveCollabAPI,
             this.mappingController as IMappingController,
+            this.databaseController as IDatabaseController,
             this.logger
         );
     }
