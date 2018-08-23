@@ -3,6 +3,7 @@ import * as https from 'https';
 import * as fs from 'fs';
 import * as moment from 'moment';
 import { RichEmbed } from 'discord.js';
+import * as mongoose from 'mongoose';
 
 export interface IDatabaseController {
     addImage: (type: string, imageUrl: string) => Promise<RichEmbed>;
@@ -54,6 +55,12 @@ async function downloadImage (url: string) {
 async function addImage(type: string, imageUrl: string) {
     const embed = new RichEmbed();
 
+    if (!mongoose.connection.readyState) {
+        return embed.addField('Image upload failed', 
+        'Database not found ' + 
+        'or the server is still starting.');
+    }
+
     if (!validImageTypes.find(validType => type === validType)) {
         return embed.addField('Image upload failed', 
         'Parameter \'type\' is invalid or not supported\n' + 
@@ -87,11 +94,17 @@ async function getImage(type: string, id?: string) {
     const filename = moment().format('YYYY-MM-DD') + '_' + type;
     
     try {
+        
         let results;
         if (id) {
             if (!fs.existsSync(imageSaveLocation)) {
                 fs.mkdirSync(imageSaveLocation);
                 console.log('Image directory didn\'t exist\nCreated Image directory');
+            }
+
+            if (!mongoose.connection.readyState) {
+                throw new Error('Database not found ' + 
+                'or the server is still starting.');
             }
 
             results = await imageModel.find({ type: type, _id: id });
@@ -114,6 +127,12 @@ async function getImage(type: string, id?: string) {
                     return imageSaveLocation + existingFileName;
                 }
             }
+
+            if (!mongoose.connection.readyState) {
+                throw new Error('Database not found ' + 
+                'or the server is still starting.');
+            }
+
             results = await imageModel.find({ type: type });
         }
 
@@ -140,6 +159,12 @@ async function getImage(type: string, id?: string) {
 async function getAllImages (type: string) {
     const tempFolderPath = 'temp/';
     try {
+        if (!mongoose.connection.readyState) {
+            return [new RichEmbed().addField('Error getting all images:', 
+            'Database not found ' + 
+            'or the server is still starting.')];
+        }
+
         if (!fs.existsSync(imageSaveLocation + tempFolderPath)) {
             if (!fs.existsSync(imageSaveLocation)) {
                 fs.mkdirSync(imageSaveLocation);
@@ -190,6 +215,12 @@ async function removeImage(id: string) {
     const embed = new RichEmbed();
 
     try {
+        if (!mongoose.connection.readyState) {
+            return new RichEmbed().addField('Error removing image:', 
+            'Database not found ' + 
+            'or the server is still starting.');
+        }
+
         const imageRemoved = await imageModel.findOneAndRemove({ _id: id });
         if (!imageRemoved) {
             return embed.addField('Failed to Remove Image', 'Please check that the id provided is valid');
@@ -209,7 +240,6 @@ async function removeImage(id: string) {
         return embed.setTitle(`Successfully Removed Image: ${id}`).attachFile(imageSaveLocation + tempFolderPath + imageRemoved._id + fileExtension);
     }
     catch (error) {
-        console.log(error);
         return embed.addField('Error occurred while removing image', 'Please check that the id provided is valid');
     }
 }

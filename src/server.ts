@@ -40,7 +40,12 @@ async function createServer() {
 
         const activeCollabApi = createActiveCollabAPI(activeCollabRestClient);
 
-        mongoose.connect('mongodb://localhost:27017/database');
+        try {
+            mongoose.connect('mongodb://localhost:27017/database');
+        }
+        catch (error) {
+            logger.error(error);
+        }
 
         const databaseController = createDatabaseController();
 

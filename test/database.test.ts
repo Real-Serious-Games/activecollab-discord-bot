@@ -4,22 +4,22 @@ import * as mongoose from 'mongoose';
 import * as moment from 'moment';
 import * as fs from 'fs';
 
+beforeEach(async () => {
+    await mongoose.connect('mongodb://localhost:27017/testDatabase');
+});
+afterEach(async () => {
+    await mongoose.connection.db.dropDatabase();
+    await mongoose.connection.close();
+});
 describe('DatabaseController', async () => {
-    beforeEach(async () => {
-        await mongoose.connect('mongodb://localhost:27017/testDatabase');
-    });
-    afterEach(async () => {
-        await mongoose.connection.db.dropDatabase();
-        await mongoose.connection.close();
-    });
-    afterAll(() => {
-        if (fs.existsSync('./Images/temp/')) {
-            const dirContents = fs.readdirSync('./Images/temp/');
-            dirContents.forEach(file => {
-                fs.unlinkSync('./Images/temp/' + file);
-            });
-        }
-    });
+    // afterAll(() => {
+    //     if (fs.existsSync('./Images/temp/')) {
+    //         const dirContents = fs.readdirSync('./Images/temp/');
+    //         dirContents.forEach(file => {
+    //             fs.unlinkSync('./Images/temp/' + file);
+    //         });
+    //     }
+    // });
     describe('addImage', () => {
         it('should return embed with error message if type not supported', async () => {
             const databaseController = new DatabaseControllerBuilder().build();
@@ -208,6 +208,7 @@ describe('DatabaseController', async () => {
             
             expect(mockIdArray.toString()).toBe(resultIdArray.toString());
 
+            clearTempDirectory ();
             await mongoose.connection.db.dropCollection('imageschemas');
         });
     });
@@ -251,6 +252,7 @@ describe('DatabaseController', async () => {
             expect(result.title).toBe(`Successfully Removed Image: ${mockId}`);
             expect(result.file).toBeTruthy();
 
+            clearTempDirectory ();
             await mongoose.connection.db.dropCollection('imageschemas');
         });
     });
@@ -277,20 +279,29 @@ describe('DatabaseController', async () => {
 });
 
 async function seedDatabase (type: string) {
-switch (type) {
-    case 'image':
-    const imageModel = new ImageSchema().getModelForClass(ImageSchema);
-    const imageData = '/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAABAAEDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwD3+iiigD//2Q==';
-    const img = new imageModel({ type: 'test', fileName: 'Blank.jpg', data: imageData});
-    const response = await img.save();
-    return response._id;
+    switch (type) {
+        case 'image':
+        const imageModel = new ImageSchema().getModelForClass(ImageSchema);
+        const imageData = '/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAABAAEDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwD3+iiigD//2Q==';
+        const img = new imageModel({ type: 'test', fileName: 'Blank.jpg', data: imageData});
+        const response = await img.save();
+        return response._id;
 
-    case 'user':
-    const userModel = new UserSchema().getModelForClass(UserSchema);
-    break;
+        case 'user':
+        const userModel = new UserSchema().getModelForClass(UserSchema);
+        break;
 
-    case 'channel':
-    const channelModel = new ChannelSchema().getModelForClass(ChannelSchema);
-    break;
+        case 'channel':
+        const channelModel = new ChannelSchema().getModelForClass(ChannelSchema);
+        break;
+    }
 }
+
+function clearTempDirectory () {
+    if (fs.existsSync('./Images/temp/')) {
+        const dirContents = fs.readdirSync('./Images/temp/');
+        dirContents.forEach(file => {
+            fs.unlinkSync('./Images/temp/' + file);
+        });
+    }
 }
