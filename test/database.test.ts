@@ -161,78 +161,56 @@ describe('DatabaseController', async () => {
         });
     });
 
+    describe('getAllImages', () => {
+        const imageSaveLocation = './Images/temp/';
 
-    // describe('getAllImages', () => {
-    //     const imageSaveLocation = './Images/temp';
-    //     const filename = moment().format('YYYY-MM-DD') + '_test.jpg';
+        afterEach(() => {
+            if (fs.existsSync(imageSaveLocation)) {
+                const dirContents = fs.readdirSync(imageSaveLocation);
+                dirContents.forEach(file => {
+                    fs.unlinkSync(imageSaveLocation + file);
+                });
+            }
+        });
+        it('should throw error if type is invalid', async () => {
+            const databaseController = new DatabaseControllerBuilder().build();
+            const mockError = new Error('Error when saving Image to file: ' 
+            + 'No images found for specified type!');
 
-    //     afterEach(() => {
-    //         if (fs.existsSync(imageSaveLocation)) {
-    //             const dirContents = fs.readdirSync(imageSaveLocation);
-    //             dirContents.forEach(file => {
-    //                 if (file === filename) {
-    //                     fs.unlinkSync(imageSaveLocation + file);
-    //                 }
-    //             });
-    //         }
-    //     });
-    //     it('should throw error if type is invalid', async () => {
-    //         const databaseController = new DatabaseControllerBuilder().build();
-    //         const mockError = new Error('Error when saving Image to file: ' 
-    //         + 'No images found for specified type!');
+            try {
+                await databaseController.getAllImages('invalidType');
+            }
+            catch (error) {
+                expect(error.message)
+                .toBe(mockError.message);
+            }
+        });
+        it('should return array of all images of that type as embeds', async () => {
+            const databaseController = new DatabaseControllerBuilder().build();
 
-    //         try {
-    //             await databaseController.getImage('invalidType');
-    //         }
-    //         catch (error) {
-    //             expect(error.message)
-    //             .toBe(mockError.message);
-    //         }
-    //     });
-    //     it('should return path to image', async () => {
-    //         const databaseController = new DatabaseControllerBuilder().build();
+            const numMocks = 9;
 
-    //         await seedDatabase('image');
-    //         const response = await databaseController.getImage('test');
-    //         expect(response).toBe(imageSaveLocation + filename);
-    //     });
-    //     it('should return path to image if provided ID', async () => {
-    //         const databaseController = new DatabaseControllerBuilder().build();
+            const mockIdArray = [];
+            for (let i = 0; i < numMocks; i++) {
+                const mockId = await seedDatabase('image');
+                mockIdArray.push(mockId);
+            }
 
-    //         const mockId = await seedDatabase('image');
-    //         const response = await databaseController.getImage('test', mockId);
+            const response = await databaseController.getAllImages('test');
 
-    //         expect(response).toBe(imageSaveLocation + filename);
+            const resultIdArray = [];
+            expect(response.length).toBe(numMocks);
 
-    //         await mongoose.connection.db.dropCollection('imageschemas');
-    //     });
-    //     it('should return existing image if one exists', async () => {
-    //         const databaseController = new DatabaseControllerBuilder().build();
-
-    //         await seedDatabase('image');
-
+            response.forEach(img => {
+                expect(img.fields.length).toBe(1);
+                resultIdArray.push(img.fields[0].value);
+            });
             
-    //         // Creating a local image
-    //         await databaseController.getImage('test');
-            
-    //         // Recording the time modified
-    //         let modifiedTime;
-    //         if (fs.existsSync(imageSaveLocation + filename)) {
-    //             modifiedTime = fs.statSync(imageSaveLocation + filename).mtime.toTimeString();
-    //         }
+            expect(mockIdArray.toString()).toBe(resultIdArray.toString());
 
-    //         // Getting the same image
-    //         await databaseController.getImage('test');
-
-    //         expect(fs.existsSync(imageSaveLocation + filename)).toBe(true);
-    //         if (fs.existsSync(imageSaveLocation + filename)) {
-    //             expect(modifiedTime).toBe(fs.statSync(imageSaveLocation + filename).mtime.toTimeString());
-    //         }
-
-    //         await mongoose.connection.db.dropCollection('imageschemas');
-    //     });
-    // });
-
+            await mongoose.connection.db.dropCollection('imageschemas');
+        });
+    });
 
     describe('removeImage', () => {
         it('should return embed with error message if id is invalid', async () => {
