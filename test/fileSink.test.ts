@@ -221,6 +221,17 @@ describe('getDate', () => {
 
         expect(testDate).toEqual('02-01-2000');
     });
+    it('should have a default date of new Date() and '
+        + 'should have a default timezone of +10:00', () => {
+            const testDate = fileSink.getDate();
+
+            expect(testDate).toEqual(
+                moment()
+                    .utcOffset('+10:00')
+                    .format('DD-MM-YYYY')
+            );
+        }
+    );
 });
 
 describe('getTime', () => {
@@ -238,4 +249,15 @@ describe('getTime', () => {
 
         expect(testDate).toEqual('01:02:03');
     });
+    it('should have a default date of new Date() and '
+        + 'should have a default timezone of +10:00', () => {
+            const testDate = fileSink.getTime();
+
+            expect(testDate).toEqual(
+                moment()
+                    .utcOffset('+10:00')
+                    .format('HH:mm:ss')
+            );
+        }
+    );
 });
