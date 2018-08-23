@@ -133,7 +133,7 @@ async function getImage(type: string, id?: string) {
         return imageSaveLocation + filename + fileExtension;
     }
     catch (error) {
-        throw new Error('Error when saving Image to file: ' + error);
+        throw new Error('Error when saving Image to file: ' + error.message);
     }
 }
 
@@ -141,6 +141,10 @@ async function getAllImages (type: string) {
     const tempFolderPath = 'temp/';
     try {
         if (!fs.existsSync(imageSaveLocation + tempFolderPath)) {
+            if (!fs.existsSync(imageSaveLocation)) {
+                fs.mkdirSync(imageSaveLocation);
+                console.log('Image directory didn\'t exist\nCreated Image directory');
+            }
             fs.mkdirSync(imageSaveLocation + tempFolderPath);
             console.log('Temp Image directory didn\'t exist\nCreated temp directory');
         }
