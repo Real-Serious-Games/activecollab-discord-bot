@@ -31,15 +31,20 @@ async function downloadImage (url: string) {
     
         https.request(url, function(response) {                                        
             
+            response.on('error', (error) => {
+                throw new Error(error.message);
+
+            });
+            
             if (response.statusCode != 200) {
                 throw new Error('Received invalid HTTP status: ' + response.statusCode);
             }
 
-            response.on('data', function(chunk) {  
+            response.on('data', (chunk) => {  
                 data.push(Buffer.from(chunk));                                                         
             });                                                                         
             
-            response.on('end', function() {                                             
+            response.on('end', () => {                                             
                resolve(Buffer.concat(data)); 
             });                                                                         
         }).end();
@@ -206,11 +211,11 @@ async function removeImage(id: string) {
 }
 
 function addUser() {
-
+throw new Error('Not yet implemented');
 }
 
 function updateUser() {
-
+    throw new Error('Not yet implemented');
 }
 
 export function createDatabaseController() {
