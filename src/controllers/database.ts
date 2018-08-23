@@ -18,6 +18,11 @@ const channelModel = new ChannelSchema().getModelForClass(ChannelSchema);
 const imageModel = new ImageSchema().getModelForClass(ImageSchema);
 
 const imageSaveLocation = './Images/';
+const validImageTypes = [
+    'reminder',
+    'positive',
+    'negative'
+];
 
 async function downloadImage (url: string) {
     return new Promise<Buffer>((resolve, reject) => {
@@ -38,6 +43,12 @@ async function downloadImage (url: string) {
 
 async function addImage(type: string, imageUrl: string) {
     const embed = new RichEmbed();
+
+    if (!validImageTypes.find(validType => type === validType)) {
+        return embed.addField('Image upload failed', 
+        'Parameter \'type\' is invalid or not supported\n' + 
+        'Use !help for the list of supported types.');
+    }
 
     try {
         const imageData = await downloadImage(imageUrl);
@@ -62,6 +73,7 @@ async function addImage(type: string, imageUrl: string) {
  * @param id Optional id parameter forces the return of a certain image (not random)
  */
 async function getImage(type: string, id?: string) {
+
     const filename = moment().format('YYYY-MM-DD') + '_' + type;
     
     try {
@@ -95,7 +107,7 @@ async function getImage(type: string, id?: string) {
             results = await imageModel.find({ type: type });
         }
 
-        if (results.length === 0) {
+        if (!results || results.length === 0) {
             console.warn('No images found for specified type!');
             throw new Error('No images found for specified type!');
         }
@@ -132,7 +144,7 @@ async function getAllImages (type: string) {
 
         const results = await imageModel.find({ type: type });
 
-        if (results.length === 0) {
+        if (!results || results.length === 0) {
             console.warn('No images found for specified type!');
             throw new Error('No images found for specified type!');
         }

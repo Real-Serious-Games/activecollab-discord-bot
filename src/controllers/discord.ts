@@ -239,6 +239,7 @@ export class DiscordController implements IDiscordController {
                 .then(embed => message.channel.send(embed));
                     break;
                 case 'types':
+                    // NOTE: This is a duplicate of the array found in the databaseController
                     message.channel.send(new discord.RichEmbed()
                     .addField('Types:', 
                     ' - reminder\n' + 
