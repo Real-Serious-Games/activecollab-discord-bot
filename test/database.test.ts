@@ -174,8 +174,8 @@ describe('DatabaseController', async () => {
         });
         it('should throw error if type is invalid', async () => {
             const databaseController = new DatabaseControllerBuilder().build();
-            const mockError = new Error('Error when saving Image to file: ' 
-            + 'No images found for specified type!');
+            const mockError = new Error('Error when getting all images of specified type: invalidType. ' 
+            + 'Error: No images found for specified type!');
 
             try {
                 await databaseController.getAllImages('invalidType');

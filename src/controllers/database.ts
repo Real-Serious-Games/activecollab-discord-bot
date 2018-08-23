@@ -181,7 +181,7 @@ async function getAllImages (type: string) {
         }
     }
     catch (error) {
-        throw new Error('Error when getting all images of specified type: ' + type + ', error: ' + error);
+        throw new Error('Error when getting all images of specified type: ' + type + '. ' + error);
     }
 }
 
