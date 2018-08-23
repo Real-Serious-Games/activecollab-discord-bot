@@ -888,6 +888,82 @@ describe('client receiving message', () => {
     });
 });
 
+describe('when command is "!logs"', () => {
+    describe('when argument is sendfile"', () => {
+        it('should call commandController.logsSendFile', () => {
+            const client = setupClient();
+
+            const logsSendFileMock = jest.fn(() =>
+                Promise.resolve(new RichEmbed()));
+
+            const commandControllerMock = new CommandControllerMockBuilder()
+                .withLogsSendFile(logsSendFileMock)
+                .build();
+
+            const discordController = new DiscordControllerBuilder()
+                .withCommandController(commandControllerMock)
+                .withClient(client)
+                .build();
+
+            const message = new MessageBuilder()
+                .withContent('!logs sendfile')
+                .build();
+
+            client.emit('message', message);
+
+            expect(logsSendFileMock).toHaveBeenCalledTimes(1);
+        });
+    });
+    describe('when argument is message"', () => {
+        it('should call commandController.logsSendMessage', () => {
+            const client = setupClient();
+
+            const logsSendMessageMock = jest.fn(() => Promise.resolve());
+
+            const commandControllerMock = new CommandControllerMockBuilder()
+                .withLogsSendMessage(logsSendMessageMock)
+                .build();
+
+            const discordController = new DiscordControllerBuilder()
+                .withCommandController(commandControllerMock)
+                .withClient(client)
+                .build();
+
+            const message = new MessageBuilder()
+                .withContent('!logs message')
+                .build();
+
+            client.emit('message', message);
+
+            expect(logsSendMessageMock).toHaveBeenCalledTimes(1);
+        });
+    });
+    describe('when argument is invalid"', () => {
+        it('should tell user the help commands', () => {
+            const unknownCommand = '!logs unknown';
+
+            const client = setupClient();
+
+            const discordController = new DiscordControllerBuilder()
+                .withClient(client)
+                .build();
+
+            const message = new MessageBuilder()
+                .withContent(unknownCommand)
+                .build();
+
+            client.emit('message', message);
+
+            expect(message.channel.send)
+                .toHaveBeenCalledWith(
+                    `Unknown command, *${unknownCommand}*, `
+                    + `use *!logs help* or *!logs commands* `
+                    + `for list of commands.`
+                );
+        });
+    });
+});
+
 function setupClient() {
     const client = new Client();
     client.login = jest.fn(() => Promise.resolve());
