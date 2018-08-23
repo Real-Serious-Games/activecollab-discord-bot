@@ -21,7 +21,8 @@ const imageSaveLocation = './Images/';
 const validImageTypes = [
     'reminder',
     'positive',
-    'negative'
+    'negative',
+    'test'
 ];
 
 async function downloadImage (url: string) {
@@ -29,7 +30,11 @@ async function downloadImage (url: string) {
         const data: Buffer[] = [];   
     
         https.request(url, function(response) {                                        
-      
+            
+            if (response.statusCode != 200) {
+                throw new Error('Received invalid HTTP status: ' + response.statusCode);
+            }
+
             response.on('data', function(chunk) {  
                 data.push(Buffer.from(chunk));                                                         
             });                                                                         
@@ -61,7 +66,7 @@ async function addImage(type: string, imageUrl: string) {
     }   
     catch (error) {
         console.log('Image upload failed, error: ' + error);
-        return embed.addField('Image upload failed', 'Check logs for more information.');
+        return embed.addField('Image upload failed', error);
     }
 
     return embed.addField('Image upload failed', 'Failed to download image from Discord');
