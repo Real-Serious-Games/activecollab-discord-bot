@@ -186,7 +186,7 @@ export async function userWeekTimes(
     }
     catch (error) {
         logger.error('Failed to attach image to TimeReport\n' + 
-    `Error: ${error}`);
+    `${error.message}`);
     }
 
     return message;
