@@ -4,7 +4,7 @@ services:
     image: "realseriousregistry.azurecr.io/activecollab-discord-bot"
     depends_on:
       - mongodb
-    restart: on-failure
+    #restart: on-failure
     ports:
      - "443:443"
      - "80:80"
