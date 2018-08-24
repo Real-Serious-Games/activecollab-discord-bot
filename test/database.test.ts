@@ -6,19 +6,21 @@ import * as fs from 'fs';
 import { RichEmbed } from 'discord.js';
 
 beforeAll(async () => {
-    await mongoose.connect('mongodb://localhost:27017/testDatabase');
+    await connectToDB();
 });
 afterEach(async () => {
-    await mongoose.connection.db.dropDatabase();
+    if (mongoose.connection.readyState === 1) {
+        await mongoose.connection.db.dropDatabase();
+    }
 });
 afterAll(async () => {
-    await mongoose.connection.close();
+    await disconnectFromDB();
 });
 
 describe('DatabaseController', async () => {
     describe('addImage', () => {
         it('should return embed with error if database connection not available', async () => {
-            await mongoose.connection.close(); // disconnect from database
+            await disconnectFromDB(); // disconnect from database
 
             const databaseController = new DatabaseControllerBuilder().build();
             const mockType = 'test';
@@ -33,7 +35,7 @@ describe('DatabaseController', async () => {
                 expect(result.fields[0].value).toBe('Database not found or the server is still starting.');
             }
             finally {
-                await mongoose.connect('mongodb://localhost:27017/testDatabase'); // reconnect to database
+                await connectToDB(); // reconnect to database
             }
         });
         it('should return embed with error message if type not supported', async () => {
@@ -120,7 +122,7 @@ describe('DatabaseController', async () => {
             }
         });
         it('should trow error if database connection not available (unless correct image exists on disk)', async () => {
-            await mongoose.connection.close(); // disconnect from database
+            await disconnectFromDB(); // disconnect from database
 
             const databaseController = new DatabaseControllerBuilder().build();
             const mockType = 'test';
@@ -134,7 +136,7 @@ describe('DatabaseController', async () => {
                 + 'Database not found or the server is still starting.');
             }
             finally {
-                await mongoose.connect('mongodb://localhost:27017/testDatabase'); // reconnect to database
+                await connectToDB(); // reconnect to database
             }
         });
         it('should throw error if type is invalid', async () => {
@@ -165,7 +167,9 @@ describe('DatabaseController', async () => {
 
             expect(response).toBe(imageSaveLocation + filename);
 
-            await mongoose.connection.db.dropCollection('imageschemas');
+            if (mongoose.connection.readyState === 1) {
+                await mongoose.connection.db.dropCollection('imageschemas');
+            }
         });
         it('should return existing image if one exists', async () => {
             const databaseController = new DatabaseControllerBuilder().build();
@@ -189,7 +193,9 @@ describe('DatabaseController', async () => {
                 expect(modifiedTime).toBe(fs.statSync(imageSaveLocation + filename).mtime.toTimeString());
             }
 
-            await mongoose.connection.db.dropCollection('imageschemas');
+            if (mongoose.connection.readyState === 1) {
+                await mongoose.connection.db.dropCollection('imageschemas');
+            }        
         });
     });
 
@@ -205,7 +211,7 @@ describe('DatabaseController', async () => {
             }
         });
         it('should return embed with error if database connection not available', async () => {
-            await mongoose.connection.close(); // disconnect from database
+            await disconnectFromDB(); // disconnect from database
 
             const databaseController = new DatabaseControllerBuilder().build();
             const mockType = 'test';
@@ -219,7 +225,7 @@ describe('DatabaseController', async () => {
                 expect(result[0].fields[0].value).toBe('Database not found or the server is still starting.');
             }
             finally {
-                await mongoose.connect('mongodb://localhost:27017/testDatabase'); // reconnect to database
+                await connectToDB(); // reconnect to database
             }
         });
         it('should return embed with error if type is invalid', async () => {
@@ -256,13 +262,16 @@ describe('DatabaseController', async () => {
             expect(mockIdArray.toString()).toBe(resultIdArray.toString());
 
             clearTempDirectory ();
-            await mongoose.connection.db.dropCollection('imageschemas');
+
+            if (mongoose.connection.readyState === 1) {
+                await mongoose.connection.db.dropCollection('imageschemas');
+            }        
         });
     });
 
     describe('removeImage', () => {
         it('should return embed with error if database connection not available', async () => {
-            await mongoose.connection.close(); // disconnect from database
+            await disconnectFromDB(); // disconnect from database
 
             const databaseController = new DatabaseControllerBuilder().build();
             const mockId = 'invalidId';
@@ -277,7 +286,7 @@ describe('DatabaseController', async () => {
                 expect(result.fields[0].value).toBe('Database not found or the server is still starting.');
             }
             finally {
-                await mongoose.connect('mongodb://localhost:27017/testDatabase'); // reconnect to database
+                await connectToDB(); // reconnect to database
             }
         });
         it('should return embed with error message if id is invalid', async () => {
@@ -319,7 +328,10 @@ describe('DatabaseController', async () => {
             expect(result.file).toBeTruthy();
 
             clearTempDirectory ();
-            await mongoose.connection.db.dropCollection('imageschemas');
+
+            if (mongoose.connection.readyState === 1) {
+                await mongoose.connection.db.dropCollection('imageschemas');
+            }        
         });
     });
     describe('addUser', () => {
@@ -369,5 +381,21 @@ function clearTempDirectory () {
         dirContents.forEach(file => {
             fs.unlinkSync('./Images/temp/' + file);
         });
+    }
+}
+
+async function connectToDB () {
+    try {
+        // May want to rename the database to something more appropriate (currently 'database' as shown below)
+        await mongoose.connect('mongodb://localhost:27017/testDatabase'); 
+    }
+    catch (error) {
+        console.log('Failed to connect to database', error);
+    }
+}
+
+async function disconnectFromDB () {
+    if (mongoose.connection.readyState === 1) {
+        await mongoose.connection.close();
     }
 }
