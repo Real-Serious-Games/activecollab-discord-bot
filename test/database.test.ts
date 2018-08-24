@@ -5,22 +5,17 @@ import * as moment from 'moment';
 import * as fs from 'fs';
 import { RichEmbed } from 'discord.js';
 
-beforeEach(async () => {
+beforeAll(async () => {
     await mongoose.connect('mongodb://localhost:27017/testDatabase');
 });
 afterEach(async () => {
     await mongoose.connection.db.dropDatabase();
+});
+afterAll(async () => {
     await mongoose.connection.close();
 });
+
 describe('DatabaseController', async () => {
-    // afterAll(() => {
-    //     if (fs.existsSync('./Images/temp/')) {
-    //         const dirContents = fs.readdirSync('./Images/temp/');
-    //         dirContents.forEach(file => {
-    //             fs.unlinkSync('./Images/temp/' + file);
-    //         });
-    //     }
-    // });
     describe('addImage', () => {
         it('should return embed with error if database connection not available', async () => {
             await mongoose.connection.close(); // disconnect from database
