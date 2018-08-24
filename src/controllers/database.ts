@@ -55,7 +55,7 @@ async function downloadImage (url: string) {
 async function addImage(type: string, imageUrl: string) {
     const embed = new RichEmbed();
 
-    if (!mongoose.connection.readyState) {
+    if (mongoose.connection.readyState != 1) {
         return embed.addField('Image upload failed', 
         'Database not found ' + 
         'or the server is still starting.');
@@ -102,7 +102,7 @@ async function getImage(type: string, id?: string) {
                 console.log('Image directory didn\'t exist\nCreated Image directory');
             }
 
-            if (!mongoose.connection.readyState) {
+            if (mongoose.connection.readyState != 1) {
                 throw new Error('Database not found ' + 
                 'or the server is still starting.');
             }
@@ -128,7 +128,7 @@ async function getImage(type: string, id?: string) {
                 }
             }
 
-            if (!mongoose.connection.readyState) {
+            if (mongoose.connection.readyState != 1) {
                 throw new Error('Database not found ' + 
                 'or the server is still starting.');
             }
@@ -159,7 +159,7 @@ async function getImage(type: string, id?: string) {
 async function getAllImages (type: string) {
     const tempFolderPath = 'temp/';
     try {
-        if (!mongoose.connection.readyState) {
+        if (mongoose.connection.readyState != 1) {
             return [new RichEmbed().addField('Error getting all images:', 
             'Database not found ' + 
             'or the server is still starting.')];
@@ -206,7 +206,8 @@ async function getAllImages (type: string) {
         }
     }
     catch (error) {
-        throw new Error('Error when getting all images of specified type: ' + type + '. ' + error);
+        return [new RichEmbed().addField('Error getting all images of type: ' + type, 
+        error.message)];
     }
 }
 
@@ -215,7 +216,7 @@ async function removeImage(id: string) {
     const embed = new RichEmbed();
 
     try {
-        if (!mongoose.connection.readyState) {
+        if (mongoose.connection.readyState != 1) {
             return new RichEmbed().addField('Error removing image:', 
             'Database not found ' + 
             'or the server is still starting.');

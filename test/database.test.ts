@@ -3,6 +3,7 @@ import { DatabaseControllerBuilder } from './builders/databaseControllerBuilder'
 import * as mongoose from 'mongoose';
 import * as moment from 'moment';
 import * as fs from 'fs';
+import { RichEmbed } from 'discord.js';
 
 beforeEach(async () => {
     await mongoose.connect('mongodb://localhost:27017/testDatabase');
@@ -21,6 +22,25 @@ describe('DatabaseController', async () => {
     //     }
     // });
     describe('addImage', () => {
+        it('should return embed with error if database connection not available', async () => {
+            await mongoose.connection.close(); // disconnect from database
+
+            const databaseController = new DatabaseControllerBuilder().build();
+            const mockType = 'test';
+            const mockUrl = 'mockUrl';
+
+            try {
+                const result = await databaseController.addImage(mockType, mockUrl);
+    
+                expect(result.fields).toBeTruthy();
+                expect(result.fields.length).toBe(1);
+                expect(result.fields[0].name).toBe('Image upload failed');
+                expect(result.fields[0].value).toBe('Database not found or the server is still starting.');
+            }
+            finally {
+                await mongoose.connect('mongodb://localhost:27017/testDatabase'); // reconnect to database
+            }
+        });
         it('should return embed with error message if type not supported', async () => {
             const databaseController = new DatabaseControllerBuilder().build();
             
@@ -104,6 +124,24 @@ describe('DatabaseController', async () => {
                 });
             }
         });
+        it('should trow error if database connection not available (unless correct image exists on disk)', async () => {
+            await mongoose.connection.close(); // disconnect from database
+
+            const databaseController = new DatabaseControllerBuilder().build();
+            const mockType = 'test';
+
+            try {
+                await databaseController.getImage(mockType);
+            }
+            catch (error) {
+                expect(error.message)
+                .toBe('Error when saving Image to file: ' 
+                + 'Database not found or the server is still starting.');
+            }
+            finally {
+                await mongoose.connect('mongodb://localhost:27017/testDatabase'); // reconnect to database
+            }
+        });
         it('should throw error if type is invalid', async () => {
             const databaseController = new DatabaseControllerBuilder().build();
             const mockError = new Error('Error when saving Image to file: ' 
@@ -139,7 +177,6 @@ describe('DatabaseController', async () => {
 
             await seedDatabase('image');
 
-            
             // Creating a local image
             await databaseController.getImage('test');
             
@@ -172,18 +209,33 @@ describe('DatabaseController', async () => {
                 });
             }
         });
-        it('should throw error if type is invalid', async () => {
+        it('should return embed with error if database connection not available', async () => {
+            await mongoose.connection.close(); // disconnect from database
+
             const databaseController = new DatabaseControllerBuilder().build();
-            const mockError = new Error('Error when getting all images of specified type: invalidType. ' 
-            + 'Error: No images found for specified type!');
+            const mockType = 'test';
 
             try {
-                await databaseController.getAllImages('invalidType');
+                const result = await databaseController.getAllImages(mockType);
+    
+                expect(result[0].fields).toBeTruthy();
+                expect(result[0].fields.length).toBe(1);
+                expect(result[0].fields[0].name).toBe('Error getting all images:');
+                expect(result[0].fields[0].value).toBe('Database not found or the server is still starting.');
             }
-            catch (error) {
-                expect(error.message)
-                .toBe(mockError.message);
+            finally {
+                await mongoose.connect('mongodb://localhost:27017/testDatabase'); // reconnect to database
             }
+        });
+        it('should return embed with error if type is invalid', async () => {
+            const databaseController = new DatabaseControllerBuilder().build();
+
+            const result = await databaseController.getAllImages('invalidType');
+
+            expect(result[0].fields).toBeTruthy();
+            expect(result[0].fields.length).toBe(1);
+            expect(result[0].fields[0].name).toBe('Error getting all images of type: invalidType');
+            expect(result[0].fields[0].value).toBe('No images found for specified type!');
         });
         it('should return array of all images of that type as embeds', async () => {
             const databaseController = new DatabaseControllerBuilder().build();
@@ -214,6 +266,25 @@ describe('DatabaseController', async () => {
     });
 
     describe('removeImage', () => {
+        it('should return embed with error if database connection not available', async () => {
+            await mongoose.connection.close(); // disconnect from database
+
+            const databaseController = new DatabaseControllerBuilder().build();
+            const mockId = 'invalidId';
+
+            try {
+
+                const result = await databaseController.removeImage(mockId);
+    
+                expect(result.fields).toBeTruthy();
+                expect(result.fields.length).toBe(1);
+                expect(result.fields[0].name).toBe('Error removing image:');
+                expect(result.fields[0].value).toBe('Database not found or the server is still starting.');
+            }
+            finally {
+                await mongoose.connect('mongodb://localhost:27017/testDatabase'); // reconnect to database
+            }
+        });
         it('should return embed with error message if id is invalid', async () => {
             const databaseController = new DatabaseControllerBuilder().build();
 
