@@ -53,6 +53,8 @@ export class DiscordController implements IDiscordController {
         this.client.on('ready', () => { });
 
         this.client.login(token).catch(console.error);
+        
+        this.client.on('error', error => logger.error(error.message));
 
         this.client.on('message', async message => {
             if (
