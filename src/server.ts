@@ -108,12 +108,12 @@ function getConfigValue(key: string): any {
     return value;
 }
 
-function connectToDatabase(logger: Logger) {
+async function connectToDatabase (logger: Logger) {
     let databaseConnected = false;
     let errorMessage;
     try {
         // May want to rename the database to something more appropriate (currently 'database' as shown below)
-        mongoose.connect('mongodb://mongodb:27017/database'); 
+        await mongoose.connect('mongodb://mongodb:27017/database'); 
         databaseConnected = true;
         logger.info('Connected to docker database successfully');
     }
@@ -124,7 +124,7 @@ function connectToDatabase(logger: Logger) {
     if (!databaseConnected) {
         try {
             // May want to rename the database to something more appropriate (currently 'database' as shown below
-            mongoose.connect('mongodb://localhost:27017/database');
+            await mongoose.connect('mongodb://localhost:27017/database');
             databaseConnected = true;
             logger.info('Connected to local database successfully');
         }
