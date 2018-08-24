@@ -4,6 +4,7 @@ import * as express from 'express';
 import * as mongoose from 'mongoose';
 import * as request from 'request-promise-native';
 
+import { Logger } from 'structured-log';
 import { setupApp } from './app';
 import { DiscordController } from './controllers/discord';
 import { createApiController } from './controllers/api';
@@ -40,12 +41,7 @@ async function createServer() {
 
         const activeCollabApi = createActiveCollabAPI(activeCollabRestClient);
 
-        try {
-            mongoose.connect('mongodb://localhost:27017/database');
-        }
-        catch (error) {
-            logger.error(error);
-        }
+        connectToDatabase(logger);
 
         const databaseController = createDatabaseController();
 
@@ -112,6 +108,34 @@ function getConfigValue(key: string): any {
     return value;
 }
 
+function connectToDatabase(logger: Logger) {
+    let databaseConnected = false;
+    let errorMessage;
+    try {
+        // May want to rename the database to something more appropriate (currently 'database' as shown below)
+        mongoose.connect('mongodb://mongodb:27017/database'); 
+        databaseConnected = true;
+        logger.info('Connected to docker database successfully');
+    }
+    catch (error) {
+        errorMessage = error;
+    }
+    // If the remote database failed, try a local database
+    if (!databaseConnected) {
+        try {
+            // May want to rename the database to something more appropriate (currently 'database' as shown below
+            mongoose.connect('mongodb://localhost:27017/database');
+            databaseConnected = true;
+            logger.info('Connected to local database successfully');
+        }
+        catch (error) {
+            errorMessage = error;
+        }
+    }
+    if (!databaseConnected) {
+        logger.error(errorMessage);
+    }
+}
 
 export = createServer()
     .catch(e => {
