@@ -200,10 +200,9 @@ async function getAllImages (type: string) {
             console.log(`Sending all images of type: ${ type }, total of: ${ response.length }`);
             return response;
         }
-        else {
-            response.push(new RichEmbed().addField('No images found', 'No images found for specified type'));
-            return response;
-        }
+
+        response.push(new RichEmbed().addField('No images found', 'No images found for specified type'));
+        return response;
     }
     catch (error) {
         return [new RichEmbed().addField('Error getting all images of type: ' + type, 
@@ -226,9 +225,8 @@ async function removeImage(id: string) {
         if (!imageRemoved) {
             return embed.addField('Failed to Remove Image', 'Please check that the id provided is valid');
         }
-        else {
-            embed.addField('Removal from database', 'Complete');
-        }
+
+        embed.addField('Removal from database', 'Complete');
 
         if (!fs.existsSync(imageSaveLocation + tempFolderPath)) {
             fs.mkdirSync(imageSaveLocation + tempFolderPath);
