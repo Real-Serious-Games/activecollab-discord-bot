@@ -1,0 +1,16 @@
+version: '3'
+services:
+  activecollab-discord-bot:
+    image: "realseriousregistry.azurecr.io/activecollab-discord-bot"
+    depends_on:
+      - mongodb
+    #restart: on-failure
+    ports:
+     - "443:443"
+     - "80:80"
+  mongodb:
+    image: "bitnami/mongodb:latest"
+    volumes:
+     - ".:/data/db"
+    expose:
+     - "27017"

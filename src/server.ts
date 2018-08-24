@@ -1,8 +1,10 @@
 import * as config from 'confucious';
 import * as discord from 'discord.js';
 import * as express from 'express';
+import * as mongoose from 'mongoose';
 import * as request from 'request-promise-native';
 
+import { Logger } from 'structured-log';
 import { setupApp } from './app';
 import { DiscordController } from './controllers/discord';
 import { createApiController } from './controllers/api';
@@ -12,6 +14,7 @@ import { createActiveCollabAPI } from './controllers/activecollab-api';
 import { createActiveCollabRestClient } from './controllers/activecollab-rest';
 import { createMappingController, ChannelMap, UserMap } from './controllers/mapping';
 import { createCommandController } from './controllers/command';
+import { createDatabaseController } from './controllers/database';
 
 async function createServer() {
     // Setup config
@@ -38,9 +41,14 @@ async function createServer() {
 
         const activeCollabApi = createActiveCollabAPI(activeCollabRestClient);
 
+        connectToDatabase(logger);
+
+        const databaseController = createDatabaseController();
+
         const commandController = createCommandController(
             activeCollabApi,
             mappingController,
+            databaseController,
             logger
         );
 
@@ -98,6 +106,34 @@ function getConfigValue(key: string): any {
     return value;
 }
 
+async function connectToDatabase (logger: Logger) {
+    let databaseConnected = false;
+    let errorMessage;
+    try {
+        // May want to rename the database to something more appropriate (currently 'database' as shown below)
+        await mongoose.connect('mongodb://mongodb:27017/database'); 
+        databaseConnected = true;
+        logger.info('Connected to docker database successfully');
+    }
+    catch (error) {
+        errorMessage = error;
+    }
+    // If the remote database failed, try a local database
+    if (!databaseConnected) {
+        try {
+            // May want to rename the database to something more appropriate (currently 'database' as shown below
+            await mongoose.connect('mongodb://localhost:27017/database');
+            databaseConnected = true;
+            logger.info('Connected to local database successfully');
+        }
+        catch (error) {
+            errorMessage = error;
+        }
+    }
+    if (!databaseConnected) {
+        logger.error(errorMessage);
+    }
+}
 
 export = createServer()
     .catch(e => {

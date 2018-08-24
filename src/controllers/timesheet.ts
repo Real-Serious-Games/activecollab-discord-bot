@@ -7,6 +7,7 @@ import { IActiveCollabAPI } from './activecollab-api';
 import * as moment from '../../node_modules/moment';
 import { ICommandController } from './command';
 import { IMappingController } from './mapping';
+import { IDatabaseController } from './database';
 
 const dayToNumber = (day?: string): number => {
     if (day) {
@@ -109,6 +110,7 @@ export async function userWeekTimes(
     userId: number,
     eventColor: any,
     activeCollabApi: IActiveCollabAPI,
+    databaseController: IDatabaseController,
     logger: Logger
 ): Promise<discord.RichEmbed> {
     const message = new discord.RichEmbed()
@@ -161,6 +163,31 @@ export async function userWeekTimes(
         'Total Hours',
         'Total: ' + totalHoursStr + ':' + totalMinsStr
     );
+
+    try {
+        const currentDay = moment().day();
+        if (currentDay === 0) {
+            return message;
+        }
+
+        let image;
+        if ((currentDay <= 5 && totalDuration / currentDay < 7.6) || (currentDay > 5 && totalDuration < 38)) {
+            image = await databaseController.getImage('negative');
+        }
+        else {
+            image = await databaseController.getImage('positive');
+        }
+
+        if (image) {
+            const attachment = new discord.Attachment(image, image.split('/').pop());
+            message.attachFile(attachment);
+            console.log('attached image successfully!');
+        }
+    }
+    catch (error) {
+        logger.error('Failed to attach image to TimeReport\n' + 
+    `${error.message}`);
+    }
 
     return message;
 }

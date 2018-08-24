@@ -188,6 +188,70 @@ export class DiscordController implements IDiscordController {
             else if (command === 'wallofshame') {
                 wallOfShameCommand(this.commandController, this.logger, message.channel);
             }
+            else if (command === 'image') {
+                if (args.length < 2) {
+                    message.channel.send('Invalid number of parameters\n' 
+                    + 'Use: \'!help\' to view commands.');
+                    return;
+                }
+
+                switch (args[0]) {
+                case 'a':
+                case 'add':
+                logger.info('add image');
+                message.channel.send('Adding image, please wait...');
+                message.attachments.forEach( a => {
+                    logger.info('filename: ' + a.filename + ', url: ' + a.url);
+                    this.commandController.databaseAddImage(args[1], a.url)
+                    .then ( embed => 
+                        message.channel.send(embed)
+                    );
+                });
+                    break;
+                case 'g':
+                case 'get':
+                message.channel.send('Getting image, please wait...');
+                this.commandController.databaseGetImage(args[1], args[2])
+                .then(image => {
+                    const attachment = new discord.Attachment(image, image.split('/').pop());
+                    message.channel.send(args[1] + ' image:', attachment);
+                }).catch((error) => {
+                    message.channel.send('An error occurred.\n' 
+                    + 'Make sure the type is spelt correctly and that images exist for the specified type.');
+                    logger.error(error);
+                });
+                    break;
+                case 'getall':
+                    this.commandController.databaseGetAllImages(args[1])
+                    .then( embeds => {
+                        message.channel.send(new discord.RichEmbed()
+                        .setTitle(`Getting all images of type: ${args[1]}\nPlease wait...`));
+                        embeds.forEach(embed => {
+                            message.channel.send(embed);
+                        });
+                    });
+                    break;
+                case 'r':
+                case 'rm':
+                case 'remove':
+                message.channel.send(`Removing image: ${ args[1] }\nPlease wait...`);
+                this.commandController.databaseRemoveImage(args[1])
+                .then(embed => message.channel.send(embed));
+                    break;
+                case 'types':
+                    // NOTE: This is a duplicate of the array found in the databaseController
+                    message.channel.send(new discord.RichEmbed()
+                    .addField('Types:', 
+                    ' - reminder\n' + 
+                    ' - positive\n' +
+                    ' - negative'
+                    ));
+                    break;
+                default:
+                message.channel.send('Invalid image command\n' 
+                    + 'Use: \'!help\' to view commands.');
+                    break;
+                }            }
             else if (command === 'help' || command === 'commands') {
                 message.channel.send(new discord.RichEmbed()
                     .setTitle('Commands')
@@ -231,6 +295,12 @@ export class DiscordController implements IDiscordController {
                     )
                     .addField('!wallOfShame',
                         '*!wallOfShame* - sends a list of the people who have not completed enough hours for the week.\n'
+                    )
+                    .addField('!image', 
+                        '!image add <type> - Adds the attached image to the database.\n' +
+                        '!image get <type> - Gets the image for today of the specified type\n' +
+                        '!image getall <type> - Gets all images of the specified type\n' +
+                        '!image types - Gets a list of all image types'
                     )
                 );
             } else {
@@ -687,11 +757,21 @@ export class DiscordController implements IDiscordController {
                 break;
             case 'timereminder':
                 // Internal chat channel
-                channel.send(new discord.RichEmbed().setTitle('Timesheet Reminder!').addField('<Cool image coming soon>', 'In the meantime, make sure your timesheet is filled out!'));
-                return 418;
+                try {
+                    this.commandController.databaseGetImage('reminder')
+                    .then(image => {
+                        const attachment = new discord.Attachment(image, image.split('/').pop());
+                        channel.send(new discord.RichEmbed().setTitle('Timesheet Reminder!').attachFile(attachment));
+                    });
+                }
+                catch (error) {
+                    channel.send(new discord.RichEmbed().setTitle('Timesheet Reminder!').addField('<Cool image coming soon>', 'In the meantime, make sure your timesheet is filled out!'));
+                    this.logger.error('Failed to get image for channel timesheet reminder, sending placeholder instead.');
+                }
+                return 200;
             case 'wallofshame':
                 wallOfShameCommand(this.commandController, this.logger, channel);
-                return 418;
+                return 200;
             default:
                 this.logger.error(
                     'Failed to process CommandEvent: Invalid CommandType or type not supported!'

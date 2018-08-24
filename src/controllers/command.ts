@@ -7,12 +7,12 @@ import { Assignment } from '../models/report';
 import { Project } from '../models/project';
 import { IActiveCollabAPI } from './activecollab-api';
 import { IMappingController } from './mapping';
-import { parse } from 'url';
 import { userTimes, userWeekTimes, wallOfShame } from './timesheet';
-import * as spreadsheetCommand from './spreadsheetCommand';
 import { writeToCsv } from './csvHandle';
-import * as dailyReportCommand from '../controllers/dailyReportCommand';
+import { IDatabaseController } from './database';
 
+import * as spreadsheetCommand from './spreadsheetCommand';
+import * as dailyReportCommand from '../controllers/dailyReportCommand';
 import * as logsCommand from './logsCommand';
 
 export interface ICommandController {
@@ -35,6 +35,10 @@ export interface ICommandController {
         endDate: string
     ) => Promise<RichEmbed>;
     dailyReport: (projects: string[]) => Promise<Array<RichEmbed>>;
+    databaseAddImage: (type: string, imageUrl: string) => Promise<RichEmbed>;
+    databaseGetImage: (type: string, id?: string) => Promise<string>;
+    databaseGetAllImages: (type: string) => Promise<Array<RichEmbed>>;
+    databaseRemoveImage: (id: string) => Promise<RichEmbed>;
 }
 
 const eventColor = '#449DF5';
@@ -258,6 +262,7 @@ function determineFormattedFields(
 export function createCommandController(
     activeCollabApi: IActiveCollabAPI,
     mappingController: IMappingController,
+    databaseController: IDatabaseController,
     logger: Logger
 ) {
     return {
@@ -277,7 +282,7 @@ export function createCommandController(
         userTimes: (userId: number, day?: string) =>
             userTimes(userId, eventColor, activeCollabApi, logger, day),
         userWeekTimes: (userId: number) =>
-            userWeekTimes(userId, eventColor, activeCollabApi, logger),
+            userWeekTimes(userId, eventColor, activeCollabApi, databaseController, logger),
         wallOfShame: () =>
             wallOfShame(mappingController, eventColor, activeCollabApi, logger),
         filteredTasks: (
@@ -303,6 +308,11 @@ export function createCommandController(
                 activeCollabApi,
                 logger,
                 writeToCsv
-            )
+            ),
+        databaseAddImage: (type: string, imageUrl: string) => databaseController.addImage(type, imageUrl),
+        databaseGetImage: (type: string, id?: string) => databaseController.getImage(type, id),
+        databaseGetAllImages: (type: string) => databaseController.getAllImages(type),
+        databaseRemoveImage: (id: string) => databaseController.removeImage(id)
+
     };
 }
