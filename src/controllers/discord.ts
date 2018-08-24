@@ -209,17 +209,15 @@ export class DiscordController implements IDiscordController {
                 case 'g':
                 case 'get':
                 message.channel.send('Getting image, please wait...');
-                try {
-                    this.commandController.databaseGetImage(args[1], args[2])
-                    .then(image => {
-                        const attachment = new discord.Attachment(image, image.split('/').pop());
-                        message.channel.send(args[1] + ' image:', attachment);
-                    });
-                }
-                catch (error) {
+                this.commandController.databaseGetImage(args[1], args[2])
+                .then(image => {
+                    const attachment = new discord.Attachment(image, image.split('/').pop());
+                    message.channel.send(args[1] + ' image:', attachment);
+                }).catch((error) => {
                     message.channel.send('An error occurred.\n' 
                     + 'Make sure the type is spelt correctly and that images exist for the specified type.');
-                }
+                    logger.error(error);
+                });
                     break;
                 case 'getall':
                     this.commandController.databaseGetAllImages(args[1])
