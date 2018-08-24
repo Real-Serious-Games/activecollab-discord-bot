@@ -78,7 +78,7 @@ async function addImage(type: string, imageUrl: string) {
     }   
     catch (error) {
         console.log('Image upload failed, error: ' + error);
-        return embed.addField('Image upload failed', error);
+        return embed.addField('Image upload failed', error.message);
     }
 
     return embed.addField('Image upload failed', 'Failed to download image from Discord');

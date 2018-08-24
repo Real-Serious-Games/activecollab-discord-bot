@@ -62,7 +62,7 @@ describe('DatabaseController', async () => {
             expect(result.fields).toBeTruthy();
             expect(result.fields.length).toBe(1);
             expect(result.fields[0].name).toBe('Image upload failed');
-            expect(result.fields[0].value).toBe('Error: Unable to determine the domain name');
+            expect(result.fields[0].value).toBe('Unable to determine the domain name');
         });
         it('should return embed with error message if url passed is http', async () => {
             const databaseController = new DatabaseControllerBuilder().build();
@@ -75,7 +75,7 @@ describe('DatabaseController', async () => {
             expect(result.fields).toBeTruthy();
             expect(result.fields.length).toBe(1);
             expect(result.fields[0].name).toBe('Image upload failed');
-            expect(result.fields[0].value).toBe('Error: Protocol \"http:\" not supported. Expected \"https:\"');
+            expect(result.fields[0].value).toBe('Protocol \"http:\" not supported. Expected \"https:\"');
         });
         it('should return embed with error message if url passed isn\'t image', async () => {
             const databaseController = new DatabaseControllerBuilder().build();
@@ -88,7 +88,7 @@ describe('DatabaseController', async () => {
             expect(result.fields).toBeTruthy();
             expect(result.fields.length).toBe(1);
             expect(result.fields[0].name).toBe('Image upload failed');
-            expect(result.fields[0].value).toBe('ValidationError: fileName: Path `fileName` is required.');
+            expect(result.fields[0].value).toBe('ImageSchema validation failed: fileName: Path `fileName` is required.');
         });
         it('should return embed with success message if saved correctly', async () => {
             const databaseController = new DatabaseControllerBuilder().build();
